@@ -26,6 +26,12 @@
           <el-icon><List /></el-icon>
           <span>订单管理</span>
         </el-menu-item>
+        <el-menu-item index="/merchant/notifications">
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99" class="noti-badge">
+            <el-icon><Bell /></el-icon>
+          </el-badge>
+          <span>消息通知</span>
+        </el-menu-item>
       </el-menu>
     </div>
 
@@ -41,11 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Shop, Plus, DataLine, List } from "@element-plus/icons-vue";
+import { Shop, Plus, DataLine, List, Bell } from "@element-plus/icons-vue";
 import { useUserStore } from "@/store/modules/user";
 import { getFullImageUrl } from "@/utils/url";
+import NotificationAPI from "@/api/eshop/notification";
 
 const route = useRoute();
 const router = useRouter();
@@ -61,8 +68,20 @@ const activeMenu = computed(() => {
   if (path.startsWith("/merchant/product/edit")) return "/merchant/products"; // 编辑商品时高亮“我的小店”
   if (path.startsWith("/merchant/statistics")) return "/merchant/statistics";
   if (path.startsWith("/merchant/orders")) return "/merchant/orders";
+  if (path.startsWith("/merchant/notifications")) return "/merchant/notifications";
   return "/merchant/products";
 });
+
+const unreadCount = ref(0);
+let pollingTimer: ReturnType<typeof setInterval> | null = null;
+
+const fetchUnreadCount = async () => {
+  try {
+    unreadCount.value = await NotificationAPI.getUnreadCount();
+  } catch {
+    // ignore
+  }
+};
 
 const handleMenuSelect = (index: string) => {
   router.push(index);
@@ -75,6 +94,12 @@ onMounted(() => {
       userInfo.value = info;
     });
   }
+  fetchUnreadCount();
+  pollingTimer = setInterval(fetchUnreadCount, 30000);
+});
+
+onUnmounted(() => {
+  if (pollingTimer) clearInterval(pollingTimer);
 });
 </script>
 
@@ -134,6 +159,20 @@ onMounted(() => {
       &:hover {
         background-color: #f5f7fa;
       }
+    }
+  }
+
+  .noti-badge {
+    display: inline-flex;
+    margin-right: 4px;
+
+    :deep(.el-badge__content) {
+      top: 6px;
+      right: -2px;
+    }
+
+    .el-icon {
+      font-size: 18px;
     }
   }
 }

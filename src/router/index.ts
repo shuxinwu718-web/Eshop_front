@@ -262,6 +262,12 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: { title: "订单详情", hidden: true },
           },
           {
+            path: "notifications",
+            name: "MerchantNotifications",
+            component: () => import("@/views/merchant/Notifications.vue"),
+            meta: { title: "消息通知", icon: "bell" },
+          },
+          {
             path: "my-apply",
             name: "MyApply",
             component: () => import("@/views/merchant/MyApply/index.vue"),
