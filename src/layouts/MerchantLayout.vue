@@ -56,7 +56,7 @@ import { useRoute, useRouter } from "vue-router";
 import { Shop, Plus, DataLine, List, Bell, ChatDotSquare } from "@element-plus/icons-vue";
 import { useUserStore } from "@/store/modules/user";
 import { getFullImageUrl } from "@/utils/url";
-import NotificationAPI from "@/api/eshop/notification";
+import NoticeAPI from "@/api/system/notice";
 
 const route = useRoute();
 const router = useRouter();
@@ -82,7 +82,7 @@ let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
 const fetchUnreadCount = async () => {
   try {
-    unreadCount.value = await NotificationAPI.getUnreadCount();
+    unreadCount.value = await NoticeAPI.getUnreadCount();
   } catch {
     // ignore
   }

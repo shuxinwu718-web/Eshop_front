@@ -54,6 +54,10 @@ export interface NoticeItem {
   publishTime?: Date;
   /** 撤回时间 */
   revokeTime?: Date;
+  /** 业务类型（new_order/order_paid/order_cancelled/new_message/reply_message） */
+  bizType?: string;
+  /** 业务ID（如订单ID、留言ID） */
+  bizId?: number | string;
 }
 
 /** 通知详情对象 */
@@ -76,4 +80,8 @@ export interface NoticeDetail {
   publisherName?: string;
   /** 发布时间 */
   publishTime?: Date;
+  /** 业务类型 */
+  bizType?: string;
+  /** 业务ID */
+  bizId?: number | string;
 }

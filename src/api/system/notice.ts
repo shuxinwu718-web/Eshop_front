@@ -3,18 +3,6 @@ import type { NoticeQueryParams, NoticeForm, NoticeItem, NoticeDetail } from "@/
 
 const NOTICE_BASE_URL = "/api/v1/notices";
 
-export interface MerchantNoticeItem {
-  id: number;
-  title: string;
-  content: string;
-  isRead: number;
-  source: string;
-  type: string;
-  orderId: number | null;
-  orderNo: string | null;
-  createTime: string;
-}
-
 const NoticeAPI = {
   /** 获取通知公告分页数据 */
   getPage(queryParams?: NoticeQueryParams) {
@@ -65,12 +53,20 @@ const NoticeAPI = {
     });
   },
 
-  /** 获取商家通知（用于统一通知页展示） */
-  getMerchantNotices(pageNum = 1, pageSize = 20) {
-    return request<any, PageResult<MerchantNoticeItem>>({
-      url: "/merchant/notices",
+  /** 获取未读通知数量 */
+  getUnreadCount() {
+    return request<any, number>({
+      url: `${NOTICE_BASE_URL}/unread-count`,
       method: "get",
-      params: { pageNum, pageSize },
+    });
+  },
+
+  /** 获取未读通知列表（下拉展示） */
+  getUnreadList(limit = 5) {
+    return request<any, NoticeItem[]>({
+      url: `${NOTICE_BASE_URL}/unread-list`,
+      method: "get",
+      params: { limit },
     });
   },
 };

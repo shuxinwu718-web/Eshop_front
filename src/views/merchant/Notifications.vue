@@ -1,110 +1,177 @@
 <template>
   <div class="merchant-notifications">
-    <div class="page-header">
-      <h2>消息通知</h2>
-      <el-button v-if="hasUnread" size="small" @click="markAllRead">全部标为已读</el-button>
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <el-input
+        v-model="queryParams.title"
+        placeholder="搜索通知标题"
+        clearable
+        @keyup.enter="handleQuery"
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+        <template #append>
+          <el-button @click="handleQuery">搜索</el-button>
+        </template>
+      </el-input>
+      <el-button text @click="handleResetQuery">重置</el-button>
     </div>
 
-    <div v-loading="loading" class="notification-list">
-      <div v-for="item in list" :key="item.id" class="notification-item" :class="{ unread: !item.isRead }" @click="handleClick(item)">
-        <div class="noti-icon">
-          <el-badge :is-dot="!item.isRead">
-            <el-icon :size="20" :color="iconColor(item.type)">
-              <component :is="iconComponent(item.type)" />
-            </el-icon>
-          </el-badge>
+    <div v-loading="loading" class="notice-list">
+      <div
+        v-for="item in pageData"
+        :key="item.id"
+        class="notice-card"
+        :class="{ 'notice-card--unread': item.isRead === 0, 'notice-card--biz': !!item.bizType }"
+        @click="handleRead(item)"
+      >
+        <div class="notice-card__header">
+          <div class="notice-card__title">
+            <el-tag v-if="item.bizType" size="small" :type="bizTypeTag(item.bizType)" class="biz-tag">
+              {{ bizTypeText(item.bizType) }}
+            </el-tag>
+            {{ item.title }}
+          </div>
+          <div class="notice-card__status">
+            <el-tag v-if="item.isRead === 1" size="small" type="success">已读</el-tag>
+            <el-tag v-else size="small" type="info">未读</el-tag>
+          </div>
         </div>
-        <div class="noti-body">
-          <div class="noti-title">{{ item.title }}</div>
-          <div class="noti-content">{{ item.content }}</div>
-          <div class="noti-time">{{ item.createTime }}</div>
+
+        <div class="notice-card__content">{{ item.content }}</div>
+
+        <div class="notice-card__info">
+          <div class="notice-card__meta">
+            <span>
+              <el-icon><User /></el-icon>
+              {{ item.publisherName || "系统" }}
+            </span>
+            <span>
+              <el-icon><Timer /></el-icon>
+              {{ formatDate(item.publishTime || item.createTime) }}
+            </span>
+          </div>
+          <div v-if="item.bizType && item.bizId" class="notice-card__actions" @click.stop>
+            <el-button size="small" type="primary" link @click="goBizDetail(item)">
+              查看详情
+            </el-button>
+            <el-button v-if="item.isRead === 0" size="small" @click="markAsRead(item)">
+              标为已读
+            </el-button>
+          </div>
         </div>
-        <div v-if="!item.isRead" class="noti-dot" />
       </div>
 
-      <el-empty v-if="!loading && list.length === 0" description="暂无通知" />
+      <el-empty v-if="!loading && pageData.length === 0" description="暂无通知" />
+    </div>
 
-      <div v-if="total > pageSize" class="pagination">
-        <el-pagination
-          v-model:current-page="pageNum"
-          v-model:page-size="pageSize"
-          :total="total"
-          layout="prev, pager, next"
-          @current-change="fetchList"
-        />
-      </div>
+    <!-- 分页 -->
+    <div class="pagination-wrapper">
+      <el-pagination
+        v-if="total > 0"
+        v-model:current-page="queryParams.pageNum"
+        v-model:page-size="queryParams.pageSize"
+        :total="total"
+        :page-sizes="[5, 10, 20]"
+        layout="total, sizes, prev, pager, next"
+        background
+        @size-change="handleQuery"
+        @current-change="handleQuery"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { ShoppingCart, CircleCheck, CircleClose, ChatDotSquare, Bell } from "@element-plus/icons-vue";
-import NotificationAPI, { type MerchantNotification } from "@/api/eshop/notification";
+import { Search, User, Timer } from "@element-plus/icons-vue";
+import NoticeAPI from "@/api/system/notice";
+import type { NoticeItem, NoticeQueryParams } from "@/types/api";
 
-const loading = ref(false);
-const list = ref<MerchantNotification[]>([]);
+defineOptions({ name: "MerchantNotifications" });
+
+const router = useRouter();
+
+const queryParams = reactive<NoticeQueryParams>({
+  pageNum: 1,
+  pageSize: 10,
+  title: "",
+});
+const pageData = ref<NoticeItem[]>([]);
 const total = ref(0);
-const pageNum = ref(1);
-const pageSize = ref(20);
-const hasUnread = ref(false);
+const loading = ref(false);
 
-const iconColor = (type: string) => {
-  switch (type) {
-    case "new_order": return "#409eff";
-    case "order_paid": return "#67c23a";
-    case "order_cancelled": return "#f56c6c";
-    case "new_message": return "#e6a23c";
-    default: return "#909399";
-  }
+const bizTypeMap: Record<string, { text: string; tag: string }> = {
+  new_order: { text: "新订单", tag: "primary" },
+  order_paid: { text: "已付款", tag: "success" },
+  order_cancelled: { text: "已取消", tag: "danger" },
+  new_message: { text: "新留言", tag: "warning" },
+  reply_message: { text: "留言回复", tag: "success" },
+};
+const bizTypeText = (type: string) => bizTypeMap[type]?.text || "通知";
+const bizTypeTag = (type: string) => bizTypeMap[type]?.tag || "info";
+
+const formatDate = (dateStr?: string | Date) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
-const iconComponent = (type: string) => {
-  switch (type) {
-    case "new_order": return ShoppingCart;
-    case "order_paid": return CircleCheck;
-    case "order_cancelled": return CircleClose;
-    case "new_message": return ChatDotSquare;
-    default: return Bell;
-  }
-};
-
-const fetchList = async () => {
+async function handleQuery() {
   loading.value = true;
   try {
-    const res = await NotificationAPI.getList(pageNum.value, pageSize.value);
-    list.value = res.records;
-    total.value = res.total;
-    hasUnread.value = list.value.some((n) => !n.isRead);
+    const res = await NoticeAPI.getMyNoticePage(queryParams);
+    pageData.value = res.records || [];
+    total.value = res.total || 0;
   } catch {
     // ignore
   } finally {
     loading.value = false;
   }
-};
+}
 
-const handleClick = async (item: MerchantNotification) => {
-  if (!item.isRead) {
-    await NotificationAPI.markAsRead(item.id);
-    item.isRead = 1;
-    hasUnread.value = list.value.some((n) => !n.isRead);
+function handleResetQuery() {
+  queryParams.title = "";
+  queryParams.pageNum = 1;
+  handleQuery();
+}
+
+async function handleRead(item: NoticeItem) {
+  if (item.isRead === 0) {
+    await markAsRead(item);
   }
-};
+}
 
-const markAllRead = async () => {
+async function markAsRead(item: NoticeItem) {
   try {
-    await NotificationAPI.markAllAsRead();
-    list.value.forEach((n) => (n.isRead = 1));
-    hasUnread.value = false;
-    ElMessage.success("已全部标为已读");
+    await NoticeAPI.getDetail(item.id);
+    item.isRead = 1;
   } catch {
-    ElMessage.error("操作失败");
+    // ignore
   }
-};
+}
+
+function goBizDetail(item: NoticeItem) {
+  if (!item.bizId) return;
+  switch (item.bizType) {
+    case "new_order":
+    case "order_paid":
+    case "order_cancelled":
+      router.push(`/merchant/order/${item.bizId}`);
+      break;
+    case "new_message":
+      router.push("/merchant/messages");
+      break;
+    default:
+      break;
+  }
+}
 
 onMounted(() => {
-  fetchList();
+  handleQuery();
 });
 </script>
 
@@ -115,78 +182,106 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-.page-header {
+.search-bar {
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
   align-items: center;
   margin-bottom: 20px;
 
-  h2 {
-    margin: 0;
-    font-size: 20px;
+  .el-input {
+    flex: 1;
   }
 }
 
-.notification-list {
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   min-height: 200px;
 }
 
-.notification-item {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 16px 12px;
+.notice-card {
+  padding: 16px;
   cursor: pointer;
-  transition: background 0.2s;
-  border-bottom: 1px solid #f0f0f0;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  transition: all 0.2s;
 
   &:hover {
-    background: #f5f7fa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
-  &.unread {
-    background: #f0f5ff;
+  &--unread {
+    background: #f0f7ff;
+    border-left: 3px solid #409eff;
   }
-}
 
-.noti-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
+  &--biz.notice-card--unread {
+    border-left-color: #67c23a;
+    background: #f0fff5;
+  }
 
-.noti-body {
-  flex: 1;
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
 
-  .noti-title {
-    font-weight: 600;
+  &__title {
+    flex: 1;
     font-size: 15px;
+    font-weight: 600;
     color: #303133;
+
+    .biz-tag {
+      margin-right: 6px;
+      vertical-align: middle;
+    }
   }
 
-  .noti-content {
-    margin-top: 4px;
+  &__status {
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  &__content {
     font-size: 14px;
     color: #666;
+    line-height: 1.5;
+    margin-bottom: 8px;
   }
 
-  .noti-time {
-    margin-top: 6px;
+  &__info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 12px;
     font-size: 12px;
     color: #999;
+
+    span {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
   }
 }
 
-.noti-dot {
-  width: 8px;
-  height: 8px;
-  margin-top: 8px;
-  background: #409eff;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.pagination {
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
   margin-top: 20px;
-  text-align: center;
 }
 </style>

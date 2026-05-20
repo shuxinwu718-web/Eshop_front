@@ -56,10 +56,8 @@ let timer: NodeJS.Timeout | null = null;
 // 获取通知列表（前5条）和未读数量
 const fetchNotices = async () => {
   try {
-    const res = await NoticeAPI.getMyNoticePage({ pageNum: 1, pageSize: 5 });
-    noticeList.value = res.records || [];
-    // 统计未读数量（后端最好直接返回 totalUnread，这里前端统计）
-    unreadCount.value = noticeList.value.filter((item) => item.isRead === 0).length;
+    noticeList.value = await NoticeAPI.getUnreadList(5) || [];
+    unreadCount.value = await NoticeAPI.getUnreadCount();
   } catch (error) {
     console.error("获取通知失败", error);
   }
