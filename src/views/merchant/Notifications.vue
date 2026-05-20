@@ -28,7 +28,12 @@
       >
         <div class="notice-card__header">
           <div class="notice-card__title">
-            <el-tag v-if="item.bizType" size="small" :type="bizTypeTag(item.bizType)" class="biz-tag">
+            <el-tag
+              v-if="item.bizType"
+              size="small"
+              :type="bizTypeTag(item.bizType)"
+              class="biz-tag"
+            >
               {{ bizTypeText(item.bizType) }}
             </el-tag>
             {{ item.title }}
@@ -49,15 +54,12 @@
             </span>
             <span>
               <el-icon><Timer /></el-icon>
-              {{ formatDate(item.publishTime || item.createTime) }}
+              {{ formatDate(item.publishTime) }}
             </span>
           </div>
           <div v-if="item.bizType && item.bizId" class="notice-card__actions" @click.stop>
             <el-button size="small" type="primary" link @click="goBizDetail(item)">
-              查看详情
-            </el-button>
-            <el-button v-if="item.isRead === 0" size="small" @click="markAsRead(item)">
-              标为已读
+              查看订单
             </el-button>
           </div>
         </div>
@@ -66,7 +68,6 @@
       <el-empty v-if="!loading && pageData.length === 0" description="暂无通知" />
     </div>
 
-    <!-- 分页 -->
     <div class="pagination-wrapper">
       <el-pagination
         v-if="total > 0"
@@ -86,7 +87,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem, NoticeQueryParams } from "@/types/api";
@@ -109,7 +109,6 @@ const bizTypeMap: Record<string, { text: string; tag: string }> = {
   order_paid: { text: "已付款", tag: "success" },
   order_cancelled: { text: "已取消", tag: "danger" },
   new_message: { text: "新留言", tag: "warning" },
-  reply_message: { text: "留言回复", tag: "success" },
 };
 const bizTypeText = (type: string) => bizTypeMap[type]?.text || "通知";
 const bizTypeTag = (type: string) => bizTypeMap[type]?.tag || "info";
@@ -141,16 +140,12 @@ function handleResetQuery() {
 
 async function handleRead(item: NoticeItem) {
   if (item.isRead === 0) {
-    await markAsRead(item);
-  }
-}
-
-async function markAsRead(item: NoticeItem) {
-  try {
-    await NoticeAPI.getDetail(item.id);
-    item.isRead = 1;
-  } catch {
-    // ignore
+    try {
+      await NoticeAPI.getDetail(item.id);
+      item.isRead = 1;
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -175,11 +170,11 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .merchant-notifications {
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
+  min-height: 100vh;
+  padding: 16px;
+  background-color: var(--el-bg-color-page);
 }
 
 .search-bar {
@@ -197,28 +192,32 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 200px;
 }
 
 .notice-card {
   padding: 16px;
   cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid #ebeef5;
+  background-color: var(--el-bg-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
 
-  &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  &:active {
+    transform: scale(0.99);
   }
 
   &--unread {
-    background: #f0f7ff;
-    border-left: 3px solid #409eff;
+    background-color: #f0f7ff;
+    border-left: 4px solid var(--el-color-primary);
   }
 
-  &--biz.notice-card--unread {
+  &--biz {
     border-left-color: #67c23a;
-    background: #f0fff5;
+
+    &.notice-card--unread {
+      background-color: #f0fff5;
+      border-left: 4px solid #67c23a;
+    }
   }
 
   &__header {
@@ -230,12 +229,14 @@ onMounted(() => {
 
   &__title {
     flex: 1;
-    font-size: 15px;
-    font-weight: 600;
-    color: #303133;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--el-text-color-primary);
+    word-break: keep-all;
 
     .biz-tag {
-      margin-right: 6px;
+      margin-right: 8px;
       vertical-align: middle;
     }
   }
@@ -246,25 +247,25 @@ onMounted(() => {
   }
 
   &__content {
+    margin-bottom: 10px;
     font-size: 14px;
-    color: #666;
     line-height: 1.5;
-    margin-bottom: 8px;
+    color: var(--el-text-color-secondary);
   }
 
   &__info {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
   }
 
   &__meta {
     display: flex;
     gap: 12px;
     font-size: 12px;
-    color: #999;
+    color: var(--el-text-color-secondary);
 
     span {
       display: inline-flex;
@@ -283,5 +284,26 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .merchant-notifications {
+    padding: 12px;
+  }
+
+  .notice-card {
+    padding: 12px;
+  }
+
+  .notice-card__title {
+    font-size: 15px;
+  }
+
+  .notice-card__meta {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
 }
 </style>
