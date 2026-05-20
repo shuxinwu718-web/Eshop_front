@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="p-4">
     <el-row :gutter="20">
       <!-- 左侧个人信息卡片 -->
@@ -8,7 +8,7 @@
           <el-card class="user-card">
             <div class="user-info">
               <div class="avatar-wrapper">
-                <el-avatar :src="userStore.userInfo.avatar" :size="100" />
+                <el-avatar :src="getFullImageUrl(userStore.userInfo.avatar)" :size="100" />
                 <el-button
                   type="info"
                   class="avatar-edit-btn"
@@ -313,7 +313,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import FileAPI from "@/api/file";
 import { useUserStoreHook } from "@/store";
 import { redirectToLogin } from "@/utils/auth";
-
+import { getFullImageUrl } from "@/utils/url";
 import {
   Camera,
   Edit,
@@ -332,13 +332,6 @@ const userStore = useUserStoreHook();
 
 const userProfile = ref<UserProfileDetail>({});
 
-const enum DialogType {
-  ACCOUNT = "account",
-  PASSWORD = "password",
-  MOBILE = "mobile",
-  EMAIL = "email",
-}
-
 const dialogState = reactive({
   visible: false,
   title: "",
@@ -354,7 +347,12 @@ const userProfileForm = reactive<UserProfileForm>({});
 const passwordChangeForm = reactive<PasswordChangeForm>({});
 const mobileUpdateForm = reactive<MobileUpdateForm>({});
 const emailUpdateForm = reactive<EmailUpdateForm>({});
-
+enum DialogType {
+  ACCOUNT = "account",
+  PASSWORD = "password",
+  MOBILE = "mobile",
+  EMAIL = "email",
+}
 const mobileCountdown = ref(0);
 const mobileTimer = ref();
 
@@ -607,19 +605,23 @@ const triggerFileUpload = () => {
 
 const handleFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
-  const file = target.files ? target.files[0] : null;
-  if (file) {
-    const data = await FileAPI.uploadFile(file);
-    await UserAPI.updateProfile({
-      avatar: data.url,
-    });
-    userStore.userInfo.avatar = data.url;
-  }
+  const file = target.files?.[0]; // 获取第一个文件
+  if (!file) return;
+  const data = await FileAPI.uploadFile(file);
+  await UserAPI.updateProfile({ avatar: data.url });
+  userStore.userInfo.avatar = data.url;
+  await loadUserProfile();
 };
 
 const loadUserProfile = async () => {
   const data = await UserAPI.getProfile();
   userProfile.value = data;
+  // 同步头像到 store（用于顶部导航栏和个人资料页显示）
+  if (data.avatar) {
+    userStore.userInfo.avatar = data.avatar;
+  }
+  // console.log('BACKEND_URL:', import.meta.env.VITE_APP_BACKEND_URL);
+  // console.log(userStore.userInfo.avatar);
 };
 
 onMounted(async () => {

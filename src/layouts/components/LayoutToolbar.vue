@@ -39,7 +39,7 @@
         <div class="user-profile">
           <div style="width: 28px; height: 28px; overflow: hidden; border-radius: 50%">
             <img
-              :src="userStore.userInfo.avatar"
+              :src="getFullImageUrl(userStore.userInfo.avatar)"
               class="user-profile__avatar"
               style="width: 100%; height: 100%; object-fit: cover; object-position: center"
             />
@@ -81,6 +81,7 @@ import LangSelect from "@/components/LangSelect/index.vue";
 import NoticeDropdown from "@/components/NoticeDropdown/index.vue";
 import TenantSwitcher from "@/components/TenantSwitcher/index.vue";
 import { useTenantStoreHook } from "@/store/modules/tenant";
+import { getFullImageUrl } from "@/utils/url";
 
 const { t } = useI18n();
 const appStore = useAppStore();

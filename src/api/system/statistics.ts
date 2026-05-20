@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { VisitTrendQueryParams, VisitTrendDetail, VisitStatsDetail } from "@/types/api";
 
-const STATISTICS_BASE_URL = "/api/v1/logs";
+const STATISTICS_BASE_URL = "/api/logs/statistics";
 
 const StatisticsAPI = {
   /** 获取访问趋势统计 */
@@ -15,7 +15,7 @@ const StatisticsAPI = {
   /** 获取访问概览统计 */
   getVisitOverview() {
     return request<any, VisitStatsDetail>({
-      url: `${STATISTICS_BASE_URL}/views`,
+      url: `${STATISTICS_BASE_URL}/views/over`,
       method: "get",
     });
   },

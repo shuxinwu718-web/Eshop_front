@@ -14,50 +14,14 @@
     </div>
 
     <div class="auth-view__wrapper">
-      <!-- 可选：左侧产品介绍区域，如不需要可整段删除，右侧登录表单会自动居中展示 -->
-      <section class="auth-feature">
-        <div class="auth-feature__badge">
-          <span class="auth-feature__dot" />
-          Enterprise Ready
-        </div>
-        <h1 class="auth-feature__title">企业级管理系统</h1>
-        <p class="auth-feature__subtitle">
-          提供安全、高效、可扩展的管理解决方案，助力企业数字化转型与业务增长。
-        </p>
-        <ul class="auth-feature__highlights">
-          <li>
-            <span>✓</span>
-            统一身份认证与权限管理
-          </li>
-          <li>
-            <span>✓</span>
-            支持多租户模式与租户隔离
-          </li>
-          <li>
-            <span>✓</span>
-            数据安全与操作审计
-          </li>
-          <li>
-            <span>✓</span>
-            灵活扩展与高可用架构
-          </li>
-        </ul>
-      </section>
-
       <section class="auth-panel">
         <div class="auth-panel__brand">
-          <div class="auth-panel__logo-wrap">
-            <el-image :src="logo" class="auth-panel__logo" />
-          </div>
           <div class="auth-panel__meta">
             <div class="auth-panel__title-row">
-              <span class="auth-panel__title">{{ appConfig.title }}</span>
+              <span class="auth-panel__title">电商平台</span>
             </div>
             <div v-if="appConfig.version || tenantEnabled" class="auth-panel__version-row">
-              <el-text size="small" type="info">VERSION</el-text>
-              <el-tag v-if="appConfig.version" size="small" effect="light" round>
-                {{ `v${appConfig.version}` }}
-              </el-tag>
+              <el-tag v-if="appConfig.version" size="small" effect="light" round></el-tag>
               <el-tag v-if="tenantEnabled" type="success" size="small" effect="light" round>
                 多租户
               </el-tag>
@@ -68,20 +32,12 @@
         <transition name="fade-slide" mode="out-in">
           <component :is="formComponents[component]" v-model="component" class="auth-panel__form" />
         </transition>
-
-        <footer class="auth-panel__footer">
-          <el-text size="small">
-            Copyright © 2021 - 2025 youlai.tech
-            <a href="http://beian.miit.gov.cn/" target="_blank">皖ICP备00064962号</a>
-          </el-text>
-        </footer>
       </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import logo from "@/assets/images/logo.png";
 import { appConfig } from "@/settings";
 import ThemeSwitch from "@/components/ThemeSwitch/index.vue";
 
@@ -100,6 +56,7 @@ const formComponents = {
 </script>
 
 <style lang="scss" scoped>
+// ========== 完整优化版样式 ==========
 .auth-view {
   position: relative;
   z-index: 1;
@@ -110,7 +67,7 @@ const formComponents = {
   padding: clamp(1rem, 3vw, 2rem);
   overflow-x: hidden;
   overflow-y: auto;
-  background-color: #f5f7ff;
+  background-color: #f0f4fe;
 
   &::before {
     position: fixed;
@@ -126,7 +83,7 @@ const formComponents = {
     z-index: -1;
     pointer-events: none;
     content: "";
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.2));
   }
 }
 
@@ -135,16 +92,14 @@ const formComponents = {
   gap: 0.75rem;
   align-self: flex-end;
   padding: 0.5rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(22, 93, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(64, 128, 255, 0.25);
   border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(22, 93, 255, 0.12);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 16px 40px rgba(22, 93, 255, 0.18);
+    box-shadow: 0 12px 28px rgba(64, 128, 255, 0.15);
     transform: translateY(-2px);
   }
 
@@ -154,11 +109,11 @@ const formComponents = {
     justify-content: center;
     padding: 0.5rem;
     cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
+    border-radius: 10px;
+    transition: background 0.2s;
 
     &:hover {
-      background-color: var(--el-fill-color);
+      background-color: rgba(64, 128, 255, 0.1);
     }
   }
 
@@ -167,348 +122,208 @@ const formComponents = {
     top: 12px;
     right: 16px;
     z-index: 20;
-    align-self: flex-end;
-    justify-content: center;
   }
-
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(24, 28, 43, 0.8);
-    border-color: rgba(64, 128, 255, 0.3);
-  }
-}
-
-/* 应用内暗黑主题下顶部设置面板的深色样式 */
-.dark .auth-view__toolbar {
-  background-color: rgba(24, 28, 43, 0.9);
-  border-color: rgba(64, 128, 255, 0.35);
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(90, 140, 255, 0.25) inset;
 }
 
 .auth-view__wrapper {
-  display: grid;
+  display: flex;
   flex: 1;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: clamp(1.5rem, 3vw, 3rem);
-  align-items: stretch;
-  padding: clamp(1.5rem, 2vw, 2.5rem);
-}
-
-.auth-feature {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(1.5rem, 3vw, 3rem);
-  color: var(--el-text-color-primary);
-  animation: featureFade 0.8s ease-out;
-}
-
-.dark .auth-feature {
-  color: rgba(240, 245, 255, 0.92);
-}
-
-@media (max-width: 768px) {
-  .auth-view__wrapper {
-    display: block;
-    padding: 1.25rem 0.75rem 1.75rem;
-  }
-
-  .auth-feature {
-    display: none;
-  }
-
-  .auth-panel {
-    width: 100%;
-    margin-inline: 0;
-    box-shadow:
-      0 12px 32px rgba(22, 93, 255, 0.18),
-      0 2px 8px rgba(22, 93, 255, 0.12);
-  }
-}
-
-.auth-feature__badge {
-  display: inline-flex;
-  gap: 0.5rem;
   align-items: center;
-  width: fit-content;
-  padding: 0.3rem 0.9rem;
-  font-size: 0.875rem;
-  color: rgba(22, 93, 255, 0.95);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: rgba(22, 93, 255, 0.1);
-  border-radius: 999px;
-
-  @media (prefers-color-scheme: dark) {
-    color: rgba(160, 190, 255, 0.95);
-    background: rgba(64, 128, 255, 0.12);
-  }
+  justify-content: center;
+  padding: clamp(1rem, 3vw, 2rem);
 }
 
-.auth-feature__dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  background: #165dff;
-  border-radius: 50%;
-  box-shadow: 0 0 12px rgba(22, 93, 255, 0.7);
-
-  @media (prefers-color-scheme: dark) {
-    background: #7aa2ff;
-  }
-}
-
-.auth-feature__title {
-  margin: 1.5rem 0 0.5rem;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.auth-feature__subtitle {
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--el-text-color-regular);
-
-  @media (prefers-color-scheme: dark) {
-    color: rgba(220, 230, 255, 0.75);
-  }
-}
-
-.auth-feature__highlights {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-
-  li {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    padding: 0.75rem 1rem;
-    font-weight: 500;
-    color: var(--el-text-color-primary);
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(64, 128, 255, 0.08);
-    border-radius: 12px;
-    backdrop-filter: blur(6px);
-
-    span {
-      font-size: 0.75rem;
-      line-height: 1.6;
-      color: rgba(22, 93, 255, 0.8);
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    li {
-      color: rgba(230, 236, 255, 0.85);
-      background: rgba(18, 22, 36, 0.7);
-      border-color: rgba(98, 149, 255, 0.18);
-
-      span {
-        color: rgba(122, 162, 255, 0.9);
-      }
-    }
-  }
-}
-
+// 主要登录卡片
 .auth-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-self: center;
-  justify-content: flex-start;
-  justify-self: end;
-  width: min(420px, 100%);
-  min-height: 560px;
-  padding: clamp(1.5rem, 3vw, 2rem);
-  margin-inline: auto;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(22, 93, 255, 0.1);
-  border-radius: 24px;
+  width: 100%;
+  max-width: 460px;
+  padding: 2rem 1.8rem;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 40px;
   box-shadow:
-    0 16px 48px rgba(22, 93, 255, 0.12),
-    0 4px 16px rgba(22, 93, 255, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    0 30px 50px -20px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
   backdrop-filter: blur(20px);
-  animation: panelLift 0.7s ease;
+  transition: transform 0.2s;
+  animation: panelLift 0.5s ease;
 
-  @media (prefers-color-scheme: dark) {
-    background: rgba(18, 20, 32, 0.88);
-    border-color: rgba(64, 128, 255, 0.25);
-    box-shadow:
-      0 20px 60px rgba(0, 0, 0, 0.6),
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(90, 140, 255, 0.12) inset;
+  &:hover {
+    transform: translateY(-3px);
   }
 }
 
-/* 应用内暗黑主题（例如 html/body 上挂 .dark 类）下的登录表单样式 */
-.dark .auth-panel {
-  background: rgba(26, 32, 48, 0.9);
-  border-color: rgba(86, 140, 255, 0.28);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.58),
-    0 4px 16px rgba(0, 0, 0, 0.36),
-    0 0 0 1px rgba(110, 150, 255, 0.16) inset;
-}
-
+// 品牌区域（全部居中）
 .auth-panel__brand {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   align-items: center;
-  justify-content: space-between;
-  padding-bottom: 0.875rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(22, 93, 255, 0.06);
-
-  @media (prefers-color-scheme: dark) {
-    border-color: rgba(64, 128, 255, 0.12);
-  }
+  justify-content: center;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(64, 128, 255, 0.2);
 }
 
 .auth-panel__logo-wrap {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  background: radial-gradient(circle at 30% 20%, #ffffff, #e6efff);
-  border-radius: 18px;
+  width: 64px;
+  height: 64px;
+  background: white;
+  border-radius: 24px;
   box-shadow:
-    0 8px 20px rgba(22, 93, 255, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-
-  @media (prefers-color-scheme: dark) {
-    background: radial-gradient(circle at 30% 20%, #1f2438, #141827);
-    box-shadow:
-      0 8px 20px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(90, 140, 255, 0.3) inset;
-  }
+    0 6px 14px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(64, 128, 255, 0.2) inset;
 }
 
 .auth-panel__logo {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
 }
 
 .auth-panel__meta {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+  text-align: center;
 }
 
 .auth-panel__title-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: baseline;
+  justify-content: center;
 }
 
 .auth-panel__title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 1.2rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: var(--el-text-color-primary);
-  white-space: nowrap;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.3px;
 }
 
 .auth-panel__version-row {
-  display: inline-flex;
   gap: 0.5rem;
-  align-items: center;
-  font-size: 0.78rem;
+  justify-content: center;
+  margin-top: 0.25rem;
 }
 
+// 表单区域样式重写（更明亮）
 .auth-panel__form {
-  width: 100%;
-  max-width: 100%;
-  min-height: 360px;
-  margin-inline: auto;
-
   :deep(.el-form-item) {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
 
   :deep(.el-input__wrapper) {
-    box-shadow: 0 0 0 1px var(--el-border-color) inset;
-    transition: all 0.2s ease;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px #e2e8f0 inset;
+    transition: all 0.2s;
 
     &:hover {
-      box-shadow: 0 0 0 1px var(--el-border-color-hover) inset;
+      box-shadow: 0 0 0 1px #94a3b8 inset;
     }
 
     &.is-focus {
-      box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+      box-shadow:
+        0 0 0 2px rgba(64, 158, 255, 0.3),
+        0 0 0 1px #409eff inset;
     }
   }
 
-  :deep(.el-card) {
-    background: transparent;
-    box-shadow: none;
+  :deep(.el-input__prefix) {
+    margin-right: 8px;
+    color: #94a3b8;
   }
-}
 
-.auth-panel__footer {
-  padding-top: 0.875rem;
-  margin-top: 0.125rem;
-  font-size: 0.875rem;
-  text-align: center;
-  border-top: 1px solid rgba(22, 93, 255, 0.06);
+  :deep(.el-checkbox__label) {
+    font-weight: 500;
+    color: #334155;
+  }
 
-  a {
-    margin-left: 0.25rem;
-    color: rgba(22, 93, 255, 0.85);
-    text-decoration: none;
-    transition: color 0.2s ease;
+  :deep(.el-button--primary) {
+    height: 44px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(105deg, #409eff, #2c8df0);
+    border: none;
+    border-radius: 40px;
+    box-shadow: 0 8px 18px rgba(64, 158, 255, 0.35);
+    transition: all 0.25s;
 
     &:hover {
-      color: rgba(22, 93, 255, 1);
+      background: linear-gradient(105deg, #5cb0ff, #409eff);
+      box-shadow: 0 12px 24px rgba(64, 158, 255, 0.45);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(1px);
     }
   }
+}
 
-  @media (prefers-color-scheme: dark) {
-    border-color: rgba(64, 128, 255, 0.12);
+// 底部链接
+.auth-footer {
+  margin-top: 1rem;
+  text-align: center;
+}
 
-    a {
-      color: rgba(140, 170, 255, 0.88);
+// 暗色模式适配
+.dark .auth-panel {
+  background: rgba(22, 28, 44, 0.94);
+  box-shadow:
+    0 30px 50px -20px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(90, 140, 255, 0.2) inset;
+  backdrop-filter: blur(20px);
+
+  .auth-panel__title {
+    color: #eef2ff;
+  }
+
+  .auth-panel__brand {
+    border-bottom-color: rgba(90, 140, 255, 0.25);
+  }
+
+  .auth-panel__logo-wrap {
+    background: #1e243f;
+    box-shadow:
+      0 6px 14px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(90, 140, 255, 0.3) inset;
+  }
+
+  .auth-panel__form {
+    :deep(.el-input__wrapper) {
+      background-color: #1a1f33;
+      box-shadow: 0 0 0 1px #2d3452 inset;
 
       &:hover {
-        color: rgba(160, 190, 255, 1);
+        box-shadow: 0 0 0 1px #4c6ef5 inset;
       }
+
+      &.is-focus {
+        box-shadow:
+          0 0 0 2px rgba(64, 158, 255, 0.4),
+          0 0 0 1px #409eff inset;
+      }
+    }
+
+    :deep(.el-checkbox__label) {
+      color: #cbd5e1;
     }
   }
 }
 
-@keyframes featureFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+// 动画
 @keyframes panelLift {
   from {
     opacity: 0;
     transform: translateY(30px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+// 过渡动画（如果使用 component 切换）
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -516,17 +331,11 @@ const formComponents = {
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateX(-40px) scale(0.95);
+  transform: translateX(-30px) scale(0.96);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateX(40px) scale(0.95);
-}
-
-.fade-slide-enter-to,
-.fade-slide-leave-from {
-  opacity: 1;
-  transform: translateX(0) scale(1);
+  transform: translateX(30px) scale(0.96);
 }
 </style>

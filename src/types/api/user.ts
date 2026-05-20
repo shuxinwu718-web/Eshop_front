@@ -14,12 +14,24 @@ export interface UserInfo {
   nickname?: string;
   /** 头像URL */
   avatar?: string;
-  /** 租户切换权限（true 可切换租户） */
-  canSwitchTenant?: boolean;
   /** 角色集合 */
   roles: string[];
   /** 权限集合 */
   perms: string[];
+
+  gender?: number;
+  /** 手机号 */
+  mobile?: string;
+  /** 邮箱 */
+  email?: string;
+  /** 部门名称 */
+  deptName?: string;
+  /** 角色名称（展示用） */
+  roleNames?: string;
+  /** 创建时间 */
+  createTime?: string | Date;
+  /** 租户切换权限（原有） */
+  canSwitchTenant?: boolean;
 }
 
 /** 用户分页查询参数 */
@@ -152,4 +164,27 @@ export interface EmailUpdateForm {
   code?: string;
   /** 当前密码 */
   password?: string;
+}
+
+// ===== 用户事件日志（E-Shop 暂未使用） =====
+
+/** 用户事件查询参数 */
+export interface UserEventQueryParams extends BaseQueryParams {
+  keywords?: string;
+}
+
+/** 用户事件记录 */
+export interface UserEventItem {
+  id: string;
+  eventType: string;
+  eventData: string;
+  createTime: string;
+}
+
+/** 登录设备信息 */
+export interface LoginDeviceItem {
+  id: string;
+  deviceType: string;
+  deviceName: string;
+  lastLoginTime: string;
 }

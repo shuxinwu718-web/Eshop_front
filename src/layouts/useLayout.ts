@@ -3,9 +3,9 @@
  *
  * 整合布局状态、设备检测、菜单数据
  */
-import { useRoute } from "vue-router";
+import { useRoute, type RouteRecordRaw } from "vue-router";
 import { useWindowSize } from "@vueuse/core";
-import { useAppStore, usePermissionStore, useSettingsStore } from "@/store";
+import { useAppStore, usePermissionStore, useSettingsStore, useUserStore } from "@/store";
 import { DeviceEnum } from "@/enums/settings";
 import { defaults } from "@/settings";
 
@@ -58,8 +58,50 @@ export function useLayout() {
   // 菜单数据
   // ============================================
 
-  /** 路由列表（左侧/顶部菜单） */
-  const routes = computed(() => permissionStore.routes);
+  /** 路由列表（左侧/顶部菜单）- 按角色过滤 */
+  const routes = computed(() => {
+    const userStore = useUserStore();
+    const currentRole = userStore.userInfo.roles?.[0] || "USER";
+
+    function hasAccess(route: RouteRecordRaw): boolean {
+      if (route.meta?.roles && Array.isArray(route.meta.roles)) {
+        return (route.meta.roles as string[]).includes(currentRole);
+      }
+      return true;
+    }
+
+    function filterRoutes(routesToFilter: RouteRecordRaw[]): RouteRecordRaw[] {
+      return routesToFilter.reduce((acc: RouteRecordRaw[], route) => {
+        if (!hasAccess(route)) return acc;
+
+        let filteredChildren: RouteRecordRaw[] | undefined;
+        if (route.children) {
+          filteredChildren = filterRoutes(route.children);
+          // 如果父路由自己没有 roles 限制但所有子路由都被过滤掉，则隐藏
+          if (!route.meta?.roles && filteredChildren.length === 0) {
+            return acc;
+          }
+        }
+
+        // 没有标题/图标的纯布局路由 → 扁平化为其子路由（路径转为绝对路径）
+        // 排除隐藏路由（如 /redirect, /login），这些保持原样由模板的 hidden 过滤
+        const isLayoutWrapper =
+          !route.meta?.title && !route.meta?.icon && !route.meta?.hidden && filteredChildren;
+        if (isLayoutWrapper) {
+          const withAbsPaths = filteredChildren!.map((child) => ({
+            ...child,
+            path: child.path.startsWith("/") ? child.path : `/${child.path}`,
+          }));
+          return acc.concat(withAbsPaths);
+        }
+
+        acc.push({ ...route, children: filteredChildren } as RouteRecordRaw);
+        return acc;
+      }, []);
+    }
+
+    return filterRoutes(permissionStore.routes);
+  });
 
   /** 混合布局侧边菜单 */
   const sideMenuRoutes = computed(() => permissionStore.mixLayoutSideMenus);

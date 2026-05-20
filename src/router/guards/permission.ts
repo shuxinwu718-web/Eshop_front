@@ -1,16 +1,13 @@
-import type { RouteRecordRaw } from "vue-router";
 import NProgress from "@/plugins/nprogress";
 import router from "@/router";
-import { usePermissionStore, useUserStore } from "@/store";
-import { useTenantStoreHook } from "@/store/modules/tenant";
-import { isTenantEnabled } from "@/utils/tenant";
-import { addRecentMenu } from "@/composables/useRecentMenus";
-import { setupSse } from "@/composables";
+import { useUserStore } from "@/store";
+
+// 模块级变量：保证 profile 只请求一次
+let _profileLoaded = false;
+let _profilePromise: Promise<any> | null = null;
 
 /**
  * 路由权限守卫
- *
- * 处理登录验证、动态路由生成、404检测等
  */
 export function setupPermissionGuard() {
   const whiteList = ["/login"];
@@ -19,13 +16,20 @@ export function setupPermissionGuard() {
     NProgress.start();
 
     try {
-      const isLoggedIn = useUserStore().isLoggedIn();
+      const userStore = useUserStore();
+      const isLoggedIn = userStore.isLoggedIn();
+      console.log("是否已登录:", isLoggedIn);
 
       // 未登录处理
       if (!isLoggedIn) {
+        // 重置标志，以便下次登录后重新请求
+        _profileLoaded = false;
+        _profilePromise = null;
         if (whiteList.includes(to.path)) {
+          console.log("在白名单中，放行");
           next();
         } else {
+          console.log("不在白名单，重定向到登录页");
           next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
           NProgress.done();
         }
@@ -34,48 +38,84 @@ export function setupPermissionGuard() {
 
       // 已登录访问登录页，重定向到首页
       if (to.path === "/login") {
+        console.log("已登录访问登录页，重定向到根路径");
         next({ path: "/" });
         return;
       }
 
-      const permissionStore = usePermissionStore();
-      const userStore = useUserStore();
-
-      // 动态路由生成
-      if (!permissionStore.isRouteGenerated) {
-        if (!userStore.userInfo?.roles?.length) {
-          await userStore.getUserInfo();
-          // 用户信息加载完成后初始化 SSE
-          setupSse();
+      // ========== 核心：确保用户信息只请求一次 ==========
+      if (!_profileLoaded) {
+        if (!_profilePromise) {
+          console.log("首次获取用户信息，发起请求");
+          _profilePromise = userStore.getUserInfo();
+        } else {
+          console.log("用户信息正在请求中，等待...");
         }
+        try {
+          await _profilePromise;
+          _profileLoaded = true;
+          console.log("用户信息获取完成");
+        } catch (err) {
+          console.error("获取用户信息失败", err);
+          _profilePromise = null;
+          _profileLoaded = false;
+          await userStore.resetAllState();
+          next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+          NProgress.done();
+          return;
+        } finally {
+          _profilePromise = null;
+        }
+      } else {
+        console.log("用户信息已加载过，直接使用");
+      }
 
-        // 加载用户租户列表（VITE_APP_TENANT_ENABLED=true 时生效）
-        await initTenantContext();
+      // 获取当前用户角色（从 store 中取，此时一定存在）
+      const currentRole = userStore.userInfo.roles?.[0] || "USER";
+      console.log("当前用户角色:", currentRole);
 
-        const dynamicRoutes = await permissionStore.generateRoutes();
-        dynamicRoutes.forEach((route: RouteRecordRaw) => {
-          router.addRoute(route);
-        });
-
-        next({ ...to, replace: true });
+      // 根路径动态重定向
+      if (to.path === "/") {
+        console.log("访问根路径，根据角色重定向");
+        if (currentRole === "ADMIN") {
+          console.log("角色为 ADMIN，跳转到 /dashboard");
+          next("/dashboard");
+        } else if (currentRole === "MERCHANT") {
+          console.log("角色为 MERCHANT，跳转到 /merchant/products");
+          next("/merchant/products");
+        } else {
+          console.log("角色为 USER，跳转到 /home");
+          next("/home");
+        }
         return;
+      }
+
+      // 权限检查（根据路由 meta.roles）
+      if (to.matched.some((record) => record.meta && record.meta.roles)) {
+        const requiredRoles = to.meta.roles as string[];
+        console.log("目标路由需要的角色:", requiredRoles);
+        if (!requiredRoles.includes(currentRole)) {
+          console.warn(`权限不足: 需要 ${requiredRoles}，当前角色 ${currentRole}，跳转 /401`);
+          next("/401");
+          return;
+        } else {
+          console.log("角色匹配，通过权限检查");
+        }
+      } else {
+        console.log("路由无角色限制，通过");
       }
 
       // 路由 404 检查
       if (to.matched.length === 0) {
+        console.warn("未匹配到任何路由，跳转 /404");
         next("/404");
         return;
       }
 
-      // 动态标题
-      const title = (to.params.title as string) || (to.query.title as string);
-      if (title) {
-        to.meta.title = title;
-      }
-
+      console.log("全部检查通过，放行");
       next();
     } catch (error) {
-      console.error("Route guard error:", error);
+      console.error("路由守卫异常:", error);
       await useUserStore().resetAllState();
       next("/login");
       NProgress.done();
@@ -83,28 +123,7 @@ export function setupPermissionGuard() {
   });
 
   router.afterEach((to) => {
+    console.log("路由跳转完成:", to.path);
     NProgress.done();
-
-    // 记录最近访问
-    if (to.meta?.title && to.path) {
-      const icon = typeof to.meta.icon === "string" ? to.meta.icon : undefined;
-      addRecentMenu(to.path, to.meta.title as string, icon);
-    }
   });
-}
-
-// ============================================
-// 多租户支持（可选）
-// ============================================
-
-/** 初始化多租户上下文，未启用或失败时静默跳过 */
-async function initTenantContext(): Promise<void> {
-  // 多租户关闭时不初始化租户上下文
-  if (!isTenantEnabled()) return;
-
-  try {
-    await useTenantStoreHook().loadTenant();
-  } catch {
-    // 静默失败，不影响主流程
-  }
 }

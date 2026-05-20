@@ -9,7 +9,6 @@
 @forward "element-plus/theme-chalk/src/common/var.scss" with (
   $colors: (
     "primary": (
-      // 默认主题色 - 修改此值时需同步修改 src/settings.ts 中的 themeColor
       "base": #4080ff,
     ),
     "success": (
@@ -27,20 +26,31 @@
   ),
   $bg-color: (
     "page": #f5f8fd,
+  ),
+  $border-radius: (
+    "base": 6px,
+    "small": 4px,
+    "round": 20px,
+    "circle": 100%,
   )
 );
 
 // ============================================
-// 2. 样式覆盖
+// 2. 全局样式覆盖
 // ============================================
 
 $border: 1px solid var(--el-border-color-light);
 
 /* el-dialog */
 .el-dialog {
+  overflow: hidden;
+  border-radius: 12px !important;
+  box-shadow: var(--dialog-shadow) !important;
+
   .el-dialog__header {
-    padding: 15px 20px;
+    padding: 16px 20px;
     margin: 0;
+    background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
     border-bottom: $border;
   }
 
@@ -49,17 +59,22 @@ $border: 1px solid var(--el-border-color-light);
   }
 
   .el-dialog__footer {
-    padding: 15px;
+    padding: 12px 20px;
+    background: var(--el-fill-color-lighter);
     border-top: $border;
   }
 }
 
 /* el-drawer */
 .el-drawer {
+  overflow: hidden;
+  border-radius: 12px 0 0 12px !important;
+
   .el-drawer__header {
-    padding: 15px 20px;
+    padding: 16px 20px;
     margin: 0;
     color: inherit;
+    background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
     border-bottom: $border;
   }
 
@@ -68,7 +83,7 @@ $border: 1px solid var(--el-border-color-light);
   }
 
   .el-drawer__footer {
-    padding: 15px;
+    padding: 12px 20px;
     border-top: $border;
   }
 }
@@ -78,4 +93,49 @@ $border: 1px solid var(--el-border-color-light);
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* el-tag 圆角增强 */
+.el-tag {
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+/* el-alert */
+.el-alert {
+  border-radius: 8px;
+}
+
+/* el-message-box */
+.el-message-box {
+  border-radius: 12px;
+}
+
+/* el-dropdown-menu */
+.el-dropdown-menu {
+  padding: 4px;
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow-hover);
+
+  .el-dropdown-menu__item {
+    padding: 8px 16px;
+    margin: 2px 0;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+}
+
+/* el-notification */
+.el-notification {
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* el-message */
+.el-message {
+  border: 1px solid var(--card-border-color) !important;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow-hover) !important;
 }

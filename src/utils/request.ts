@@ -1,13 +1,7 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from "axios";
 import qs from "qs";
-import { ApiCodeEnum } from "@/enums/api";
-import { useUserStoreHook } from "@/store/modules/user";
-import { usePermissionStoreHook } from "@/store/modules/permission";
 import { AuthStorage, redirectToLogin } from "@/utils/auth";
-
-// 记录已重试的请求，防止无限循环
-const retriedConfigs = new WeakSet<InternalAxiosRequestConfig>();
-
+import { ElLoading } from "element-plus";
 // HTTP 请求实例
 const http = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -16,14 +10,30 @@ const http = axios.create({
   paramsSerializer: (params) => qs.stringify(params, { arrayFormat: "repeat" }),
 });
 
+// 加载状态
+let loadingInstance: any = null;
+let requestCount = 0;
+
+const showLoading = () => {
+  if (requestCount === 0) {
+    loadingInstance = ElLoading.service({ fullscreen: true, text: "加载中..." });
+  }
+  requestCount++;
+};
+
+const hideLoading = () => {
+  requestCount--;
+  if (requestCount === 0 && loadingInstance) {
+    loadingInstance.close();
+  }
+};
+
 // 请求拦截器
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = AuthStorage.getAccessToken();
-
-    if (config.headers.Authorization === "no-auth") {
-      delete config.headers.Authorization;
-    } else if (token) {
+    showLoading();
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -43,65 +53,33 @@ http.interceptors.response.use(
     }
 
     const { code, data, msg } = response.data;
-
-    if (code === ApiCodeEnum.SUCCESS) {
+    hideLoading();
+    // E-Shop 后端成功码为 200
+    if (code === 200) {
       return data;
     }
 
+    // 业务异常
     ElMessage.error(msg || "系统出错");
     return Promise.reject(new Error(msg || "系统出错"));
   },
 
   async (error) => {
-    const { config, response } = error;
+    const { response } = error;
 
     if (!response) {
       ElMessage.error("网络连接失败");
       return Promise.reject(error);
     }
 
-    const { code, msg } = response.data as ApiResponse;
+    const status = response.status;
+    const { msg } = response.data as ApiResponse;
 
-    // Token 过期：尝试刷新 token 后自动重试一次
-    if (code === ApiCodeEnum.ACCESS_TOKEN_INVALID) {
-      // 已重试过，直接跳登录
-      if (retriedConfigs.has(config)) {
-        await redirectToLogin("登录已过期，请重新登录");
-        return Promise.reject(new Error("Token Invalid"));
-      }
-
-      retriedConfigs.add(config);
-
-      try {
-        const userStore = useUserStoreHook();
-        await userStore.refreshTokenOnce();
-
-        const token = AuthStorage.getAccessToken();
-        if (token) {
-          config.headers.set("Authorization", `Bearer ${token}`);
-        }
-
-        return http(config);
-      } catch {
-        await redirectToLogin("登录已过期，请重新登录");
-        return Promise.reject(new Error("Token refresh failed"));
-      }
-    }
-
-    // Refresh token 失效：无法续期，跳转登录
-    if (code === ApiCodeEnum.REFRESH_TOKEN_INVALID) {
+    if (status === 401) {
       await redirectToLogin("登录已过期，请重新登录");
-      return Promise.reject(new Error(msg || "Token Invalid"));
+      return Promise.reject(new Error("Token Invalid"));
     }
-
-    // 权限不足：刷新权限快照后提示
-    if (code === ApiCodeEnum.PERMISSION_DENIED) {
-      const permissionStore = usePermissionStoreHook();
-      await permissionStore.reloadPermissionSnapshotOnce();
-      ElMessage.error(msg || "权限不足");
-      return Promise.reject(new Error(msg || "权限不足"));
-    }
-
+    hideLoading();
     ElMessage.error(msg || "请求失败");
     return Promise.reject(new Error(msg || "请求失败"));
   }

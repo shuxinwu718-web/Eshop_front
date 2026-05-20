@@ -1,18 +1,13 @@
 <template>
   <div class="logo">
-    <transition enter-active-class="animate__animated animate__fadeInLeft">
-      <router-link :key="+collapse" class="wh-full flex-center" to="/">
-        <img :src="logo" class="w20px h20px" />
-        <span v-if="!collapse" class="title">
-          {{ appConfig.title }}
-        </span>
-      </router-link>
-    </transition>
+    <router-link :key="+collapse" class="logo-link" to="/">
+      <img :src="logo" class="logo-img" />
+      <span v-if="!collapse" class="logo-title">悦选商场</span>
+    </router-link>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { appConfig } from "@/settings";
 import logo from "@/assets/images/logo.png";
 
 defineProps({
@@ -29,46 +24,68 @@ defineProps({
   height: $navbar-height;
   background-color: $sidebar-logo-background;
 
-  .title {
-    flex-shrink: 0;
-    margin-left: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    color: $sidebar-logo-text-color;
+  .logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    padding-left: 35px; // 左侧留白，视觉舒适
+    text-decoration: none;
   }
+
+  .logo-img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px; // 图片与文字间距
+    object-fit: contain;
+  }
+
+  .logo-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    color: $sidebar-logo-text-color;
+    white-space: nowrap;
+  }
+}
+
+// 折叠时只显示图标，文字隐藏，但图标仍需居中
+.hideSidebar .logo .logo-link {
+  justify-content: center;
+  padding-left: 0;
 }
 </style>
 
 <style lang="scss">
-// 顶部布局和混合布局的特殊处理
+// 顶部/混合布局适配
 .layout-top,
 .layout-mix {
   .logo {
     background-color: transparent !important;
 
-    .title {
+    .logo-title {
       color: var(--menu-text);
     }
   }
 }
 
-// 宽屏时：openSidebar 状态下显示完整Logo+文字
+// 宽屏展开时显示完整 Logo+文字
 .openSidebar {
-  &.layout-top .layout__header-left .logo,
-  &.layout-mix .layout__header-logo .logo {
-    width: $sidebar-width; // 210px，显示logo+文字
+  &.layout-top .layout__header-left .logo .logo-link,
+  &.layout-mix .layout__header-logo .logo .logo-link {
+    justify-content: flex-start;
+    padding-left: 16px;
   }
 }
 
-// 窄屏时：hideSidebar 状态下只显示Logo图标
+// 窄屏折叠时只显示图标，且居中
 .hideSidebar {
-  &.layout-top .layout__header-left .logo,
-  &.layout-mix .layout__header-logo .logo {
-    width: $sidebar-width-collapsed; // 54px，只显示logo
+  .logo .logo-link {
+    justify-content: center;
+    padding-left: 0;
   }
 
-  // 隐藏文字，只显示图标
-  .logo .title {
+  .logo-title {
     display: none;
   }
 }

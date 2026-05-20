@@ -15,7 +15,84 @@
 // ============================================
 
 #nprogress .bar {
-  background-color: var(--el-color-primary);
+  height: 3px;
+  background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-primary-light-3));
+}
+
+// ============================================
+// 侧边栏菜单增强
+// ============================================
+
+.layout__sidebar {
+  --el-menu-bg-color: var(--menu-background);
+
+  .el-menu {
+    border-right: none !important;
+
+    .el-menu-item,
+    .el-sub-menu__title {
+      margin-right: 8px;
+      border-radius: 0 8px 8px 0;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: var(--menu-hover) !important;
+      }
+
+      &.is-active {
+        position: relative;
+        font-weight: 600;
+        color: var(--el-color-primary) !important;
+        background-color: var(--el-color-primary-light-9) !important;
+
+        &::before {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          width: 3px;
+          height: 20px;
+          content: "";
+          background: var(--el-color-primary);
+          border-radius: 0 3px 3px 0;
+          transform: translateY(-50%);
+        }
+      }
+    }
+
+    .el-sub-menu.is-active > .el-sub-menu__title {
+      font-weight: 600;
+      color: var(--el-color-primary) !important;
+    }
+  }
+
+  // 折叠状态侧边栏
+  &.layout__sidebar--collapsed {
+    .el-menu-item.is-active::before {
+      display: none;
+    }
+
+    .el-menu-item.is-active {
+      background-color: var(--el-color-primary-light-9) !important;
+    }
+  }
+}
+
+// 深蓝色侧边栏背景
+html.sidebar-color-blue .layout__sidebar {
+  --el-menu-bg-color: #1a2332;
+  background: linear-gradient(180deg, #1a2332 0%, #2d3748 100%);
+}
+
+// 深色侧边栏的 hover 和 active 适配
+html.sidebar-color-blue .layout__sidebar,
+html.dark .layout__sidebar {
+  .el-menu-item.is-active {
+    background-color: rgba(64, 128, 255, 0.15) !important;
+
+    &::before {
+      background: var(--el-color-primary);
+    }
+  }
 }
 
 // ============================================
@@ -27,12 +104,19 @@
   --el-menu-text-color: var(--menu-text);
   --el-menu-active-color: var(--menu-active-text);
   --el-menu-hover-bg-color: var(--menu-hover);
+  padding: 4px;
+  overflow: hidden;
 
-  background-color: var(--menu-background);
+  background: var(--menu-background);
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow-hover);
 
   .el-menu-item,
   .el-sub-menu__title {
+    margin: 2px 0;
     color: var(--menu-text) !important;
+    border-radius: 6px;
   }
 
   .el-menu-item:hover,
@@ -52,12 +136,7 @@
 // ============================================
 
 .layout-mix .layout__sidebar--left .el-menu {
-  .el-menu-item {
-    &:hover {
-      background-color: var(--el-fill-color-light) !important;
-    }
-  }
-
+  .el-menu-item,
   .el-sub-menu__title {
     &:hover {
       background-color: var(--el-fill-color-light) !important;
@@ -65,7 +144,6 @@
   }
 }
 
-// 深色或深蓝侧边栏的 hover 样式
 html.dark .layout-mix .layout__sidebar--left .el-menu,
 html.sidebar-color-blue .layout-mix .layout__sidebar--left .el-menu {
   .el-menu-item,
@@ -119,11 +197,12 @@ html.sidebar-color-blue .layout-mix .layout__sidebar--left .el-menu {
 // ============================================
 
 .filter-section {
-  padding: 8px 12px 0;
-  margin-bottom: 8px;
-  background-color: var(--el-bg-color-overlay);
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
+  padding: 16px 16px 0;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
 
   .search-buttons {
     margin-right: 0;
@@ -155,6 +234,11 @@ html.sidebar-color-blue .layout-mix .layout__sidebar--left .el-menu {
 
   &__content {
     margin: 8px 0;
+
+    .el-table {
+      border: 1px solid var(--card-border-color);
+      border-radius: 8px;
+    }
   }
 
   .el-pagination {

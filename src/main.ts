@@ -1,8 +1,5 @@
 /**
  * 应用启动入口
- *
- * @description
- * Vue3 应用初始化，包括样式、插件、配置的加载
  */
 
 import { createApp } from "vue";
@@ -24,6 +21,7 @@ import { setupStore } from "@/store";
 
 // ===== 全局组件 =====
 import * as ElementPlusIcons from "@element-plus/icons-vue";
+import "@wangeditor-next/editor/dist/css/style.css";
 
 // ===== 第三方插件 =====
 import VXETable from "vxe-table";
@@ -42,15 +40,20 @@ setupRouter(app);
 setupStore(app);
 setupI18n(app);
 
-// 2️⃣ 全局组件（Element Plus 图标）
+// 2️⃣ 全局组件（Element Plus 图标 + 富文本编辑器）
 Object.entries(ElementPlusIcons).forEach(([name, comp]) => app.component(name, comp));
+
+// 注意：如果项目中没有 DictTag / DictSelect 的实际实现，请勿全局注册
+// 通知页面已改用硬编码方式，因此不需要注册它们
+// app.component('DictTag', DictTag);
+// app.component('DictSelect', DictSelect);
 
 // 3️⃣ 第三方插件
 configureVxeTable();
 app.use(VXETable);
 app.use(InstallCodeMirror);
 
-// 4️⃣ 路由守卫
+// 4️⃣ 路由守卫（确保该文件存在，若不存在请注释）
 setupPermissionGuard();
 
 // 5️⃣ 挂载应用

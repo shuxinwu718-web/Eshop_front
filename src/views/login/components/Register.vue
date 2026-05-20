@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <h3 text-center m-0 mb-20px>{{ t("login.reg") }}</h3>
     <el-form ref="formRef" :model="model" :rules="rules" size="large">
@@ -29,6 +29,7 @@
         </el-form-item>
       </el-tooltip>
 
+      <!-- 确认密码 -->
       <el-tooltip :visible="isCapsLock" :content="t('login.capsLock')" placement="right">
         <el-form-item prop="confirmPassword">
           <el-input
@@ -46,43 +47,22 @@
         </el-form-item>
       </el-tooltip>
 
-      <!-- 验证码 -->
-      <el-form-item prop="captchaCode">
-        <div flex items-center gap-10px>
-          <el-input
-            v-model.trim="model.captchaCode"
-            :placeholder="t('login.captchaCode')"
-            clearable
-            class="flex-1"
-            @keyup.enter="submit"
-          >
-            <template #prefix>
-              <div class="i-svg:captcha" />
-            </template>
-          </el-input>
-          <div cursor-pointer h-44px w-140px flex-center @click="getCaptcha">
-            <el-icon v-if="codeLoading" class="is-loading" size="20"><Loading /></el-icon>
-            <img
-              v-else-if="captchaBase64"
-              border-rd-4px
-              w-full
-              h-full
-              block
-              object-cover
-              shadow="[0_0_0_1px_var(--el-border-color)_inset]"
-              :src="captchaBase64"
-              alt="code"
-            />
-            <el-text v-else type="info" size="small">点击获取验证码</el-text>
-          </div>
-        </div>
+      <!-- 手机号 -->
+      <el-form-item prop="phone">
+        <el-input v-model.trim="model.phone" placeholder="手机号（可选）">
+          <template #prefix>
+            <el-icon><Iphone /></el-icon>
+          </template>
+        </el-input>
       </el-form-item>
 
-      <el-form-item>
-        <div class="flex-y-center w-full gap-10px">
-          <el-checkbox v-model="isRead">{{ t("login.agree") }}</el-checkbox>
-          <el-link type="primary" underline="never">{{ t("login.userAgreement") }}</el-link>
-        </div>
+      <!-- 邮箱 -->
+      <el-form-item prop="email">
+        <el-input v-model.trim="model.email" placeholder="邮箱（可选）">
+          <template #prefix>
+            <el-icon><Message /></el-icon>
+          </template>
+        </el-input>
       </el-form-item>
 
       <!-- 注册按钮 -->
@@ -99,110 +79,91 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { FormInstance } from "element-plus";
-import { Lock } from "@element-plus/icons-vue";
+import type { FormInstance, ElMessageBox } from "element-plus";
+import { Lock, Iphone, Message } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
 import AuthAPI from "@/api/auth";
-import type { LoginRequest } from "@/types/api";
 
 const { t } = useI18n();
 
 const emit = defineEmits(["update:modelValue"]);
 const toLogin = () => emit("update:modelValue", "login");
 
-onMounted(() => getCaptcha());
-
 const formRef = ref<FormInstance>();
-const loading = ref(false); // 按钮 loading 状态
-const isCapsLock = ref(false); // 是否大写锁定
-const captchaBase64 = ref(); // 验证码图片Base64字符串
-const isRead = ref(false);
+const loading = ref(false);
+const isCapsLock = ref(false);
 
-interface Model extends LoginRequest {
+interface RegisterForm {
+  username: string;
+  password: string;
   confirmPassword: string;
+  phone: string;
+  email: string;
 }
 
-const model = ref<Model>({
-  username: "admin",
-  password: "123456",
+const model = ref<RegisterForm>({
+  username: "",
+  password: "",
   confirmPassword: "",
-  captchaId: "",
-  captchaCode: "",
-  rememberMe: false,
+  phone: "",
+  email: "",
 });
 
 const rules = computed(() => {
   return {
-    username: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.username.required"),
-      },
-    ],
+    username: [{ required: true, trigger: "blur", message: t("login.message.username.required") }],
     password: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.password.required"),
-      },
-      {
-        min: 6,
-        message: t("login.message.password.min"),
-        trigger: "blur",
-      },
+      { required: true, trigger: "blur", message: t("login.message.password.required") },
+      { min: 6, message: t("login.message.password.min"), trigger: "blur" },
     ],
     confirmPassword: [
+      { required: true, trigger: "blur", message: t("login.message.password.required") },
       {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.password.required"),
-      },
-      {
-        min: 6,
-        message: t("login.message.password.min"),
-        trigger: "blur",
-      },
-      {
-        validator: (_: any, value: string) => {
-          return value === model.value.password;
-        },
+        validator: (_: any, value: string) => value === model.value.password,
         trigger: "blur",
         message: t("login.message.password.inconformity"),
-      },
-    ],
-    captchaCode: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.captchaCode.required"),
       },
     ],
   };
 });
 
-// 获取验证码
-const codeLoading = ref(false);
-function getCaptcha() {
-  codeLoading.value = true;
-  AuthAPI.getCaptcha()
-    .then((data) => {
-      model.value.captchaId = data.captchaId;
-      captchaBase64.value = data.captchaBase64;
-    })
-    .finally(() => (codeLoading.value = false));
-}
-
-// 检查输入大小写
 function checkCapsLock(event: KeyboardEvent) {
-  // 防止浏览器密码自动填充时报错
   if (event instanceof KeyboardEvent) {
     isCapsLock.value = event.getModifierState("CapsLock");
   }
 }
 
 const submit = async () => {
-  await formRef.value?.validate();
-  ElMessage.warning("开发中 ...");
+  const valid = await formRef.value?.validate().then(
+    () => true,
+    () => false
+  );
+  if (!valid) return;
+
+  loading.value = true;
+  try {
+    const res = await AuthAPI.register({
+      username: model.value.username,
+      password: model.value.password,
+      phone: model.value.phone,
+      email: model.value.email,
+    });
+    // 注册成功后弹窗提示新人礼包
+    await ElMessageBox.alert(
+      res?.msg || "恭喜注册成功！您已获得新人礼包（5张优惠券），请登录后查看。",
+      "🎁 新人礼包",
+      {
+        confirmButtonText: "去登录",
+        type: "success",
+        callback: () => {
+          toLogin(); // 跳转到登录页
+        },
+      }
+    );
+  } catch {
+    // 错误信息已由拦截器处理，无需额外提示
+  } finally {
+    loading.value = false;
+  }
 };
 </script>

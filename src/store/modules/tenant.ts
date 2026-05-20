@@ -2,8 +2,6 @@ import { store } from "@/store";
 import TenantAPI from "@/api/system/tenant";
 import type { TenantInfo } from "@/types/api";
 import { STORAGE_KEYS } from "@/constants";
-import AuthAPI from "@/api/auth";
-import { AuthStorage } from "@/utils/auth";
 
 /**
  * 租户 Store
@@ -169,14 +167,11 @@ export const useTenantStore = defineStore("tenant", () => {
     }
   }
 
-  async function refreshTokenIfSupported(tenantId: number): Promise<void> {
+  async function refreshTokenIfSupported(): Promise<void> {
     try {
-      const token = await AuthAPI.switchTenant(tenantId);
-      if (token?.accessToken && token?.refreshToken) {
-        AuthStorage.setTokens(token.accessToken, token.refreshToken, AuthStorage.getRememberMe());
-      }
+      // E-Shop 不支持多租户切换，静默跳过
     } catch {
-      // 忽略：非平台用户或后端未启用该接口时，回退到旧接口
+      // 忽略
     }
   }
 

@@ -72,7 +72,7 @@ const menuThemeProps = computed(() => {
     theme.value === "dark" || sidebarColorScheme.value === SidebarColor.CLASSIC_BLUE;
 
   return {
-    backgroundColor: isDarkOrClassicBlue ? variables["menu-background"] : undefined,
+    backgroundColor: undefined, // 由 CSS 控制以支持渐变背景
     textColor: isDarkOrClassicBlue ? variables["menu-text"] : undefined,
     activeTextColor: isDarkOrClassicBlue ? variables["menu-active-text"] : undefined,
   };
