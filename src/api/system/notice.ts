@@ -3,6 +3,18 @@ import type { NoticeQueryParams, NoticeForm, NoticeItem, NoticeDetail } from "@/
 
 const NOTICE_BASE_URL = "/api/v1/notices";
 
+export interface MerchantNoticeItem {
+  id: number;
+  title: string;
+  content: string;
+  isRead: number;
+  source: string;
+  type: string;
+  orderId: number | null;
+  orderNo: string | null;
+  createTime: string;
+}
+
 const NoticeAPI = {
   /** 获取通知公告分页数据 */
   getPage(queryParams?: NoticeQueryParams) {
@@ -50,6 +62,15 @@ const NoticeAPI = {
       url: `${NOTICE_BASE_URL}/my`,
       method: "get",
       params: queryParams,
+    });
+  },
+
+  /** 获取商家通知（用于统一通知页展示） */
+  getMerchantNotices(pageNum = 1, pageSize = 20) {
+    return request<any, PageResult<MerchantNoticeItem>>({
+      url: "/merchant/notices",
+      method: "get",
+      params: { pageNum, pageSize },
     });
   },
 };
