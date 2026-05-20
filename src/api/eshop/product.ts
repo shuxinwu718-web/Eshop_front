@@ -12,6 +12,7 @@ export interface ProductItem {
   description: string;
   coverImage: string;
   status: number;
+  sales?: number;
   createTime: string;
 }
 
@@ -41,7 +42,25 @@ export interface ProductSaveForm {
   status?: number;
 }
 
+export interface HotProductItem {
+  id: number;
+  name: string;
+  price: number;
+  coverImage: string;
+  description: string;
+  sales: number;
+  avgRating: number;
+}
+
 const ProductAPI = {
+  getHot(limit = 10) {
+    return request<any, HotProductItem[]>({
+      url: `${BASE_URL}/hot`,
+      method: "get",
+      params: { limit },
+    });
+  },
+
   getPage(params: ProductPageParams) {
     return request<any, { records: ProductItem[]; total: number }>({
       url: `${BASE_URL}/page`,

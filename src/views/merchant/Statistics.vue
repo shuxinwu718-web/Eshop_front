@@ -19,22 +19,73 @@
       <template #header>近30天销售趋势</template>
       <div ref="chartRef" style="height: 400px"></div>
     </el-card>
+    <el-card style="margin-top: 20px">
+      <template #header>各商品售卖情况</template>
+      <el-table v-loading="salesLoading" :data="productSales" stripe style="width: 100%">
+        <el-table-column label="商品图片" width="100">
+          <template #default="{ row }">
+            <el-image
+              :src="getFullImageUrl(row.productImage)"
+              style="width: 60px; height: 60px"
+              fit="cover"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="productName" label="商品名称" min-width="180" />
+        <el-table-column label="单价" width="120">
+          <template #default="{ row }">¥{{ row.price }}</template>
+        </el-table-column>
+        <el-table-column prop="stock" label="库存" width="80" />
+        <el-table-column prop="sales" label="销量" width="80" />
+        <el-table-column label="销售额" width="140">
+          <template #default="{ row }">¥{{ row.totalAmount }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" link size="small" @click="goEdit(row.productId)">
+              编辑
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import * as echarts from "echarts";
-import MerchantAPI, { type SalesStatistics } from "@/api/eshop/merchant";
+import MerchantAPI, { type SalesStatistics, type ProductSalesItem } from "@/api/eshop/merchant";
+import { getFullImageUrl } from "@/utils/url";
 
+const router = useRouter();
 const statistics = ref<SalesStatistics>({ totalSales: 0, totalOrders: 0, dailyStats: [] });
 const chartRef = ref<HTMLDivElement>();
 let chart: echarts.ECharts | null = null;
+
+const productSales = ref<ProductSalesItem[]>([]);
+const salesLoading = ref(false);
 
 const loadStatistics = async () => {
   const res = await MerchantAPI.getStatistics(30);
   statistics.value = res;
   renderChart();
+};
+
+const loadProductSales = async () => {
+  salesLoading.value = true;
+  try {
+    productSales.value = await MerchantAPI.getProductSales();
+  } catch {
+    // ignore
+  } finally {
+    salesLoading.value = false;
+  }
+};
+
+const goEdit = (productId: number) => {
+  router.push(`/merchant/product/edit/${productId}`);
 };
 
 const renderChart = () => {
@@ -60,6 +111,7 @@ const renderChart = () => {
 
 onMounted(() => {
   loadStatistics();
+  loadProductSales();
   window.addEventListener("resize", () => chart?.resize());
 });
 onUnmounted(() => {

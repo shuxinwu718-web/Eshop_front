@@ -1,113 +1,89 @@
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import { useRouter, useRoute } from "vue-router";
+
+export interface TagView {
+  name: string;
+  title?: string;
+  path: string;
+  fullPath: string;
+  affix?: boolean;
+  keepAlive?: boolean;
+  query?: any;
+}
+
 export const useTagsViewStore = defineStore("tagsView", () => {
   const visitedViews = ref<TagView[]>([]);
   const cachedViews = ref<string[]>([]);
   const router = useRouter();
   const route = useRoute();
 
-  /**
-   * 添加已访问视图到已访问视图列表中
-   */
   function addVisitedView(view: TagView) {
-    // 如果已经存在于已访问的视图列表中或者是重定向地址，则不再添加
-    if (view.path.startsWith("/redirect")) {
-      return;
-    }
-    if (visitedViews.value.some((v) => v.path === view.path)) {
-      return;
-    }
-    // 如果视图是固定的（affix），则在已访问的视图列表的开头添加
+    if (view.path.startsWith("/redirect")) return;
+    if (visitedViews.value.some((v) => v.path === view.path)) return;
     if (view.affix) {
       visitedViews.value.unshift(view);
     } else {
-      // 如果视图不是固定的，则在已访问的视图列表的末尾添加
       visitedViews.value.push(view);
     }
   }
 
-  /**
-   * 添加缓存视图到缓存视图列表中
-   */
-  function addCachedView({ fullPath, keepAlive }: TagView) {
-    // 如果缓存视图名称已经存在于缓存视图列表中，则不再添加
-    if (cachedViews.value.includes(fullPath)) {
-      return;
-    }
-
-    // 如果视图需要缓存（keepAlive），则将其路由名称添加到缓存视图列表中
-    if (keepAlive) {
-      cachedViews.value.push(fullPath);
-    }
+  // 关键修改：使用 name 作为缓存标识
+  function addCachedView(view: TagView) {
+    // console.log('addCachedView called:', view.name, view.keepAlive);
+    const { name, keepAlive } = view;
+    if (!name || !keepAlive) return;
+    if (cachedViews.value.includes(name)) return;
+    cachedViews.value.push(name);
+    // console.log('cachedViews now:', cachedViews.value);
   }
 
-  /**
-   * 从已访问视图列表中删除指定的视图
-   */
   function delVisitedView(view: TagView) {
     return new Promise((resolve) => {
-      for (const [i, v] of visitedViews.value.entries()) {
-        // 找到与指定视图路径匹配的视图，在已访问视图列表中删除该视图
-        if (v.path === view.path) {
-          visitedViews.value.splice(i, 1);
-          break;
-        }
-      }
+      const index = visitedViews.value.findIndex((v) => v.path === view.path);
+      if (index !== -1) visitedViews.value.splice(index, 1);
       resolve([...visitedViews.value]);
     });
   }
 
   function delCachedView(view: TagView) {
-    const { fullPath } = view;
-    return new Promise((resolve) => {
-      const index = cachedViews.value.indexOf(fullPath);
-      if (index > -1) {
-        cachedViews.value.splice(index, 1);
-      }
-      resolve([...cachedViews.value]);
-    });
+    const { name } = view;
+    if (!name) return Promise.resolve([...cachedViews.value]);
+    const index = cachedViews.value.indexOf(name);
+    if (index !== -1) cachedViews.value.splice(index, 1);
+    return Promise.resolve([...cachedViews.value]);
   }
+
   function delOtherVisitedViews(view: TagView) {
     return new Promise((resolve) => {
-      visitedViews.value = visitedViews.value.filter((v) => {
-        return v?.affix || v.path === view.path;
-      });
+      visitedViews.value = visitedViews.value.filter((v) => v.affix || v.path === view.path);
       resolve([...visitedViews.value]);
     });
   }
 
   function delOtherCachedViews(view: TagView) {
-    const { fullPath } = view;
-    return new Promise((resolve) => {
-      const index = cachedViews.value.indexOf(fullPath);
-      if (index > -1) {
-        cachedViews.value = cachedViews.value.slice(index, index + 1);
-      } else {
-        // if index = -1, there is no cached tags
-        cachedViews.value = [];
-      }
-      resolve([...cachedViews.value]);
-    });
+    const { name } = view;
+    if (!name) {
+      cachedViews.value = [];
+      return Promise.resolve([...cachedViews.value]);
+    }
+    const index = cachedViews.value.indexOf(name);
+    if (index !== -1) {
+      cachedViews.value = cachedViews.value.slice(index, index + 1);
+    } else {
+      cachedViews.value = [];
+    }
+    return Promise.resolve([...cachedViews.value]);
   }
 
   function updateVisitedView(view: TagView) {
-    for (const v of visitedViews.value) {
-      if (v.path === view.path) {
-        Object.assign(v, view);
-        break;
-      }
-    }
+    const target = visitedViews.value.find((v) => v.path === view.path);
+    if (target) Object.assign(target, view);
   }
 
-  /**
-   * 根据路径更新标签名称
-   * @param fullPath 路径
-   * @param title 标签名称
-   */
   function updateTagName(fullPath: string, title: string) {
-    const tag = visitedViews.value.find((tag: TagView) => tag.fullPath === fullPath);
-
-    if (tag) {
-      tag.title = title;
-    }
+    const tag = visitedViews.value.find((t) => t.fullPath === fullPath);
+    if (tag) tag.title = title;
   }
 
   function addView(view: TagView) {
@@ -119,10 +95,7 @@ export const useTagsViewStore = defineStore("tagsView", () => {
     return new Promise((resolve) => {
       delVisitedView(view);
       delCachedView(view);
-      resolve({
-        visitedViews: [...visitedViews.value],
-        cachedViews: [...cachedViews.value],
-      });
+      resolve({ visitedViews: [...visitedViews.value], cachedViews: [...cachedViews.value] });
     });
   }
 
@@ -130,73 +103,60 @@ export const useTagsViewStore = defineStore("tagsView", () => {
     return new Promise((resolve) => {
       delOtherVisitedViews(view);
       delOtherCachedViews(view);
-      resolve({
-        visitedViews: [...visitedViews.value],
-        cachedViews: [...cachedViews.value],
-      });
+      resolve({ visitedViews: [...visitedViews.value], cachedViews: [...cachedViews.value] });
     });
   }
 
   function delLeftViews(view: TagView) {
     return new Promise((resolve) => {
       const currIndex = visitedViews.value.findIndex((v) => v.path === view.path);
-      if (currIndex === -1) {
-        return;
+      if (currIndex === -1) return;
+      const newVisited: TagView[] = [];
+      for (let i = 0; i < visitedViews.value.length; i++) {
+        const item = visitedViews.value[i];
+        if (i >= currIndex || item.affix) {
+          newVisited.push(item);
+        } else {
+          const cacheIndex = cachedViews.value.indexOf(item.name);
+          if (cacheIndex !== -1) cachedViews.value.splice(cacheIndex, 1);
+        }
       }
-      visitedViews.value = visitedViews.value.filter((item, index) => {
-        if (index >= currIndex || item?.affix) {
-          return true;
-        }
-
-        const cacheIndex = cachedViews.value.indexOf(item.fullPath);
-        if (cacheIndex > -1) {
-          cachedViews.value.splice(cacheIndex, 1);
-        }
-        return false;
-      });
-      resolve({
-        visitedViews: [...visitedViews.value],
-      });
+      visitedViews.value = newVisited;
+      resolve({ visitedViews: [...visitedViews.value] });
     });
   }
 
   function delRightViews(view: TagView) {
     return new Promise((resolve) => {
       const currIndex = visitedViews.value.findIndex((v) => v.path === view.path);
-      if (currIndex === -1) {
-        return;
+      if (currIndex === -1) return;
+      const newVisited: TagView[] = [];
+      for (let i = 0; i < visitedViews.value.length; i++) {
+        const item = visitedViews.value[i];
+        if (i <= currIndex || item.affix) {
+          newVisited.push(item);
+        } else {
+          const cacheIndex = cachedViews.value.indexOf(item.name);
+          if (cacheIndex !== -1) cachedViews.value.splice(cacheIndex, 1);
+        }
       }
-      visitedViews.value = visitedViews.value.filter((item, index) => {
-        if (index <= currIndex || item?.affix) {
-          return true;
-        }
-        const cacheIndex = cachedViews.value.indexOf(item.fullPath);
-        if (cacheIndex > -1) {
-          cachedViews.value.splice(cacheIndex, 1);
-        }
-        return false;
-      });
-      resolve({
-        visitedViews: [...visitedViews.value],
-      });
+      visitedViews.value = newVisited;
+      resolve({ visitedViews: [...visitedViews.value] });
     });
   }
 
   function delAllViews() {
     return new Promise((resolve) => {
-      const affixTags = visitedViews.value.filter((tag) => tag?.affix);
+      const affixTags = visitedViews.value.filter((tag) => tag.affix);
       visitedViews.value = affixTags;
       cachedViews.value = [];
-      resolve({
-        visitedViews: [...visitedViews.value],
-        cachedViews: [...cachedViews.value],
-      });
+      resolve({ visitedViews: [...visitedViews.value], cachedViews: [...cachedViews.value] });
     });
   }
 
   function delAllVisitedViews() {
     return new Promise((resolve) => {
-      const affixTags = visitedViews.value.filter((tag) => tag?.affix);
+      const affixTags = visitedViews.value.filter((tag) => tag.affix);
       visitedViews.value = affixTags;
       resolve([...visitedViews.value]);
     });
@@ -209,9 +169,6 @@ export const useTagsViewStore = defineStore("tagsView", () => {
     });
   }
 
-  /**
-   * 关闭当前tagView
-   */
   function closeCurrentView() {
     const tags: TagView = {
       name: route.name as string,
@@ -223,9 +180,7 @@ export const useTagsViewStore = defineStore("tagsView", () => {
       query: route.query,
     };
     delView(tags).then((res: any) => {
-      if (isActive(tags)) {
-        toLastView(res.visitedViews, tags);
-      }
+      if (isActive(tags)) toLastView(res.visitedViews, tags);
     });
   }
 
@@ -235,13 +190,10 @@ export const useTagsViewStore = defineStore("tagsView", () => {
 
   function toLastView(visitedViews: TagView[], view?: TagView) {
     const latestView = visitedViews.slice(-1)[0];
-    if (latestView && latestView.fullPath) {
+    if (latestView?.fullPath) {
       router.push(latestView.fullPath);
     } else {
-      // now the default is to redirect to the home page if there is no tags-view,
-      // you can adjust it according to your needs.
       if (view?.name === "Dashboard") {
-        // to reload home page
         router.replace("/redirect" + view.fullPath);
       } else {
         router.push("/");

@@ -73,6 +73,38 @@
       </el-breadcrumb>
     </div>
 
+    <!-- 热销商品排行 -->
+    <div v-if="hotProducts.length" class="hot-section">
+      <div class="section-title">
+        <el-icon color="#f56c6c"><TrendCharts /></el-icon>
+        <span>热销商品排行</span>
+      </div>
+      <div class="hot-list">
+        <div
+          v-for="(item, idx) in hotProducts"
+          :key="item.id"
+          class="hot-card"
+          :class="{ 'hot-top': idx < 3 }"
+          @click="goDetail(item.id)"
+        >
+          <div class="hot-rank" :class="'rank-' + (idx + 1)">{{ idx + 1 }}</div>
+          <img
+            :src="getFullImageUrl(item.coverImage) || defaultImage"
+            class="hot-img"
+            @error="handleImageError"
+          />
+          <div class="hot-info">
+            <div class="hot-name">{{ item.name }}</div>
+            <div class="hot-price">¥{{ item.price }}</div>
+            <div class="hot-meta">
+              <span>已售 {{ item.sales }}</span>
+              <span v-if="item.avgRating > 0">评分 {{ item.avgRating }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 商品列表网格 -->
     <div v-loading="loading" class="product-grid">
       <el-card
@@ -119,8 +151,8 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { Search, ArrowDown } from "@element-plus/icons-vue";
-import ProductAPI, { type ProductItem } from "@/api/eshop/product";
+import { Search, ArrowDown, TrendCharts } from "@element-plus/icons-vue";
+import ProductAPI, { type ProductItem, type HotProductItem } from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
 import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
@@ -136,6 +168,7 @@ const pageSize = ref(12);
 const keyword = ref("");
 const activeCategoryId = ref<number | undefined>(undefined);
 const activeDropdown = ref<number | null>(null);
+const hotProducts = ref<HotProductItem[]>([]);
 const defaultImage =
   "https://fastly.picsum.photos/id/20/300/300.jpg?hmac=jE4J8fivrZv_MA5Xu9iSoEgNxfc_ucYlC_m6BgcSNNo";
 
@@ -228,9 +261,18 @@ const addFavorite = async (productId: number) => {
   }
 };
 
+const fetchHotProducts = async () => {
+  try {
+    hotProducts.value = await ProductAPI.getHot(10);
+  } catch {
+    // ignore
+  }
+};
+
 onMounted(() => {
   fetchProducts();
   loadCategories();
+  fetchHotProducts();
 });
 </script>
 
@@ -403,6 +445,112 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   text-align: center;
+}
+
+/* 热销商品排行 */
+.hot-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .hot-list {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 8px;
+    overflow-x: auto;
+  }
+
+  .hot-card {
+    display: flex;
+    flex-shrink: 0;
+    gap: 12px;
+    width: 320px;
+    padding: 12px;
+    cursor: pointer;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s;
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+
+    &.hot-top {
+      border-left: 3px solid #f56c6c;
+    }
+
+    .hot-rank {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #999;
+      background: #f5f5f5;
+      border-radius: 4px;
+
+      &.rank-1 {
+        color: #fff;
+        background: #f56c6c;
+      }
+      &.rank-2 {
+        color: #fff;
+        background: #f8983a;
+      }
+      &.rank-3 {
+        color: #fff;
+        background: #f7b84d;
+      }
+    }
+
+    .hot-img {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .hot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hot-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .hot-price {
+      margin: 4px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #f40;
+    }
+
+    .hot-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: #999;
+    }
+  }
 }
 
 /* 移动端适配 */

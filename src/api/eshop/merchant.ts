@@ -57,6 +57,16 @@ export interface MerchantShipment {
   items: ShipmentItem[]; // 商品明细
 }
 
+export interface ProductSalesItem {
+  productId: number;
+  productName: string;
+  productImage: string;
+  price: number;
+  stock: number;
+  sales: number;
+  totalAmount: number;
+}
+
 // 销售额统计数据
 export interface SalesStatistics {
   totalSales: number;
@@ -107,6 +117,10 @@ export default {
   // 获取统计
   getStatistics(days: number = 30) {
     return request.get<SalesStatistics>("/merchant/statistics", { params: { days } });
+  },
+  // 获取各商品销量统计
+  getProductSales() {
+    return request.get<ProductSalesItem[]>("/merchant/product-sales");
   },
 
   // ========== 发货单管理 ==========

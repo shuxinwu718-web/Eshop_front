@@ -134,6 +134,7 @@ import ProductAPI, {
 } from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
 import type { FormInstance } from "element-plus";
+import { onActivated } from "vue";
 
 const loading = ref(false);
 const submitLoading = ref(false);
@@ -251,6 +252,12 @@ async function handleDelete(row: ProductItem) {
   ElMessage.success("删除成功");
   fetchData();
 }
+
+onActivated(() => {
+  console.log("列表页被激活，刷新数据");
+  fetchData();
+  loadCategoryTree();
+});
 
 onMounted(() => {
   fetchData();

@@ -54,11 +54,14 @@
         <div class="price">¥{{ product.price }}</div>
         <div class="meta">
           <span class="stock">库存：{{ product.stock }}件</span>
+          <span class="sales">已售：{{ product.sales || 0 }}件</span>
         </div>
         <div class="actions">
           <el-input-number v-model="quantity" :min="1" :max="product.stock" size="large" />
           <el-button type="primary" size="large" @click="addToCart">加入购物车</el-button>
-          <el-button type="danger" size="large" @click="addFavorite">❤ 收藏</el-button>
+          <el-button type="danger" size="large" :loading="favoriteLoading" @click="toggleFavorite">
+            {{ isFavorited ? "已收藏" : "❤ 收藏" }}
+          </el-button>
           <el-button size="large" @click="contactMerchant">联系商家</el-button>
         </div>
         <div v-if="product.description" class="description">
@@ -225,8 +228,8 @@ const fetchDetail = async () => {
     ]);
     product.value = productData;
     images.value = productImages;
-    // 组装评论树（后端返回扁平列表，按 parentId 组装）
     comments.value = buildCommentTree(productComments);
+    await checkFavorite(); // 检查收藏状态
   } catch {
     ElMessage.error("加载商品详情失败");
   } finally {
@@ -235,6 +238,10 @@ const fetchDetail = async () => {
 };
 
 const addToCart = async () => {
+  if (quantity.value > product.value.stock) {
+    ElMessage.warning(`库存不足，当前库存 ${product.value.stock} 件`);
+    return;
+  }
   try {
     await CartAPI.add(product.value.id, quantity.value);
     ElMessage.success("已加入购物车");
@@ -243,12 +250,36 @@ const addToCart = async () => {
   }
 };
 
-const addFavorite = async () => {
+const isFavorited = ref(false);
+const favoriteLoading = ref(false);
+
+// 检查是否已收藏
+const checkFavorite = async () => {
   try {
-    await FavoriteAPI.add(product.value.id);
-    ElMessage.success("收藏成功");
+    const res = await FavoriteAPI.check(product.value.id);
+    isFavorited.value = res; // 假设接口返回 boolean
   } catch {
-    ElMessage.error("收藏失败");
+    // 忽略错误
+  }
+};
+
+// 切换收藏
+const toggleFavorite = async () => {
+  if (favoriteLoading.value) return;
+  favoriteLoading.value = true;
+  try {
+    if (isFavorited.value) {
+      await FavoriteAPI.remove(product.value.id);
+      ElMessage.success("已取消收藏");
+    } else {
+      await FavoriteAPI.add(product.value.id);
+      ElMessage.success("收藏成功");
+    }
+    isFavorited.value = !isFavorited.value;
+  } catch {
+    ElMessage.error(isFavorited.value ? "取消收藏失败" : "收藏失败");
+  } finally {
+    favoriteLoading.value = false;
   }
 };
 
