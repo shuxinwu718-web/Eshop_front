@@ -23,6 +23,10 @@
             <el-icon><Location /></el-icon>
             <span>收货地址</span>
           </el-menu-item>
+          <el-menu-item index="messages">
+            <el-icon><ChatDotSquare /></el-icon>
+            <span>我的留言</span>
+          </el-menu-item>
           <el-menu-item index="profile">
             <el-icon><User /></el-icon>
             <span>个人资料</span>
@@ -205,6 +209,27 @@
             </template>
           </el-dialog>
         </div>
+        <!-- 我的留言 -->
+        <div v-show="activeMenu === 'messages'" class="messages-section">
+          <div class="section-header">
+            <span>我的留言</span>
+          </div>
+          <div v-loading="messageLoading">
+            <div v-for="item in messageList" :key="item.id" class="message-item">
+              <div class="message-header">
+                <span class="message-product" v-if="item.productId">商品 #{{ item.productId }}</span>
+                <span class="message-time">{{ item.createTime }}</span>
+              </div>
+              <div class="message-content">{{ item.content }}</div>
+              <div v-if="item.replyContent" class="message-reply">
+                <span class="reply-label">商家回复：</span>
+                {{ item.replyContent }}
+                <span class="reply-time">{{ item.replyTime }}</span>
+              </div>
+            </div>
+            <el-empty v-if="!messageLoading && messageList.length === 0" description="暂无留言" />
+          </div>
+        </div>
         <!-- 个人资料（简单占位，可跳转） -->
         <div v-show="activeMenu === 'profile'" class="profile-section">
           <div class="section-header">
@@ -233,7 +258,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { List, Star, Location, User } from "@element-plus/icons-vue";
+import { List, Star, Location, User, ChatDotSquare } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useUserStore } from "@/store/modules/user";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
@@ -241,6 +266,7 @@ import FavoriteAPI, { type FavoriteItem } from "@/api/eshop/favorite";
 import CartAPI from "@/api/eshop/cart";
 import UserAPI from "@/api/system/user";
 import AddressAPI, { type AddressItem, type AddressSaveParams } from "@/api/eshop/address";
+import MessageAPI, { type MerchantMessage } from "@/api/eshop/merchant-message";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -270,6 +296,9 @@ const addressForm = ref<AddressSaveParams>({
   detailAddress: "",
   isDefault: false,
 });
+
+const messageLoading = ref(false);
+const messageList = ref<MerchantMessage[]>([]);
 
 const addressRules = {
   receiverName: [{ required: true, message: "请输入收货人", trigger: "blur" }],
@@ -326,6 +355,19 @@ const fetchAddresses = async () => {
     addressList.value = await AddressAPI.list();
   } finally {
     addressLoading.value = false;
+  }
+};
+
+// 获取留言列表
+const fetchMessages = async () => {
+  messageLoading.value = true;
+  try {
+    const res = await MessageAPI.getUserMessages(1, 20);
+    messageList.value = res.records;
+  } catch {
+    // ignore
+  } finally {
+    messageLoading.value = false;
   }
 };
 
@@ -463,6 +505,7 @@ const handleMenuSelect = (index: string) => {
   if (index === "order") fetchOrders();
   if (index === "favorite") fetchFavorites();
   if (index === "address") fetchAddresses();
+  if (index === "messages") fetchMessages();
 };
 
 // 加载用户信息
@@ -861,6 +904,75 @@ html.dark {
   }
   .address-item {
     border-color: #30363d;
+  }
+}
+
+/* 留言区块 */
+.messages-section {
+  .message-item {
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    transition: all 0.2s;
+
+    &:hover {
+      box-shadow: var(--el-box-shadow-light);
+    }
+  }
+
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .message-product {
+    font-size: 13px;
+    color: var(--el-color-primary);
+  }
+
+  .message-time {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .message-content {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+    line-height: 1.5;
+  }
+
+  .message-reply {
+    margin-top: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    background: var(--el-fill-color-lighter);
+    border-radius: 6px;
+    border-left: 3px solid #67c23a;
+
+    .reply-label {
+      font-weight: 600;
+      color: #67c23a;
+    }
+
+    .reply-time {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #999;
+    }
+  }
+}
+
+html.dark {
+  .messages-section .message-item {
+    border-color: #30363d;
+  }
+
+  .messages-section .message-reply {
+    background: #1c2333;
   }
 }
 </style>

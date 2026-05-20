@@ -11,9 +11,15 @@
           <span class="msg-time">{{ item.createTime }}</span>
         </div>
         <div class="msg-content">{{ item.content }}</div>
+        <div v-if="item.replyContent" class="msg-reply">
+          <span class="reply-label">商家回复：</span>
+          {{ item.replyContent }}
+        </div>
         <div class="msg-footer">
           <el-tag v-if="!item.isRead" size="small" type="warning">未读</el-tag>
           <el-tag v-else size="small" type="info">已读</el-tag>
+          <el-button v-if="!item.replyContent" size="small" type="primary" link @click.stop="openReply(item)">回复</el-button>
+          <span v-else class="reply-time">{{ item.replyTime }}</span>
         </div>
       </div>
 
@@ -29,11 +35,32 @@
         />
       </div>
     </div>
+
+    <!-- 回复对话框 -->
+    <el-dialog v-model="replyDialogVisible" title="回复留言" width="500px">
+      <div class="reply-original">
+        <div class="reply-original-label">用户留言：</div>
+        <div class="reply-original-content">{{ currentItem?.content }}</div>
+      </div>
+      <el-input
+        v-model="replyContent"
+        type="textarea"
+        :rows="4"
+        placeholder="请输入回复内容"
+        maxlength="500"
+        show-word-limit
+      />
+      <template #footer>
+        <el-button @click="replyDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="replyLoading" @click="doReply">回复</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { ElMessage } from "element-plus";
 import MessageAPI, { type MerchantMessage } from "@/api/eshop/merchant-message";
 
 const loading = ref(false);
@@ -41,6 +68,11 @@ const list = ref<MerchantMessage[]>([]);
 const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(20);
+
+const replyDialogVisible = ref(false);
+const replyLoading = ref(false);
+const replyContent = ref("");
+const currentItem = ref<MerchantMessage | null>(null);
 
 const fetchList = async () => {
   loading.value = true;
@@ -59,6 +91,36 @@ const handleRead = async (item: MerchantMessage) => {
   if (!item.isRead) {
     await MessageAPI.markAsRead(item.id);
     item.isRead = 1;
+  }
+  // If no reply yet, open reply dialog
+  if (!item.replyContent) {
+    openReply(item);
+  }
+};
+
+const openReply = (item: MerchantMessage) => {
+  currentItem.value = item;
+  replyContent.value = "";
+  replyDialogVisible.value = true;
+};
+
+const doReply = async () => {
+  if (!replyContent.value.trim()) {
+    ElMessage.warning("请输入回复内容");
+    return;
+  }
+  if (!currentItem.value) return;
+
+  replyLoading.value = true;
+  try {
+    await MessageAPI.reply(currentItem.value.id, replyContent.value);
+    ElMessage.success("回复成功");
+    replyDialogVisible.value = false;
+    await fetchList();
+  } catch {
+    ElMessage.error("回复失败");
+  } finally {
+    replyLoading.value = false;
   }
 };
 
@@ -124,12 +186,55 @@ onMounted(() => {
   line-height: 1.5;
 }
 
-.msg-footer {
+.msg-reply {
   margin-top: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #666;
+  background: #f5f7fa;
+  border-radius: 6px;
+  border-left: 3px solid #67c23a;
+
+  .reply-label {
+    font-weight: 600;
+    color: #67c23a;
+  }
+}
+
+.msg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.reply-time {
+  font-size: 12px;
+  color: #999;
 }
 
 .pagination {
   margin-top: 20px;
   text-align: center;
+}
+
+.reply-original {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+
+  .reply-original-label {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+  }
+
+  .reply-original-content {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+  }
 }
 </style>

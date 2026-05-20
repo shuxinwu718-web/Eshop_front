@@ -129,6 +129,7 @@ const noticeTypeMap: Record<number, { text: string; tag: string }> = {
   0: { text: "系统公告", tag: "primary" },
   1: { text: "活动通知", tag: "success" },
   2: { text: "订单提醒", tag: "warning" },
+  3: { text: "订单通知", tag: "warning" },
 };
 const getNoticeTypeText = (type: number) => noticeTypeMap[type]?.text || "未知";
 const getNoticeTypeTag = (type: number) => noticeTypeMap[type]?.tag || "info";

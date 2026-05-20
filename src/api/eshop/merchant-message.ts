@@ -6,6 +6,8 @@ export interface MerchantMessage {
   userId: number;
   productId: number | null;
   content: string;
+  replyContent?: string;
+  replyTime?: string;
   isRead: number;
   createTime: string;
 }
@@ -42,6 +44,24 @@ const MessageAPI = {
     return request({
       url: `/merchant/messages/${id}/read`,
       method: "put",
+    });
+  },
+
+  /** 商家回复留言 */
+  reply(id: number, replyContent: string) {
+    return request({
+      url: `/merchant/messages/${id}/reply`,
+      method: "put",
+      data: { replyContent },
+    });
+  },
+
+  /** 用户查看自己的留言 */
+  getUserMessages(pageNum = 1, pageSize = 20) {
+    return request<any, { records: MerchantMessage[]; total: number }>({
+      url: "/api/merchant-message/my",
+      method: "get",
+      params: { pageNum, pageSize },
     });
   },
 };
