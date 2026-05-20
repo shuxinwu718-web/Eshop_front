@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { ShoppingCart, CircleCheck, CircleClose, Bell } from "@element-plus/icons-vue";
+import { ShoppingCart, CircleCheck, CircleClose, ChatDotSquare, Bell } from "@element-plus/icons-vue";
 import NotificationAPI, { type MerchantNotification } from "@/api/eshop/notification";
 
 const loading = ref(false);
@@ -55,6 +55,7 @@ const iconColor = (type: string) => {
     case "new_order": return "#409eff";
     case "order_paid": return "#67c23a";
     case "order_cancelled": return "#f56c6c";
+    case "new_message": return "#e6a23c";
     default: return "#909399";
   }
 };
@@ -64,6 +65,7 @@ const iconComponent = (type: string) => {
     case "new_order": return ShoppingCart;
     case "order_paid": return CircleCheck;
     case "order_cancelled": return CircleClose;
+    case "new_message": return ChatDotSquare;
     default: return Bell;
   }
 };

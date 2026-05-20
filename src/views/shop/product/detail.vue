@@ -166,6 +166,24 @@
         />
       </div>
     </div>
+
+    <!-- 联系商家对话框 -->
+    <el-dialog v-model="contactDialogVisible" title="联系商家" width="400px">
+      <el-input
+        v-model="contactMessage"
+        type="textarea"
+        :rows="4"
+        placeholder="请输入你想咨询的问题..."
+        maxlength="500"
+        show-word-limit
+      />
+      <template #footer>
+        <el-button @click="contactDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="contactSending" @click="doSendMessage">
+          发送
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -178,6 +196,7 @@ import ProductAPI, { type ProductItem, type ProductImageItem } from "@/api/eshop
 import CommentAPI, { type CommentVO } from "@/api/eshop/comment";
 import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
+import MessageAPI from "@/api/eshop/merchant-message";
 import { getFullImageUrl } from "@/utils/url";
 
 const route = useRoute();
@@ -283,8 +302,38 @@ const toggleFavorite = async () => {
   }
 };
 
+const contactDialogVisible = ref(false);
+const contactMessage = ref("");
+const contactSending = ref(false);
+
 const contactMerchant = () => {
-  ElMessage.info("联系商家功能即将开放");
+  if (!userStore.isLoggedIn()) {
+    ElMessage.warning("请先登录");
+    return;
+  }
+  contactMessage.value = "";
+  contactDialogVisible.value = true;
+};
+
+const doSendMessage = async () => {
+  if (!contactMessage.value.trim()) {
+    ElMessage.warning("请输入留言内容");
+    return;
+  }
+  contactSending.value = true;
+  try {
+    await MessageAPI.send({
+      productId: product.value.id,
+      content: contactMessage.value,
+    });
+    ElMessage.success("留言发送成功，等待商家回复");
+    contactDialogVisible.value = false;
+    contactMessage.value = "";
+  } catch {
+    ElMessage.error("发送失败");
+  } finally {
+    contactSending.value = false;
+  }
 };
 
 // 将后端扁平的评论列表组装成树形结构

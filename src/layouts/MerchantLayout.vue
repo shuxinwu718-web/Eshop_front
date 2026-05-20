@@ -32,6 +32,10 @@
           </el-badge>
           <span>消息通知</span>
         </el-menu-item>
+        <el-menu-item index="/merchant/messages">
+          <el-icon><ChatDotSquare /></el-icon>
+          <span>用户留言</span>
+        </el-menu-item>
       </el-menu>
     </div>
 
@@ -49,7 +53,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Shop, Plus, DataLine, List, Bell } from "@element-plus/icons-vue";
+import { Shop, Plus, DataLine, List, Bell, ChatDotSquare } from "@element-plus/icons-vue";
 import { useUserStore } from "@/store/modules/user";
 import { getFullImageUrl } from "@/utils/url";
 import NotificationAPI from "@/api/eshop/notification";
@@ -69,6 +73,7 @@ const activeMenu = computed(() => {
   if (path.startsWith("/merchant/statistics")) return "/merchant/statistics";
   if (path.startsWith("/merchant/orders")) return "/merchant/orders";
   if (path.startsWith("/merchant/notifications")) return "/merchant/notifications";
+  if (path.startsWith("/merchant/messages")) return "/merchant/messages";
   return "/merchant/products";
 });
 
