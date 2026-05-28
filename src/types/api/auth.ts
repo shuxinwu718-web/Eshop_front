@@ -12,6 +12,10 @@ export interface LoginRequest {
   password: string;
   /** 记住我 */
   rememberMe?: boolean;
+  /** 图形验证码 key */
+  captchaKey?: string;
+  /** 图形验证码 */
+  captchaCode?: string;
 }
 
 /**

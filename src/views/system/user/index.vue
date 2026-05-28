@@ -81,6 +81,7 @@
               <el-button v-hasPerm="'sys:user:export'" icon="download" @click="exportUsers">
                 导出
               </el-button>
+              <el-button icon="Monitor" @click="openOnlineUsersDialog">在线用户</el-button>
             </div>
           </div>
 
@@ -236,6 +237,37 @@
       </template>
     </el-drawer>
 
+    <!-- 在线用户 -->
+    <el-dialog
+      v-model="onlineDialogVisible"
+      title="在线用户"
+      append-to-body
+      width="500px"
+      :close-on-click-modal="false"
+      @close="onlineDialogVisible = false"
+    >
+      <el-table v-loading="onlineLoading" :data="onlineUserList" border stripe max-height="400">
+        <el-table-column label="用户ID" prop="userId" width="100" align="center" />
+        <el-table-column label="用户名" prop="username" align="center" />
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="scope">
+            <el-button
+              type="danger"
+              size="small"
+              link
+              icon="CircleClose"
+              @click="handleKickUser(scope.row)"
+            >
+              强制下线
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="onlineDialogVisible = false">关 闭</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 用户导入 -->
     <UserImportDialog v-model="importDialogVisible" @import-success="handleQuery()" />
   </div>
@@ -288,6 +320,11 @@ const dialogState = reactive({
 
 // 导入弹窗状态
 const importDialogVisible = ref(false);
+
+// 在线用户弹窗状态
+const onlineDialogVisible = ref(false);
+const onlineUserList = ref<{ userId: string; username: string }[]>([]);
+const onlineLoading = ref(false);
 
 // 表单初始数据
 const initialFormData: UserForm = {
@@ -523,6 +560,40 @@ async function exportUsers(): Promise<void> {
  */
 function openImportDialog(): void {
   importDialogVisible.value = true;
+}
+
+/**
+ * 打开在线用户弹窗
+ */
+async function openOnlineUsersDialog(): Promise<void> {
+  onlineDialogVisible.value = true;
+  onlineLoading.value = true;
+  try {
+    const data = await UserAPI.getOnlineUsers();
+    // data is Record<string, string>: { [userId]: username }
+    onlineUserList.value = Object.entries(data).map(([userId, username]) => ({
+      userId,
+      username,
+    }));
+  } finally {
+    onlineLoading.value = false;
+  }
+}
+
+/**
+ * 强制下线
+ */
+function handleKickUser(row: { userId: string; username: string }): void {
+  ElMessageBox.confirm(`确定强制用户【${row.username}】下线吗？`, "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    await UserAPI.kickUser(row.userId);
+    ElMessage.success("已强制该用户下线");
+    // 从列表中移除
+    onlineUserList.value = onlineUserList.value.filter((item) => item.userId !== row.userId);
+  });
 }
 
 onMounted(() => {

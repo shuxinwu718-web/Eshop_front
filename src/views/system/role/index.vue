@@ -32,6 +32,7 @@
             删除
           </el-button>
         </div>
+        <el-button icon="download" @click="handleExport">导出</el-button>
       </div>
 
       <el-table
@@ -237,6 +238,7 @@ import RoleAPI from "@/api/system/role";
 import type { RoleItem, RoleForm, RoleQueryParams } from "@/types/api";
 import MenuAPI from "@/api/system/menu";
 import DeptAPI from "@/api/system/dept";
+import { useExport } from "@/composables/useExport";
 
 defineOptions({
   name: "Role",
@@ -260,6 +262,17 @@ const queryParams = reactive<RoleQueryParams>({
 
 // 角色表格数据
 const roleList = ref<RoleItem[]>();
+const { handleExport } = useExport(
+  () => roleList.value ?? [],
+  [
+    { title: "角色名称", key: "name" },
+    { title: "角色编码", key: "code" },
+    { title: "数据权限", key: "dataScopeLabel" },
+    { title: "状态", key: "status" },
+    { title: "排序", key: "sort" },
+  ],
+  "角色数据"
+);
 // 菜单权限下拉
 const menuPermOptions = ref<OptionItem[]>([]);
 // 部门下拉选项

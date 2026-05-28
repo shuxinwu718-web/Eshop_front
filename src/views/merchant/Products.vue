@@ -4,6 +4,7 @@
     <div class="page-header">
       <h2>我的小店</h2>
       <el-button type="primary" @click="goToCreate">发布商品</el-button>
+      <el-button @click="handleExport">导出Excel</el-button>
     </div>
 
     <el-card>
@@ -93,10 +94,32 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import MerchantAPI, { type MerchantProduct } from "@/api/eshop/merchant";
 import { getFullImageUrl } from "@/utils/url";
 import { Picture } from "@element-plus/icons-vue";
+import { useExport } from "@/composables/useExport";
 const router = useRouter();
 const loading = ref(false);
 const productList = ref<MerchantProduct[]>([]);
 const total = ref(0);
+
+const { handleExport } = useExport(
+  () =>
+    productList.value.map((item) => ({
+      商品名称: item.name,
+      分类: item.categoryName || "",
+      价格: item.price,
+      库存: item.stock,
+      状态: item.status === 1 ? "上架" : "下架",
+      创建时间: item.createTime,
+    })),
+  [
+    { title: "商品名称", key: "商品名称", width: 30 },
+    { title: "分类", key: "分类", width: 15 },
+    { title: "价格", key: "价格", width: 12 },
+    { title: "库存", key: "库存", width: 10 },
+    { title: "状态", key: "状态", width: 10 },
+    { title: "创建时间", key: "创建时间", width: 20 },
+  ],
+  "商品列表"
+);
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,

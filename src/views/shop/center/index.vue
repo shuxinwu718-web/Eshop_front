@@ -31,6 +31,10 @@
             <el-icon><User /></el-icon>
             <span>个人资料</span>
           </el-menu-item>
+          <el-menu-item index="history">
+            <el-icon><ChatDotSquare /></el-icon>
+            <span>浏览历史</span>
+          </el-menu-item>
         </el-menu>
       </div>
 
@@ -217,7 +221,9 @@
           <div v-loading="messageLoading">
             <div v-for="item in messageList" :key="item.id" class="message-item">
               <div class="message-header">
-                <span class="message-product" v-if="item.productId">商品 #{{ item.productId }}</span>
+                <span v-if="item.productId" class="message-product">
+                  商品 #{{ item.productId }}
+                </span>
                 <span class="message-time">{{ item.createTime }}</span>
               </div>
               <div class="message-content">{{ item.content }}</div>
@@ -249,6 +255,30 @@
             </el-descriptions-item>
           </el-descriptions>
         </div>
+
+        <!-- 浏览历史 -->
+        <div v-show="activeMenu === 'history'" class="history-section">
+          <div class="section-header">
+            <span>浏览历史</span>
+            <el-button type="primary" link @click="clearHistory">清空历史</el-button>
+          </div>
+          <div v-loading="historyLoading" class="history-grid">
+            <div
+              v-for="item in historyList"
+              :key="item.id"
+              class="history-card"
+              @click="goProductDetail(item.id)"
+            >
+              <img :src="getFullImageUrl(item.coverImage) || defaultImage" class="history-img" />
+              <div class="history-name">{{ item.name }}</div>
+              <div class="history-price">¥{{ item.price }}</div>
+            </div>
+            <el-empty
+              v-if="!historyLoading && historyList.length === 0"
+              description="暂无浏览记录"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -267,6 +297,7 @@ import CartAPI from "@/api/eshop/cart";
 import UserAPI from "@/api/system/user";
 import AddressAPI, { type AddressItem, type AddressSaveParams } from "@/api/eshop/address";
 import MessageAPI, { type MerchantMessage } from "@/api/eshop/merchant-message";
+import HistoryAPI from "@/api/eshop/history";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -499,6 +530,32 @@ const goProfile = () => {
   router.push("/profile");
 };
 
+const historyLoading = ref(false);
+const historyList = ref<ProductItem[]>([]);
+
+const fetchHistory = async () => {
+  historyLoading.value = true;
+  try {
+    const res = await HistoryAPI.get(10);
+    historyList.value = res;
+  } catch {
+    // ignore
+  } finally {
+    historyLoading.value = false;
+  }
+};
+
+const clearHistory = async () => {
+  await ElMessageBox.confirm("确定清空所有浏览历史？", "提示", { type: "warning" });
+  try {
+    await HistoryAPI.clear();
+    ElMessage.success("清空成功");
+    await fetchHistory();
+  } catch {
+    ElMessage.error("操作失败");
+  }
+};
+
 // 在菜单切换时加载对应数据
 const handleMenuSelect = (index: string) => {
   activeMenu.value = index;
@@ -506,6 +563,7 @@ const handleMenuSelect = (index: string) => {
   if (index === "favorite") fetchFavorites();
   if (index === "address") fetchAddresses();
   if (index === "messages") fetchMessages();
+  if (index === "history") fetchHistory();
 };
 
 // 加载用户信息
@@ -737,6 +795,47 @@ onMounted(async () => {
   }
 }
 
+.history-section {
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .history-card {
+    padding: 12px;
+    cursor: pointer;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
+    transition: transform 0.2s;
+
+    &:hover {
+      box-shadow: var(--el-box-shadow-light);
+      transform: translateY(-4px);
+    }
+
+    .history-img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .history-name {
+      margin-top: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .history-price {
+      margin-top: 4px;
+      color: var(--el-color-danger);
+    }
+  }
+}
+
 /* ========= 移动端统一适配 (宽度 ≤ 768px) ========= */
 @media (max-width: 768px) {
   .personal-center {
@@ -939,18 +1038,18 @@ html.dark {
 
   .message-content {
     font-size: 14px;
-    color: var(--el-text-color-primary);
     line-height: 1.5;
+    color: var(--el-text-color-primary);
   }
 
   .message-reply {
-    margin-top: 8px;
     padding: 10px 12px;
+    margin-top: 8px;
     font-size: 13px;
     color: var(--el-text-color-secondary);
     background: var(--el-fill-color-lighter);
-    border-radius: 6px;
     border-left: 3px solid #67c23a;
+    border-radius: 6px;
 
     .reply-label {
       font-weight: 600;

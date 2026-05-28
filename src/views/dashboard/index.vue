@@ -421,6 +421,56 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 用户增长 + 商品热力图 -->
+    <el-row :gutter="10" class="mt-5">
+      <el-col :xs="24" :span="14">
+        <el-card>
+          <template #header>
+            <div class="flex-x-between">
+              <span>用户增长趋势</span>
+              <el-radio-group v-model="userGrowthDays" size="small" @change="fetchUserGrowth">
+                <el-radio-button label="近7天" :value="7" />
+                <el-radio-button label="近30天" :value="30" />
+              </el-radio-group>
+            </div>
+          </template>
+          <ECharts :options="userGrowthChartOptions" height="360px" />
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :span="10">
+        <el-card>
+          <template #header>
+            <div class="flex-x-between">
+              <span>商品销售排行</span>
+              <el-radio-group v-model="topProductDays" size="small" @change="fetchTopProducts">
+                <el-radio-button label="近7天" :value="7" />
+                <el-radio-button label="近30天" :value="30" />
+              </el-radio-group>
+            </div>
+          </template>
+          <ECharts :options="topProductChartOptions" height="360px" />
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 转化率趋势 -->
+    <el-row :gutter="10" class="mt-5">
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <div class="flex-x-between">
+              <span>转化率趋势</span>
+              <el-radio-group v-model="conversionDays" size="small" @change="fetchConversion">
+                <el-radio-button label="近7天" :value="7" />
+                <el-radio-button label="近30天" :value="30" />
+              </el-radio-group>
+            </div>
+          </template>
+          <ECharts :options="conversionChartOptions" height="360px" />
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -445,6 +495,7 @@ import { useOnlineCount, useRecentMenus } from "@/composables";
 import { getFullImageUrl } from "@/utils/url";
 import UserAPI from "@/api/system/user";
 import DashboardAPI from "@/api/eshop/dashboard";
+import type { UserGrowth, TopProduct, ConversionTrend } from "@/api/eshop/dashboard";
 
 const router = useRouter();
 
@@ -628,6 +679,9 @@ watch(
     nextTick(() => {
       if (lastVisitTrendData.value) updateVisitTrendChartOptions(lastVisitTrendData.value);
       if (lastSalesTrendData.value) updateSalesTrendChart(lastSalesTrendData.value);
+      if (lastUserGrowthData.value) updateUserGrowthChart(lastUserGrowthData.value);
+      if (lastTopProductData.value) updateTopProductChart(lastTopProductData.value);
+      if (lastConversionData.value) updateConversionChart(lastConversionData.value);
     });
   }
 );
@@ -724,6 +778,152 @@ const updateSalesTrendChart = (data: {
   };
 };
 
+// ========== 用户增长趋势 ==========
+const userGrowthDays = ref(7);
+const userGrowthChartOptions = ref();
+const lastUserGrowthData = ref<UserGrowth | null>(null);
+
+const fetchUserGrowth = () => {
+  DashboardAPI.getUserGrowth(userGrowthDays.value)
+    .then((data) => {
+      lastUserGrowthData.value = data;
+      updateUserGrowthChart(data);
+    })
+    .catch(() => {});
+};
+
+const updateUserGrowthChart = (data: UserGrowth) => {
+  const colors = getChartColors();
+  userGrowthChartOptions.value = {
+    tooltip: { trigger: "axis" },
+    legend: { data: ["每日新增", "累计用户"], bottom: 0 },
+    grid: { left: "1%", right: "5%", bottom: "10%", containLabel: true },
+    xAxis: { type: "category", data: data.dates, axisLabel: { color: colors.axisLabel } },
+    yAxis: [
+      {
+        type: "value",
+        name: "新增用户",
+        splitLine: { show: true, lineStyle: { type: "dashed", color: colors.splitLine } },
+      },
+      { type: "value", name: "累计用户", splitLine: { show: false } },
+    ],
+    series: [
+      {
+        name: "每日新增",
+        type: "bar",
+        data: data.newUserCountList,
+        itemStyle: { color: colors.success, borderRadius: [4, 4, 0, 0] },
+        yAxisIndex: 0,
+      },
+      {
+        name: "累计用户",
+        type: "line",
+        data: data.totalUserCountList,
+        smooth: true,
+        itemStyle: { color: colors.primary },
+        lineStyle: { color: colors.primary },
+        yAxisIndex: 1,
+      },
+    ],
+  };
+};
+
+// ========== 商品销售排行 ==========
+const topProductDays = ref(30);
+const topProductChartOptions = ref();
+const lastTopProductData = ref<TopProduct[] | null>(null);
+
+const fetchTopProducts = () => {
+  DashboardAPI.getTopProducts(topProductDays.value, 10)
+    .then((data) => {
+      lastTopProductData.value = data;
+      updateTopProductChart(data);
+    })
+    .catch(() => {});
+};
+
+const updateTopProductChart = (data: TopProduct[]) => {
+  const colors = getChartColors();
+  const names = data.map((p) => p.productName).reverse();
+  const quantities = data.map((p) => p.totalQuantity).reverse();
+
+  topProductChartOptions.value = {
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: "1%", right: "5%", bottom: "10%", containLabel: true },
+    xAxis: {
+      type: "value",
+      splitLine: { show: true, lineStyle: { type: "dashed", color: colors.splitLine } },
+    },
+    yAxis: { type: "category", data: names, axisLabel: { color: colors.axisLabel } },
+    series: [
+      {
+        type: "bar",
+        data: quantities,
+        itemStyle: { color: colors.primary, borderRadius: [0, 4, 4, 0] },
+        label: { show: true, position: "right", formatter: (p: any) => p.value + "件" },
+      },
+    ],
+  };
+};
+
+// ========== 转化率趋势 ==========
+const conversionDays = ref(7);
+const conversionChartOptions = ref();
+const lastConversionData = ref<ConversionTrend | null>(null);
+
+const fetchConversion = () => {
+  DashboardAPI.getConversion(conversionDays.value)
+    .then((data) => {
+      lastConversionData.value = data;
+      updateConversionChart(data);
+    })
+    .catch(() => {});
+};
+
+const updateConversionChart = (data: ConversionTrend) => {
+  const colors = getChartColors();
+  conversionChartOptions.value = {
+    tooltip: { trigger: "axis" },
+    legend: { data: ["访客数(UV)", "订单数", "转化率"], bottom: 0 },
+    grid: { left: "1%", right: "5%", bottom: "10%", containLabel: true },
+    xAxis: { type: "category", data: data.dates, axisLabel: { color: colors.axisLabel } },
+    yAxis: [
+      {
+        type: "value",
+        name: "数量",
+        splitLine: { show: true, lineStyle: { type: "dashed", color: colors.splitLine } },
+      },
+      { type: "value", name: "转化率 %", max: 100, splitLine: { show: false } },
+    ],
+    series: [
+      {
+        name: "访客数(UV)",
+        type: "bar",
+        data: data.visitorCountList,
+        itemStyle: { color: colors.primary, borderRadius: [4, 4, 0, 0] },
+        yAxisIndex: 0,
+      },
+      {
+        name: "订单数",
+        type: "bar",
+        data: data.orderCountList,
+        itemStyle: { color: colors.success, borderRadius: [4, 4, 0, 0] },
+        yAxisIndex: 0,
+      },
+      {
+        name: "转化率",
+        type: "line",
+        data: data.conversionRateList,
+        smooth: true,
+        itemStyle: { color: colors.danger },
+        lineStyle: { color: colors.danger },
+        yAxisIndex: 1,
+        label: { show: true, formatter: (p: any) => p.value + "%" },
+      },
+    ],
+  };
+};
+
 // ========== 工具 ==========
 const computeGrowthRateClass = (growthRate?: number): string => {
   if (!growthRate) return "text-[--el-color-info]";
@@ -748,6 +948,9 @@ onMounted(() => {
   loadUserProfile();
   fetchDashboardStats();
   fetchSalesTrendData();
+  fetchUserGrowth();
+  fetchTopProducts();
+  fetchConversion();
 });
 </script>
 

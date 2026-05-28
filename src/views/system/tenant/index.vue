@@ -45,6 +45,14 @@
           >
             删除
           </el-button>
+          <el-button
+            v-hasPerm="['sys:tenant:export']"
+            type="warning"
+            icon="download"
+            @click="handleExport"
+          >
+            导出
+          </el-button>
         </div>
       </div>
 
@@ -370,6 +378,7 @@ import type {
 } from "@/types/api";
 import { MenuScopeEnum } from "@/enums/business";
 import { isPlatformTenantId } from "@/utils/tenant";
+import { useExport } from "@/composables/useExport";
 
 // 表单引用
 const queryFormRef = ref<FormInstance>();
@@ -984,6 +993,28 @@ function handleDelete(tenantId?: string): void {
     }
   );
 }
+
+/**
+ * 导出
+ */
+const { handleExport } = useExport(
+  () =>
+    pageData.value.map((item) => ({
+      ...item,
+      status: item.status === 1 ? "正常" : "禁用",
+    })),
+  [
+    { title: "租户名称", key: "name" },
+    { title: "租户编码", key: "code" },
+    { title: "联系人", key: "contactName" },
+    { title: "联系电话", key: "contactPhone" },
+    { title: "域名", key: "domain" },
+    { title: "状态", key: "status" },
+    { title: "过期时间", key: "expireTime" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "租户管理"
+);
 
 /**
  * 加载租户套餐选项

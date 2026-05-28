@@ -47,6 +47,7 @@
             删除
           </el-button>
         </div>
+        <el-button icon="download" @click="handleExport">导出</el-button>
       </div>
 
       <el-table
@@ -165,6 +166,7 @@ defineOptions({
 import DeptAPI from "@/api/system/dept";
 import type { DeptItem, DeptForm, DeptQueryParams } from "@/types/api";
 import type { FormInstance, FormRules } from "element-plus";
+import { useExport } from "@/composables/useExport";
 
 // 表单引用
 const queryFormRef = ref<FormInstance>();
@@ -175,6 +177,16 @@ const queryParams = reactive<DeptQueryParams>({});
 
 // 列表数据
 const deptList = ref<DeptItem[]>();
+const { handleExport } = useExport(
+  () => deptList.value ?? [],
+  [
+    { title: "部门名称", key: "name" },
+    { title: "排序", key: "sort" },
+    { title: "状态", key: "status" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "部门数据"
+);
 const deptOptions = ref<OptionItem[]>();
 const loading = ref(false);
 const selectIds = ref<string[]>([]);

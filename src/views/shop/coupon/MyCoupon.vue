@@ -80,13 +80,11 @@ const fetchData = async () => {
   loading.value = true;
   try {
     const res = await request.get("/api/user/coupons/my", {
-      params: { status: status.value },
+      params: { status: status.value }, // 0未使用，1已使用，2已过期
     });
-    // 兼容拦截器解包情况
     const data = Array.isArray(res) ? res : (res as any).data || [];
     list.value = data;
-  } catch (error) {
-    console.error(error);
+  } catch {
     ElMessage.error("加载优惠券失败");
   } finally {
     loading.value = false;

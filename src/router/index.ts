@@ -44,6 +44,13 @@ export const constantRoutes: RouteRecordRaw[] = [
           roles: ["ADMIN"],
         },
       },
+      {
+        path: "operation-log",
+        name: "OperationLog",
+        component: () => import("@/views/eshop/log/index.vue"),
+        meta: { title: "操作日志", roles: ["ADMIN"] },
+      },
+
       // ========== 管理中心（折叠菜单） ==========
       {
         path: "management",
@@ -110,6 +117,17 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
           },
           {
+            path: "eshop/seckill",
+            name: "SeckillManage",
+            component: () => import("@/views/eshop/seckill/index.vue"),
+            meta: {
+              title: "秒杀场次",
+              icon: "el-icon-lightning",
+              keepAlive: true,
+              roles: ["ADMIN"],
+            },
+          },
+          {
             path: "merchant-apply",
             name: "MerchantApply",
             component: () => import("@/views/eshop/merchantApply/index.vue"),
@@ -120,8 +138,21 @@ export const constantRoutes: RouteRecordRaw[] = [
               roles: ["ADMIN"],
             },
           },
+          {
+            path: "refund-audit",
+            name: "RefundAudit",
+            component: () => import("@/views/eshop/refund/index.vue"),
+            meta: { title: "退款审核", roles: ["ADMIN"] },
+          },
+          {
+            path: "online-user",
+            name: "OnlineUser",
+            component: () => import("@/views/system/online/index.vue"),
+            meta: { title: "在线用户", icon: "el-icon-monitor", roles: ["ADMIN"] },
+          },
         ],
       },
+
       // ========== 普通用户和商家共享页面 ==========
       {
         path: "home",
@@ -169,6 +200,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: "CouponCenter",
         component: () => import("@/views/shop/coupon/CouponCenter.vue"),
         meta: { title: "领券中心", icon: "el-icon-present", roles: ["USER", "MERCHANT"] },
+      },
+      {
+        path: "seckill",
+        name: "Seckill",
+        component: () => import("@/views/shop/seckill/index.vue"),
+        meta: { title: "限时秒杀", icon: "el-icon-lightning", roles: ["USER", "MERCHANT"] },
       },
       {
         path: "my-coupon",

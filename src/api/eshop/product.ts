@@ -52,6 +52,44 @@ export interface HotProductItem {
   avgRating: number;
 }
 
+// ====== ES 搜索相关 ======
+
+/** ES 搜索响应中的单个商品 */
+export interface ESSearchProductItem {
+  id: number;
+  name: string;
+  categoryId: number;
+  categoryName: string | null;
+  price: number;
+  stock: number;
+  coverImage: string;
+  description: string;
+  status: number;
+  sales: number;
+  createTime: number;
+}
+
+export interface SearchResultItem {
+  product: ESSearchProductItem;
+  highlights: Record<string, string[]>;
+}
+
+export interface SearchResponse {
+  total: number;
+  list: SearchResultItem[];
+}
+
+export interface SearchParams {
+  keyword?: string;
+  categoryId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  status?: number;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+}
+
 const ProductAPI = {
   getHot(limit = 10) {
     return request<any, HotProductItem[]>({
@@ -111,6 +149,23 @@ const ProductAPI = {
     return request<any, ProductImageItem[]>({
       url: `${BASE_URL}/${productId}/images`,
       method: "get",
+    });
+  },
+
+  // ES 搜索
+  esSearch(params: SearchParams) {
+    return request<any, SearchResponse>({
+      url: `${BASE_URL}/es/search`,
+      method: "get",
+      params,
+    });
+  },
+
+  // ES 全量重新索引
+  esReindex() {
+    return request({
+      url: `${BASE_URL}/es/reindex`,
+      method: "post",
     });
   },
 };

@@ -4,7 +4,7 @@
     <div class="search-bar">
       <el-input
         v-model="keyword"
-        placeholder="搜索商品（支持汉字/拼音）"
+        placeholder="搜索商品名称/描述"
         clearable
         @keyup.enter="handleSearch"
       >
@@ -12,6 +12,15 @@
           <el-icon><Search /></el-icon>
         </template>
       </el-input>
+      <el-input v-model="minPrice" placeholder="最低价" style="width: 110px" clearable />
+      <el-input v-model="maxPrice" placeholder="最高价" style="width: 110px" clearable />
+      <el-select v-model="sortBy" style="width: 130px" @change="handleSearch">
+        <el-option label="综合排序" value="relevant" />
+        <el-option label="价格从低到高" value="price_asc" />
+        <el-option label="价格从高到低" value="price_desc" />
+        <el-option label="销量优先" value="sales" />
+        <el-option label="最新上架" value="newest" />
+      </el-select>
       <el-button type="primary" @click="handleSearch">搜索</el-button>
     </div>
 
@@ -152,7 +161,11 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Search, ArrowDown, TrendCharts } from "@element-plus/icons-vue";
-import ProductAPI, { type ProductItem, type HotProductItem } from "@/api/eshop/product";
+import ProductAPI, {
+  type ProductItem,
+  type HotProductItem,
+  type ESSearchProductItem,
+} from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
 import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
@@ -166,6 +179,9 @@ const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(12);
 const keyword = ref("");
+const minPrice = ref("");
+const maxPrice = ref("");
+const sortBy = ref("relevant");
 const activeCategoryId = ref<number | undefined>(undefined);
 const activeDropdown = ref<number | null>(null);
 const hotProducts = ref<HotProductItem[]>([]);
@@ -204,18 +220,38 @@ const fetchProducts = async () => {
   loading.value = true;
   try {
     const params = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      name: keyword.value || undefined,
+      keyword: keyword.value || undefined,
       categoryId: activeCategoryId.value || undefined,
+      minPrice: minPrice.value ? Number(minPrice.value) : undefined,
+      maxPrice: maxPrice.value ? Number(maxPrice.value) : undefined,
+      sortBy: sortBy.value !== "relevant" ? sortBy.value : undefined,
+      page: pageNum.value - 1, // ES 从 0 开始
+      size: pageSize.value,
     };
-    const res = await ProductAPI.getPage(params);
-    productList.value = res.records;
+    const res = await ProductAPI.esSearch(params);
+    productList.value = res.list.map((item) => mapESSearchItem(item.product));
     total.value = res.total;
   } finally {
     loading.value = false;
   }
 };
+
+/** 将 ES 搜索商品映射为通用的 ProductItem */
+function mapESSearchItem(es: ESSearchProductItem): ProductItem {
+  return {
+    id: es.id,
+    name: es.name,
+    namePinyin: "",
+    categoryId: es.categoryId,
+    price: es.price,
+    stock: es.stock,
+    description: es.description,
+    coverImage: es.coverImage,
+    status: es.status,
+    sales: es.sales ?? 0,
+    createTime: es.createTime ? String(es.createTime) : "",
+  };
+}
 
 const loadCategories = async () => {
   const res = await CategoryAPI.getTree();
@@ -285,12 +321,14 @@ onMounted(() => {
 
 .search-bar {
   display: flex;
-  gap: 12px;
-  max-width: 600px;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 800px;
   margin-bottom: 20px;
 
   .el-input {
     flex: 1;
+    min-width: 160px;
   }
 }
 

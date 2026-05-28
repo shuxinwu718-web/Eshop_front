@@ -78,9 +78,11 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
-import type { FormInstance, ElMessageBox } from "element-plus";
-import { Lock, Iphone, Message } from "@element-plus/icons-vue";
+import type { FormInstance } from "element-plus";
+import { ElMessageBox } from "element-plus";
+import { User, Lock, Iphone, Message } from "@element-plus/icons-vue"; // 补全图标导入
 import { useI18n } from "vue-i18n";
 import AuthAPI from "@/api/auth";
 
@@ -148,7 +150,6 @@ const submit = async () => {
       phone: model.value.phone,
       email: model.value.email,
     });
-    // 注册成功后弹窗提示新人礼包
     await ElMessageBox.alert(
       res?.msg || "恭喜注册成功！您已获得新人礼包（5张优惠券），请登录后查看。",
       "🎁 新人礼包",
@@ -156,12 +157,12 @@ const submit = async () => {
         confirmButtonText: "去登录",
         type: "success",
         callback: () => {
-          toLogin(); // 跳转到登录页
+          toLogin();
         },
       }
     );
   } catch {
-    // 错误信息已由拦截器处理，无需额外提示
+    // 错误信息已由拦截器处理
   } finally {
     loading.value = false;
   }

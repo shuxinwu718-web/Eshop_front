@@ -36,6 +36,14 @@
           >
             新增
           </el-button>
+          <el-button
+            v-hasPerm="['sys:tenant-plan:export']"
+            type="warning"
+            icon="download"
+            @click="handleExport"
+          >
+            导出
+          </el-button>
         </div>
       </div>
 
@@ -226,6 +234,7 @@ import type {
   OptionItem,
 } from "@/types/api";
 import { MenuScopeEnum } from "@/enums/business";
+import { useExport } from "@/composables/useExport";
 
 // 表单引用
 const queryFormRef = ref<FormInstance>();
@@ -402,6 +411,25 @@ function handleDelete(planId?: number): void {
       });
   });
 }
+
+/**
+ * 导出
+ */
+const { handleExport } = useExport(
+  () =>
+    pageData.value.map((item) => ({
+      ...item,
+      status: item.status === 1 ? "启用" : "停用",
+    })),
+  [
+    { title: "套餐名称", key: "name" },
+    { title: "套餐编码", key: "code" },
+    { title: "状态", key: "status" },
+    { title: "备注", key: "remark" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "租户套餐管理"
+);
 
 /**
  * 打开菜单配置弹窗

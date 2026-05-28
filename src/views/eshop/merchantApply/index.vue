@@ -4,12 +4,15 @@
       <template #header>
         <div class="card-header">
           <span class="header-title">商家入驻申请</span>
-          <el-radio-group v-model="statusFilter" size="default" @change="loadData">
-            <el-radio-button :value="undefined">全部</el-radio-button>
-            <el-radio-button :value="0">待审核</el-radio-button>
-            <el-radio-button :value="1">已通过</el-radio-button>
-            <el-radio-button :value="2">已拒绝</el-radio-button>
-          </el-radio-group>
+          <div style="display: flex; gap: 12px; align-items: center">
+            <el-radio-group v-model="statusFilter" size="default" @change="loadData">
+              <el-radio-button :value="undefined">全部</el-radio-button>
+              <el-radio-button :value="0">待审核</el-radio-button>
+              <el-radio-button :value="1">已通过</el-radio-button>
+              <el-radio-button :value="2">已拒绝</el-radio-button>
+            </el-radio-group>
+            <el-button type="primary" @click="handleExport">导出Excel</el-button>
+          </div>
         </div>
       </template>
 
@@ -125,6 +128,7 @@ import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getFullImageUrl } from "@/utils/url";
 import request from "@/utils/request";
+import { useExport } from "@/composables/useExport";
 
 interface ApplyRecord {
   id: number;
@@ -248,6 +252,26 @@ const viewDetail = (row: ApplyRecord) => {
     { dangerouslyUseHTMLString: true }
   );
 };
+
+const columns = [
+  { title: "用户名", key: "username", width: 14 },
+  { title: "店铺名称", key: "businessName", width: 24 },
+  { title: "联系人", key: "contactName", width: 14 },
+  { title: "联系电话", key: "contactPhone", width: 16 },
+  { title: "经营范围", key: "businessScope", width: 30 },
+  { title: "状态", key: "statusLabel", width: 12 },
+  { title: "申请时间", key: "createTime", width: 20 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    applyList.value.map((item) => ({
+      ...item,
+      statusLabel: statusMap[Number(item.status)]?.text || "未知",
+    })),
+  columns,
+  "商家入驻申请"
+);
 
 onMounted(() => {
   loadData();

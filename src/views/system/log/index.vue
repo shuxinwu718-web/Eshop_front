@@ -32,6 +32,11 @@
     </div>
 
     <el-card shadow="hover" class="data-table">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--tools" style="margin-left: auto">
+          <el-button icon="download" @click="handleExport">导出</el-button>
+        </div>
+      </div>
       <el-table
         v-loading="loading"
         :data="pageData"
@@ -119,6 +124,7 @@ defineOptions({
 import LogAPI from "@/api/system/log";
 import type { LogItem, LogQueryParams } from "@/types/api";
 import type { FormInstance, TagProps } from "element-plus";
+import { useExport } from "@/composables/useExport";
 
 function getMethodTagType(method: string): TagProps["type"] {
   const map: Record<string, TagProps["type"]> = {
@@ -146,6 +152,21 @@ const queryParams = reactive<LogQueryParams>({
 const pageData = ref<LogItem[]>();
 const total = ref(0);
 const loading = ref(false);
+
+const { handleExport } = useExport(
+  () => pageData.value,
+  [
+    { title: "操作标题", key: "title" },
+    { title: "状态", key: "status" },
+    { title: "IP地址", key: "ip" },
+    { title: "请求路径", key: "requestUri", width: 30 },
+    { title: "请求方法", key: "requestMethod" },
+    { title: "执行时间(ms)", key: "executionTime" },
+    { title: "操作人", key: "operatorName" },
+    { title: "操作时间", key: "createTime", width: 20 },
+  ],
+  "操作日志"
+);
 
 // 详情弹窗
 const detailVisible = ref(false);

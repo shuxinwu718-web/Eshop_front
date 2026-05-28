@@ -188,3 +188,9 @@ export interface LoginDeviceItem {
   deviceName: string;
   lastLoginTime: string;
 }
+
+/** 在线用户信息 */
+export interface OnlineUserItem {
+  userId: string;
+  username: string;
+}

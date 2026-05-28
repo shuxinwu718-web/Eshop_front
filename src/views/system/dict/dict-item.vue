@@ -30,6 +30,7 @@
           >
             删除
           </el-button>
+          <el-button type="warning" icon="download" @click="handleExport">导出</el-button>
         </div>
       </div>
 
@@ -155,6 +156,7 @@
 import DictAPI from "@/api/system/dict";
 import type { DictItemQueryParams, DictItem, DictItemForm } from "@/types/api";
 import type { FormInstance, FormRules } from "element-plus";
+import { useExport } from "@/composables/useExport";
 
 const route = useRoute();
 
@@ -332,6 +334,26 @@ function handleDelete(id?: number): void {
     }
   );
 }
+
+/**
+ * 导出
+ */
+const { handleExport } = useExport(
+  () =>
+    tableData.value?.map((item) => ({
+      ...item,
+      status: item.status === 1 ? "启用" : "禁用",
+    })) || [],
+  [
+    { title: "字典标签", key: "label" },
+    { title: "字典值", key: "value" },
+    { title: "排序", key: "sort" },
+    { title: "状态", key: "status" },
+    { title: "备注", key: "remark" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "字典项管理"
+);
 
 onMounted(() => {
   handleQuery();

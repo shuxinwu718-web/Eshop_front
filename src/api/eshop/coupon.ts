@@ -11,6 +11,7 @@ export interface CouponItem {
   maxDiscount: number;
   stock: number;
   limitPerUser: number;
+  obtainType: number;
   startTime: string;
   endTime: string;
   status: number;
@@ -35,6 +36,7 @@ export interface CouponSaveForm {
   maxDiscount?: number;
   stock?: number;
   limitPerUser?: number;
+  obtainType?: number;
   startTime?: string;
   endTime?: string;
   status?: number;

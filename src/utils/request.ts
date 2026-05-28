@@ -76,7 +76,8 @@ http.interceptors.response.use(
     const { msg } = response.data as ApiResponse;
 
     if (status === 401) {
-      await redirectToLogin("登录已过期，请重新登录");
+      hideLoading();
+      await redirectToLogin(msg || "登录已过期，请重新登录");
       return Promise.reject(new Error("Token Invalid"));
     }
     hideLoading();

@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <div class="notice-card__content">{{ item.content }}</div>
+        <div class="notice-card__content">{{ getContentPreview(item.content, item.bizType) }}</div>
 
         <div class="notice-card__info">
           <div class="notice-card__meta">
@@ -112,6 +112,14 @@ const bizTypeMap: Record<string, { text: string; tag: string }> = {
 };
 const bizTypeText = (type: string) => bizTypeMap[type]?.text || "通知";
 const bizTypeTag = (type: string) => bizTypeMap[type]?.tag || "info";
+
+// 内容预览：系统通知的 HTML 内容去掉标签，业务通知保持原样
+const getContentPreview = (content?: string, bizType?: string) => {
+  if (!content) return "";
+  if (bizType) return content;
+  const stripped = content.replace(/<[^>]+>/g, "");
+  return stripped.length > 120 ? stripped.slice(0, 120) + "..." : stripped;
+};
 
 const formatDate = (dateStr?: string | Date) => {
   if (!dateStr) return "";

@@ -2,6 +2,7 @@
   <div class="merchant-orders">
     <div class="page-header">
       <h2>发货单管理</h2>
+      <el-button @click="handleExport">导出Excel</el-button>
     </div>
     <el-card>
       <el-table v-loading="loading" :data="shipmentList" border row-key="id">
@@ -137,6 +138,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import MerchantAPI from "@/api/eshop/merchant";
 import type { MerchantShipment } from "@/api/eshop/merchant";
+import { useExport } from "@/composables/useExport";
 
 const router = useRouter();
 const loading = ref(false);
@@ -155,6 +157,41 @@ const deliveryStatusMap: Record<number, { text: string; type: string }> = {
   1: { text: "已发货", type: "primary" },
   2: { text: "已收货", type: "success" },
 };
+
+const { handleExport } = useExport(
+  () =>
+    shipmentList.value.map((item) => ({
+      订单号: item.orderNo,
+      下单时间: item.orderCreateTime,
+      买家: item.userNickname || item.userMobile,
+      手机号: item.userMobile,
+      收货人: item.receiverName,
+      联系电话: item.receiverPhone,
+      收货地址: item.receiverAddress,
+      金额: item.totalAmount,
+      商品数: item.items?.length || 0,
+      支付状态: item.payStatus === 1 ? "已支付" : "待支付",
+      发货状态: deliveryStatusMap[item.deliveryStatus]?.text || "未知",
+      快递公司: item.shippingName || "",
+      快递单号: item.shippingNo || "",
+    })),
+  [
+    { title: "订单号", key: "订单号", width: 24 },
+    { title: "下单时间", key: "下单时间", width: 18 },
+    { title: "买家", key: "买家", width: 15 },
+    { title: "手机号", key: "手机号", width: 15 },
+    { title: "收货人", key: "收货人", width: 12 },
+    { title: "联系电话", key: "联系电话", width: 15 },
+    { title: "收货地址", key: "收货地址", width: 30 },
+    { title: "金额", key: "金额", width: 12 },
+    { title: "商品数", key: "商品数", width: 8 },
+    { title: "支付状态", key: "支付状态", width: 10 },
+    { title: "发货状态", key: "发货状态", width: 10 },
+    { title: "快递公司", key: "快递公司", width: 15 },
+    { title: "快递单号", key: "快递单号", width: 20 },
+  ],
+  "发货单"
+);
 
 const shipDialogVisible = ref(false);
 const currentShipment = ref<MerchantShipment | null>(null);
@@ -219,7 +256,13 @@ onMounted(() => {
   padding: 20px;
 
   .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 20px;
+    h2 {
+      margin: 0;
+    }
   }
 
   .inner-table {

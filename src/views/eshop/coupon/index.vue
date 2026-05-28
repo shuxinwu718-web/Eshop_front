@@ -4,6 +4,7 @@
       <template #header>
         <div class="card-header">
           <span class="header-title">优惠券管理</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
           <el-button type="primary" @click="openDialog()">新增优惠券</el-button>
         </div>
       </template>
@@ -61,6 +62,13 @@
           <template #default="{ row }">
             <span v-if="row.startTime">{{ row.startTime }} ~ {{ row.endTime }}</span>
             <span v-else>不限时</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="获取方式" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.obtainType === 0 ? 'success' : 'info'">
+              {{ obtainTypeMap[row.obtainType] || "未知" }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="80" align="center">
@@ -157,6 +165,15 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-form-item label="获取方式" prop="obtainType">
+          <el-select v-model="form.obtainType" style="width: 100%">
+            <el-option :value="0" label="普通领取（显示在领券中心）" />
+            <el-option :value="1" label="签到" />
+            <el-option :value="2" label="新人礼包" />
+            <el-option :value="3" label="秒杀" />
+            <el-option :value="4" label="其他活动" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="有效期">
           <el-date-picker
             v-model="dateRange"
@@ -191,6 +208,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import CouponAPI, { type CouponItem, type CouponSaveForm } from "@/api/eshop/coupon";
+import { useExport } from "@/composables/useExport";
 
 defineOptions({ name: "EshopCoupon" });
 
@@ -211,6 +229,14 @@ const submitLoading = ref(false);
 const formRef = ref();
 const dateRange = ref<[string, string] | null>(null);
 
+const obtainTypeMap: Record<number, string> = {
+  0: "普通领取",
+  1: "签到",
+  2: "新人礼包",
+  3: "秒杀",
+  4: "其他活动",
+};
+
 const form = reactive<CouponSaveForm>({
   name: "",
   type: 0,
@@ -219,6 +245,7 @@ const form = reactive<CouponSaveForm>({
   maxDiscount: undefined,
   stock: 0,
   limitPerUser: 1,
+  obtainType: 0,
   description: "",
   startTime: undefined,
   endTime: undefined,
@@ -267,6 +294,7 @@ const openDialog = (row?: CouponItem) => {
       maxDiscount: row.maxDiscount,
       stock: row.stock,
       limitPerUser: row.limitPerUser,
+      obtainType: row.obtainType ?? 0,
       description: row.description,
       startTime: undefined,
       endTime: undefined,
@@ -287,6 +315,7 @@ const resetForm = () => {
   form.maxDiscount = undefined;
   form.stock = 0;
   form.limitPerUser = 1;
+  form.obtainType = 0;
   form.description = "";
   form.startTime = undefined;
   form.endTime = undefined;
@@ -348,6 +377,33 @@ const handleDelete = async (row: CouponItem) => {
     if (error !== "cancel") console.error(error);
   }
 };
+
+const columns = [
+  { title: "优惠券名称", key: "name", width: 24 },
+  { title: "类型", key: "typeLabel", width: 12 },
+  { title: "面值", key: "valueLabel", width: 14 },
+  { title: "使用门槛", key: "minAmount", width: 14 },
+  { title: "库存", key: "stock", width: 10 },
+  { title: "获取方式", key: "obtainTypeLabel", width: 14 },
+  { title: "有效期", key: "validity", width: 36 },
+  { title: "状态", key: "statusLabel", width: 12 },
+  { title: "创建时间", key: "createTime", width: 20 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    couponList.value.map((item) => ({
+      ...item,
+      typeLabel: item.type === 0 ? "满减券" : "折扣券",
+      valueLabel: item.type === 0 ? "¥" + item.value : item.value + "折",
+      minAmount: "满¥" + (item.minAmount || 0),
+      obtainTypeLabel: obtainTypeMap[item.obtainType] || "未知",
+      validity: item.startTime ? item.startTime + " ~ " + item.endTime : "不限时",
+      statusLabel: item.status === 1 ? "上架" : "下架",
+    })),
+  columns,
+  "优惠券管理"
+);
 
 onMounted(() => {
   fetchData();

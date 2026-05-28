@@ -179,9 +179,7 @@
       />
       <template #footer>
         <el-button @click="contactDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="contactSending" @click="doSendMessage">
-          发送
-        </el-button>
+        <el-button type="primary" :loading="contactSending" @click="doSendMessage">发送</el-button>
       </template>
     </el-dialog>
   </div>
@@ -198,6 +196,7 @@ import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
 import MessageAPI from "@/api/eshop/merchant-message";
 import { getFullImageUrl } from "@/utils/url";
+import HistoryAPI from "@/api/eshop/history";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -416,6 +415,10 @@ const submitReply = async (comment: CommentVO) => {
 
 onMounted(() => {
   fetchDetail();
+  // 记录浏览历史
+  if (userStore.isLoggedIn()) {
+    HistoryAPI.add(Number(route.params.id)).catch(() => {});
+  }
 });
 </script>
 

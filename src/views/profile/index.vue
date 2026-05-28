@@ -72,17 +72,8 @@
                 <el-descriptions-item>
                   <template #label>
                     <div class="cell-item">
-                      <el-icon><OfficeBuilding /></el-icon>
-                      部门
-                    </div>
-                  </template>
-                  {{ userProfile.deptName || "-" }}
-                </el-descriptions-item>
-                <el-descriptions-item>
-                  <template #label>
-                    <div class="cell-item">
                       <el-icon><Timer /></el-icon>
-                      创建时间
+                      注册时间
                     </div>
                   </template>
                   {{ userProfile.createTime }}
@@ -323,7 +314,6 @@ import {
   User,
   Male,
   Female,
-  OfficeBuilding,
   Timer,
   Key,
 } from "@element-plus/icons-vue";

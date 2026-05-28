@@ -35,6 +35,26 @@
         </el-form-item>
       </el-tooltip>
 
+      <!-- 图形验证码 -->
+      <el-form-item prop="captchaCode">
+        <div class="captcha-wrapper">
+          <el-input
+            v-model.trim="loginFormData.captchaCode"
+            placeholder="验证码"
+            maxlength="4"
+            @keyup.enter="handleLoginSubmit"
+          >
+            <template #prefix>
+              <el-icon><Key /></el-icon>
+            </template>
+          </el-input>
+          <div class="captcha-image" @click="fetchCaptcha">
+            <img v-if="captchaImage" :src="captchaImage" alt="验证码" title="点击刷新" />
+            <span v-else class="captcha-loading">获取验证码</span>
+          </div>
+        </div>
+      </el-form-item>
+
       <div class="flex-x-between w-full">
         <el-checkbox v-model="loginFormData.rememberMe">{{ t("login.rememberMe") }}</el-checkbox>
         <el-link type="primary" :underline="false" @click="toResetPwd">
@@ -58,12 +78,17 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
-import type { FormInstance, ElMessage } from "element-plus";
+import type { FormInstance } from "element-plus";
+import { ElMessage } from "element-plus";
 import type { LoginRequest } from "@/types/api";
 import router from "@/router";
 import { useUserStore } from "@/store";
 import { AuthStorage } from "@/utils/auth";
+import { useI18n } from "vue-i18n"; // 补充缺失的导入
+
+const baseApi = import.meta.env.VITE_APP_BASE_API || "/dev-api";
 
 const { t } = useI18n();
 const userStore = useUserStore();
@@ -73,24 +98,52 @@ const loginFormRef = ref<FormInstance>();
 const loading = ref(false);
 const isCapsLock = ref(false);
 const rememberMe = AuthStorage.getRememberMe();
+
+// 验证码
+const captchaImage = ref("");
+const captchaKey = ref("");
+
 const loginFormData = ref<LoginRequest>({
   username: "admin",
   password: "123456",
   rememberMe,
+  captchaKey: "", // 后端验证码 key
+  captchaCode: "", // 用户输入的验证码
 });
 
 const loginRules = computed(() => {
   return {
     username: [{ required: true, trigger: "blur", message: t("login.message.username.required") }],
     password: [{ required: true, trigger: "blur", message: t("login.message.password.required") }],
+    captchaCode: [{ required: true, trigger: "blur", message: "请输入验证码" }],
   };
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
+// 切换到注册或重置密码表单
+function toOtherForm(type: "register" | "resetPwd") {
+  emit("update:modelValue", type);
+}
+
 const toResetPwd = () => {
-  emit("update:modelValue", "resetPwd");
+  toOtherForm("resetPwd");
 };
+
+// 获取图形验证码
+async function fetchCaptcha() {
+  try {
+    const resp = await fetch(`${baseApi}/api/captcha/image`);
+    const data = await resp.json();
+    captchaKey.value = data.key;
+    // 🔥 关键修改：后端已返回完整 Data URL，直接赋值
+    captchaImage.value = data.image;
+    loginFormData.value.captchaKey = data.key;
+    loginFormData.value.captchaCode = "";
+  } catch {
+    console.error("获取验证码失败");
+  }
+}
 
 async function handleLoginSubmit() {
   const valid = await loginFormRef.value?.validate().then(
@@ -103,17 +156,15 @@ async function handleLoginSubmit() {
   try {
     await userStore.login(loginFormData.value);
     await userStore.getUserInfo();
-    ElMessage.success("登录成功"); // 添加成功提示
+    ElMessage.success("登录成功");
 
     const role = userStore.userInfo.roles?.[0] || "USER";
     let redirectPath = (route.query.redirect as string) || "";
-    // 过滤无效的重定向地址
     if (redirectPath === "/401" || redirectPath === "/login" || redirectPath === "/") {
       console.warn("无效的 redirect 参数，忽略:", redirectPath);
       redirectPath = "";
     }
 
-    // 校验重定向地址的角色权限
     if (redirectPath) {
       const decodedPath = decodeURIComponent(redirectPath);
       const resolved = router.resolve(decodedPath);
@@ -127,7 +178,6 @@ async function handleLoginSubmit() {
       }
     }
 
-    // 角色默认首页
     const roleHomeMap: Record<string, string> = {
       ADMIN: "/dashboard",
       MERCHANT: "/merchant/products",
@@ -137,6 +187,7 @@ async function handleLoginSubmit() {
     console.error("登录或获取用户信息失败", error);
     const msg = error?.message || error?.msg || "登录失败，请稍后重试";
     ElMessage.error(msg);
+    fetchCaptcha(); // 登录失败刷新验证码
   } finally {
     loading.value = false;
   }
@@ -147,8 +198,11 @@ function checkCapsLock(event: KeyboardEvent) {
     isCapsLock.value = event.getModifierState("CapsLock");
   }
 }
-</script>
 
+onMounted(() => {
+  fetchCaptcha();
+});
+</script>
 <style lang="scss" scoped>
 .auth-panel-form {
   display: flex;
@@ -160,5 +214,45 @@ function checkCapsLock(event: KeyboardEvent) {
   margin: 0 0 0.5rem;
   font-size: 1.125rem;
   font-weight: 600;
+}
+
+.captcha-wrapper {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+
+  .el-input {
+    flex: 1;
+  }
+
+  .captcha-image {
+    flex-shrink: 0;
+    width: 130px;
+    height: 48px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--el-border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+
+    &:hover {
+      border-color: var(--el-color-primary);
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .captcha-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
 }
 </style>

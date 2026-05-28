@@ -32,7 +32,12 @@
       >
         <div class="notice-card__header">
           <div class="notice-card__title">
-            <el-tag v-if="item.bizType" size="small" :type="getBizTypeTag(item.bizType)" class="biz-tag">
+            <el-tag
+              v-if="item.bizType"
+              size="small"
+              :type="getBizTypeTag(item.bizType)"
+              class="biz-tag"
+            >
               {{ getBizTypeText(item.bizType) }}
             </el-tag>
             {{ item.title }}
@@ -43,10 +48,10 @@
           </div>
         </div>
 
-        <div class="notice-card__content">{{ item.content }}</div>
+        <div class="notice-card__content">{{ getContentPreview(item.content, item.bizType) }}</div>
 
         <div class="notice-card__info">
-          <div class="notice-card__tags" v-if="!item.bizType">
+          <div v-if="!item.bizType" class="notice-card__tags">
             <el-tag size="small" :type="getNoticeTypeTag(item.type)">
               {{ getNoticeTypeText(item.type) }}
             </el-tag>
@@ -65,7 +70,12 @@
             </span>
           </div>
           <div v-if="item.bizType && item.bizId" class="notice-card__actions" @click.stop>
-            <el-button size="small" type="primary" link @click="goBizDetail(item.bizType!, item.bizId!)">
+            <el-button
+              size="small"
+              type="primary"
+              link
+              @click="goBizDetail(item.bizType!, item.bizId!)"
+            >
               查看详情
             </el-button>
           </div>
@@ -172,6 +182,14 @@ const bizTypeMap: Record<string, { text: string; tag: string }> = {
 const getBizTypeText = (type: string) => bizTypeMap[type]?.text || "通知";
 const getBizTypeTag = (type: string) => bizTypeMap[type]?.tag || "info";
 
+// 内容预览：系统通知的 HTML 内容去掉标签，业务通知保持原样
+const getContentPreview = (content?: string, bizType?: string) => {
+  if (!content) return "";
+  if (bizType) return content;
+  const stripped = content.replace(/<[^>]+>/g, "");
+  return stripped.length > 120 ? stripped.slice(0, 120) + "..." : stripped;
+};
+
 // 格式化日期
 const formatDate = (dateStr?: string | Date) => {
   if (!dateStr) return "";
@@ -208,7 +226,9 @@ async function handleReadNotice(item: NoticeItem) {
       try {
         await NoticeAPI.getDetail(item.id);
         item.isRead = 1;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     goBizDetail(item.bizType, item.bizId);
   } else {
@@ -321,15 +341,15 @@ onMounted(() => {
   }
 
   &__status {
-    margin-left: 8px;
     flex-shrink: 0;
+    margin-left: 8px;
   }
 
   &__content {
     margin-bottom: 10px;
     font-size: 14px;
-    color: var(--el-text-color-secondary);
     line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 
   &__info {

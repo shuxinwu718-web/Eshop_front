@@ -4,6 +4,7 @@
       <template #header>
         <div class="flex-x-between">
           <span>分类管理</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
           <el-button type="primary" @click="openDialog()">新增分类</el-button>
         </div>
       </template>
@@ -71,6 +72,7 @@
 defineOptions({ name: "EshopCategory" });
 
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
+import { useExport } from "@/composables/useExport";
 import type { FormInstance } from "element-plus";
 
 const loading = ref(false);
@@ -162,6 +164,14 @@ async function handleDelete(row: CategoryItem) {
   ElMessage.success("删除成功");
   fetchData();
 }
+
+const columns = [
+  { title: "分类名称", key: "name", width: 24 },
+  { title: "级别", key: "level", width: 10 },
+  { title: "排序", key: "sortOrder", width: 10 },
+];
+
+const { handleExport } = useExport(() => categoryList.value, columns, "分类管理");
 
 onMounted(() => fetchData());
 </script>

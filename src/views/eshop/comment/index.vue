@@ -2,7 +2,10 @@
   <div class="comment-manage">
     <el-card shadow="never">
       <template #header>
-        <span>评论管理</span>
+        <div class="flex-x-between">
+          <span>评论管理</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
+        </div>
       </template>
 
       <!-- 搜索栏 -->
@@ -112,6 +115,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import CommentAPI, { type CommentItem, type CommentQueryParams } from "@/api/eshop/comment";
+import { useExport } from "@/composables/useExport";
 
 const loading = ref(false);
 const list = ref<CommentItem[]>([]);
@@ -185,6 +189,25 @@ const handleDelete = async (row: CommentItem) => {
     }
   }
 };
+
+const columns = [
+  { title: "商品ID", key: "productId", width: 12 },
+  { title: "用户ID", key: "userId", width: 12 },
+  { title: "评分", key: "rating", width: 10 },
+  { title: "评论内容", key: "content", width: 40 },
+  { title: "状态", key: "statusLabel", width: 10 },
+  { title: "评论时间", key: "createTime", width: 20 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    list.value.map((item) => ({
+      ...item,
+      statusLabel: item.status === 1 ? "显示" : "隐藏",
+    })),
+  columns,
+  "评论管理"
+);
 
 onMounted(() => {
   fetchData();

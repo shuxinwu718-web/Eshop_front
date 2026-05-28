@@ -31,6 +31,9 @@
             删除
           </el-button>
         </div>
+        <div class="table-section__toolbar--tools" style="margin-left: auto">
+          <el-button icon="download" @click="handleExport">导出</el-button>
+        </div>
       </div>
 
       <el-table
@@ -137,6 +140,7 @@ defineOptions({
 import DictAPI from "@/api/system/dict";
 import type { DictTypeQueryParams, DictTypeItem, DictTypeForm } from "@/types/api";
 import type { FormInstance, FormRules } from "element-plus";
+import { useExport } from "@/composables/useExport";
 import router from "@/router";
 
 // 表单引用
@@ -154,6 +158,17 @@ const tableData = ref<DictTypeItem[]>();
 const total = ref(0);
 const loading = ref(false);
 const ids = ref<string[]>([]);
+
+const { handleExport } = useExport(
+  () => tableData.value,
+  [
+    { title: "字典名称", key: "name" },
+    { title: "字典编码", key: "dictCode" },
+    { title: "状态", key: "status", width: 10 },
+    { title: "备注", key: "remark" },
+  ],
+  "字典管理"
+);
 
 // 弹窗状态
 const dialogState = reactive({

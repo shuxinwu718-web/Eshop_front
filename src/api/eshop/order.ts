@@ -21,7 +21,7 @@ export interface OrderVO {
   orderNo: string;
   userId: number;
   totalAmount: number;
-  ayAmount?: number;
+  payAmount?: number;
   status: number;
   createTime: string;
   items: OrderItem[];
@@ -80,6 +80,19 @@ const OrderAPI = {
       url: `${BASE_URL}/user/page`,
       method: "get",
       params,
+    });
+  },
+
+  /**
+   * 申请退款
+   * @param orderId 订单ID
+   * @param reason 退款原因（可选）
+   */
+  applyRefund(orderId: number, reason?: string) {
+    return request({
+      url: `${BASE_URL}/refund/apply`,
+      method: "post",
+      data: { orderId, reason },
     });
   },
 

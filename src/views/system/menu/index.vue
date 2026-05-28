@@ -30,6 +30,7 @@
             新增
           </el-button>
         </div>
+        <el-button icon="download" @click="handleExport">导出</el-button>
       </div>
 
       <el-table
@@ -365,6 +366,7 @@ import type { MenuQueryParams, MenuForm, MenuItem } from "@/types/api";
 import type { FormInstance, FormRules } from "element-plus";
 import { MenuScopeEnum, MenuTypeEnum } from "@/enums/business";
 import { isTenantEnabled } from "@/utils/tenant";
+import { useExport } from "@/composables/useExport";
 
 defineOptions({
   name: "SysMenu",
@@ -382,6 +384,19 @@ const queryParams = reactive<MenuQueryParams>({});
 
 // 列表数据
 const menuTableData = ref<MenuItem[]>([]);
+const { handleExport } = useExport(
+  () => menuTableData.value ?? [],
+  [
+    { title: "菜单名称", key: "name" },
+    { title: "图标", key: "icon" },
+    { title: "排序", key: "sort" },
+    { title: "权限标识", key: "perms" },
+    { title: "组件路径", key: "component" },
+    { title: "状态", key: "visible" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "菜单数据"
+);
 const menuOptions = ref<OptionItem[]>([]);
 const loading = ref(false);
 

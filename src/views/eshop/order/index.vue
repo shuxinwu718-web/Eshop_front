@@ -4,6 +4,7 @@
       <template #header>
         <div class="flex-x-between">
           <span>订单管理</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
         </div>
       </template>
 
@@ -125,6 +126,7 @@
 defineOptions({ name: "EshopOrder" });
 
 import OrderAPI, { type OrderVO, type OrderPageParams } from "@/api/eshop/order";
+import { useExport } from "@/composables/useExport";
 
 const loading = ref(false);
 const orderList = ref<OrderVO[]>([]);
@@ -201,6 +203,29 @@ async function handleCancel(row: OrderVO) {
   ElMessage.success("已取消");
   fetchData();
 }
+
+const columns = [
+  { title: "订单号", key: "orderNo", width: 24 },
+  { title: "商品", key: "productInfo", width: 40 },
+  { title: "总金额", key: "totalAmount", width: 14 },
+  { title: "状态", key: "statusLabel", width: 12 },
+  { title: "下单时间", key: "createTime", width: 20 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    orderList.value.map((item) => ({
+      ...item,
+      totalAmount: "¥" + item.totalAmount,
+      statusLabel: statusLabel(item.status),
+      productInfo:
+        item.items
+          ?.map((i) => (i.productName || "商品ID:" + i.productId) + " x" + i.quantity)
+          .join("; ") || "",
+    })),
+  columns,
+  "订单管理"
+);
 
 onMounted(() => fetchData());
 </script>

@@ -21,6 +21,12 @@
             <span>下单时间：{{ order.createTime }}</span>
             <span>实付金额：¥{{ order.payAmount }}</span>
             <el-tag :type="getStatusType(order.status)">{{ getStatusText(order.status) }}</el-tag>
+            <div v-if="order.status === 0" class="countdown">
+              <span class="label">剩余支付时间：</span>
+              <span class="time" :class="{ urgent: (remainSecondsMap.get(order.id) || 0) <= 300 }">
+                {{ formatRemaining(order.id) }}
+              </span>
+            </div>
           </div>
           <div id="order-products" class="order-products">
             <div v-for="item in order.items" :key="item.productId" class="product-item">
@@ -60,6 +66,16 @@
             >
               确认收货
             </el-button>
+
+            <el-button
+              v-if="order.status === 1"
+              type="warning"
+              size="small"
+              @click="openRefundDialog(order)"
+            >
+              申请退款
+            </el-button>
+
             <el-button size="small" @click="viewDetail(order.id)">查看详情</el-button>
           </div>
         </div>
@@ -106,11 +122,35 @@
         <el-button type="primary" :loading="paying" @click="confirmPay">确认支付</el-button>
       </div>
     </el-dialog>
+
+    <!-- 退款申请弹窗 -->
+    <el-dialog v-model="refundDialogVisible" title="申请退款" width="400px">
+      <el-form label-width="80px">
+        <el-form-item label="订单号">
+          <span>{{ currentRefundOrder?.orderNo }}</span>
+        </el-form-item>
+        <el-form-item label="退款金额">
+          <span style="color: #f56c6c">¥{{ currentRefundOrder?.payAmount }}</span>
+        </el-form-item>
+        <el-form-item label="退款原因">
+          <el-input
+            v-model="refundReason"
+            type="textarea"
+            rows="3"
+            placeholder="请简要说明退款原因（选填）"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="refundDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitRefund">提交申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
@@ -186,6 +226,7 @@ const fetchOrders = async () => {
     const res = await OrderAPI.getUserPage(params);
     orderList.value = res.records;
     total.value = res.total;
+    updateRemainSeconds(); // 更新倒计时数据
   } catch {
     ElMessage.error("加载订单失败");
   } finally {
@@ -225,8 +266,83 @@ const viewDetail = (orderId: number) => {
   router.push(`/order/detail/${orderId}`);
 };
 
+// 退款相关
+const refundReason = ref("");
+const refundDialogVisible = ref(false);
+const currentRefundOrder = ref<OrderVO | null>(null);
+
+// 打开退款申请弹窗
+const openRefundDialog = (order: OrderVO) => {
+  currentRefundOrder.value = order;
+  refundReason.value = "";
+  refundDialogVisible.value = true;
+};
+
+// 提交退款申请
+const submitRefund = async () => {
+  if (!currentRefundOrder.value) return;
+  try {
+    await OrderAPI.applyRefund(currentRefundOrder.value.id, refundReason.value);
+    ElMessage.success("退款申请已提交，请等待审核");
+    refundDialogVisible.value = false;
+    fetchOrders(); // 刷新列表
+  } catch {
+    ElMessage.error("提交失败");
+  }
+};
+
+// 存储每个待付款订单的剩余秒数
+const remainSecondsMap = ref<Map<number, number>>(new Map());
+let timer: NodeJS.Timeout | null = null;
+
+// 更新所有待付款订单的剩余秒数
+const updateRemainSeconds = () => {
+  const payTimeoutMs = 30 * 60 * 1000; // 30分钟，与后端一致
+  const now = Date.now();
+  const newMap = new Map<number, number>();
+  orderList.value.forEach((order) => {
+    if (order.status === 0) {
+      const createTime = new Date(order.createTime).getTime();
+      const expireTime = createTime + payTimeoutMs;
+      const remaining = Math.max(0, Math.floor((expireTime - now) / 1000));
+      newMap.set(order.id, remaining);
+    }
+  });
+  remainSecondsMap.value = newMap;
+};
+
+// 格式化剩余时间为 mm:ss
+const formatRemaining = (orderId: number): string => {
+  const seconds = remainSecondsMap.value.get(orderId) || 0;
+  if (seconds <= 0) return "订单已过期";
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+};
+
+// 启动定时器
+const startTimer = () => {
+  if (timer) clearInterval(timer);
+  timer = setInterval(() => {
+    updateRemainSeconds();
+    // 如果有订单剩余时间为0，立即刷新订单列表（后端订单已自动取消）
+    const hasExpired = orderList.value.some(
+      (order) => order.status === 0 && (remainSecondsMap.value.get(order.id) || 0) <= 0
+    );
+    if (hasExpired) {
+      fetchOrders(); // 刷新列表
+    }
+  }, 1000);
+};
+
 onMounted(() => {
   fetchOrders();
+  startTimer();
+});
+
+// 组件卸载时清理定时器
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer);
 });
 </script>
 
@@ -281,5 +397,39 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   text-align: center;
+}
+
+.countdown {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+
+  .label {
+    font-size: 13px;
+    color: #606266;
+  }
+
+  .time {
+    font-size: 16px;
+    font-weight: bold;
+    color: #f56c6c;
+    transition: all 0.2s;
+
+    &.urgent {
+      animation: blink 1s infinite;
+    }
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

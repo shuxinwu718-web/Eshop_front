@@ -4,6 +4,7 @@
       <template #header>
         <div class="flex-x-between">
           <span>收货地址</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
           <el-button type="primary" @click="openDialog()">新增地址</el-button>
         </div>
       </template>
@@ -119,6 +120,7 @@ defineOptions({ name: "EshopAddress" });
 
 import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import AddressAPI, { type AddressItem } from "@/api/eshop/address";
+import { useExport } from "@/composables/useExport";
 import type { FormInstance } from "element-plus";
 
 const loading = ref(false);
@@ -208,6 +210,26 @@ async function handleDelete(row: AddressItem) {
   ElMessage.success("删除成功");
   fetchData();
 }
+
+const columns = [
+  { title: "收货人", key: "receiverName", width: 16 },
+  { title: "联系电话", key: "receiverPhone", width: 18 },
+  { title: "地址", key: "fullAddress", width: 40 },
+  { title: "是否默认", key: "defaultLabel", width: 12 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    addressList.value.map((item) => ({
+      ...item,
+      fullAddress: [item.province, item.city, item.district, item.detailAddress]
+        .filter(Boolean)
+        .join(" "),
+      defaultLabel: item.isDefault === 1 ? "是" : "否",
+    })),
+  columns,
+  "收货地址"
+);
 
 onMounted(() => {
   fetchData();

@@ -44,6 +44,7 @@
             删除
           </el-button>
         </div>
+        <el-button icon="download" @click="handleExport">导出</el-button>
       </div>
 
       <el-table
@@ -59,7 +60,7 @@
         <el-table-column align="center" label="通知类型" width="150">
           <template #default="{ row }">
             <el-tag v-if="row.type === 0" type="primary">系统公告</el-tag>
-            <el-tag v-else-if="row.type === 1" type="success">活动通知</el-tag>
+            <el-tag v-else-if="row.type === 1" type="success">审核通知</el-tag>
             <el-tag v-else-if="row.type === 2" type="warning">订单提醒</el-tag>
             <span v-else>-</span>
           </template>
@@ -276,6 +277,7 @@ import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem, NoticeForm, NoticeQueryParams, NoticeDetail } from "@/types/api";
 
 import { Editor, Toolbar } from "@wangeditor-next/editor-for-vue";
+import { useExport } from "@/composables/useExport";
 import "@wangeditor-next/editor/dist/css/style.css"; // 编辑器核心样式
 
 // 表单引用
@@ -291,6 +293,19 @@ const queryParams = reactive<NoticeQueryParams>({
 });
 
 const pageData = ref<NoticeItem[]>([]);
+const { handleExport } = useExport(
+  () => pageData.value ?? [],
+  [
+    { title: "通知标题", key: "title" },
+    { title: "通知类型", key: "type" },
+    { title: "发布人", key: "publisherName" },
+    { title: "通知等级", key: "level" },
+    { title: "发布状态", key: "publishStatus" },
+    { title: "发布时间", key: "publishTime" },
+    { title: "创建时间", key: "createTime" },
+  ],
+  "通知数据"
+);
 const total = ref(0);
 const loading = ref(false);
 const selectIds = ref<number[]>([]);

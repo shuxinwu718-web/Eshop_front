@@ -66,6 +66,22 @@ const UserAPI = {
     });
   },
 
+  // 在线用户列表
+  getOnlineUsers() {
+    return request<any, Record<number, string>>({
+      url: `${BASE_URL}/admin/online`,
+      method: "get",
+    });
+  },
+
+  // 管理员强制下线
+  kickUser(id: number) {
+    return request({
+      url: `${BASE_URL}/admin/kick/${id}`,
+      method: "post",
+    });
+  },
+
   // 管理员搜索用户（关键词）
   search(keyword: string, pageNum: number = 1, pageSize: number = 10) {
     return request<any, { records: UserItem[]; total: number }>({

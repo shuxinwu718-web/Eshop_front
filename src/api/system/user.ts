@@ -229,6 +229,28 @@ const UserAPI = {
   },
 
   /**
+   * 获取在线用户列表
+   */
+  getOnlineUsers() {
+    return request<any, Record<string, string>>({
+      url: `${USER_BASE_URL}/admin/online`,
+      method: "get",
+    });
+  },
+
+  /**
+   * 强制下线指定用户
+   *
+   * @param id 用户ID
+   */
+  kickUser(id: string) {
+    return request({
+      url: `${USER_BASE_URL}/admin/kick/${id}`,
+      method: "post",
+    });
+  },
+
+  /**
    *  获取用户下拉列表
    */
   getOptions() {

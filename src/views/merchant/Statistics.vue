@@ -20,7 +20,12 @@
       <div ref="chartRef" style="height: 400px"></div>
     </el-card>
     <el-card style="margin-top: 20px">
-      <template #header>各商品售卖情况</template>
+      <template #header>
+        <div class="card-header-flex">
+          <span>各商品售卖情况</span>
+          <el-button size="small" @click="handleExport">导出Excel</el-button>
+        </div>
+      </template>
       <el-table v-loading="salesLoading" :data="productSales" stripe style="width: 100%">
         <el-table-column label="商品图片" width="100">
           <template #default="{ row }">
@@ -58,6 +63,7 @@ import { useRouter } from "vue-router";
 import * as echarts from "echarts";
 import MerchantAPI, { type SalesStatistics, type ProductSalesItem } from "@/api/eshop/merchant";
 import { getFullImageUrl } from "@/utils/url";
+import { useExport } from "@/composables/useExport";
 
 const router = useRouter();
 const statistics = ref<SalesStatistics>({ totalSales: 0, totalOrders: 0, dailyStats: [] });
@@ -66,6 +72,25 @@ let chart: echarts.ECharts | null = null;
 
 const productSales = ref<ProductSalesItem[]>([]);
 const salesLoading = ref(false);
+
+const { handleExport } = useExport(
+  () =>
+    productSales.value.map((item) => ({
+      商品名称: item.productName,
+      单价: item.price,
+      库存: item.stock,
+      销量: item.sales,
+      销售额: item.totalAmount,
+    })),
+  [
+    { title: "商品名称", key: "商品名称", width: 30 },
+    { title: "单价", key: "单价", width: 12 },
+    { title: "库存", key: "库存", width: 10 },
+    { title: "销量", key: "销量", width: 10 },
+    { title: "销售额", key: "销售额", width: 14 },
+  ],
+  "商品售卖情况"
+);
 
 const loadStatistics = async () => {
   const res = await MerchantAPI.getStatistics(30);
@@ -130,6 +155,12 @@ onUnmounted(() => {
   font-weight: bold;
   color: var(--el-color-primary);
   text-align: center;
+}
+
+.card-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* 暗黑模式适配 */

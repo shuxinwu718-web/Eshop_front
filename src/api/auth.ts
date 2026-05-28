@@ -12,6 +12,8 @@ const AuthAPI = {
       data: {
         username: data.username,
         password: data.password,
+        captchaKey: data.captchaKey,
+        captchaCode: data.captchaCode,
       },
     });
   },

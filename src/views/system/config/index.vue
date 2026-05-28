@@ -38,6 +38,9 @@
             刷新缓存
           </el-button>
         </div>
+        <div class="table-section__toolbar--tools">
+          <el-button icon="download" @click="handleExport">导出</el-button>
+        </div>
       </div>
 
       <el-table
@@ -142,6 +145,7 @@ import ConfigAPI from "@/api/system/config";
 import type { ConfigItem, ConfigForm, ConfigQueryParams } from "@/types/api";
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from "element-plus";
 import { useDebounceFn } from "@vueuse/core";
+import { useExport } from "@/composables/useExport";
 
 // 表单引用
 const queryFormRef = ref<FormInstance>();
@@ -159,6 +163,18 @@ const pageData = ref<ConfigItem[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const selectIds = ref<string[]>([]);
+
+// 导出
+const { handleExport } = useExport(
+  () => pageData.value,
+  [
+    { title: "配置名称", key: "configName" },
+    { title: "配置项", key: "configKey" },
+    { title: "配置值", key: "configValue" },
+    { title: "描述", key: "remark" },
+  ],
+  "系统配置"
+);
 
 // 弹窗状态
 const dialogState = reactive({
