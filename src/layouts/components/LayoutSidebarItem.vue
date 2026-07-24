@@ -71,7 +71,12 @@ const MenuIcon = defineComponent({
   props: { icon: String },
   setup(props) {
     const isElIcon = computed(() => props.icon?.startsWith("el-icon"));
-    const iconName = computed(() => props.icon?.replace("el-icon-", ""));
+    const iconName = computed(() => {
+      const raw = props.icon?.replace("el-icon-", "");
+      if (!raw) return "";
+      // Element Plus 图标组件名是 PascalCase，首字母大写
+      return raw.charAt(0).toUpperCase() + raw.slice(1);
+    });
 
     return () => {
       if (!props.icon) {
