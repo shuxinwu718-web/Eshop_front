@@ -15,9 +15,12 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="queryParams.status" placeholder="全部" clearable>
-            <el-option label="待审核" :value="0" />
-            <el-option label="已通过" :value="1" />
-            <el-option label="已拒绝" :value="2" />
+            <el-option label="待商户审核" :value="0" />
+            <el-option label="待管理员审核" :value="1" />
+            <el-option label="已通过" :value="2" />
+            <el-option label="已拒绝" :value="3" />
+            <el-option label="退款执行中" :value="4" />
+            <el-option label="已退款" :value="5" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -34,25 +37,43 @@
         <el-table-column prop="refundAmount" label="退款金额" width="120">
           <template #default="{ row }">¥{{ row.refundAmount }}</template>
         </el-table-column>
-        <el-table-column prop="reason" label="退款原因" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="applyTime" label="申请时间" width="180" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="reasonCategoryName" label="退款原因" min-width="120" />
+        <el-table-column prop="reason" label="补充说明" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="applyTime" label="申请时间" width="160" />
+        <el-table-column label="状态" width="120">
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status].type">{{ statusMap[row.status].text }}</el-tag>
+            <el-tag :type="statusTagMap[row.status]?.type || 'info'">
+              {{ statusTagMap[row.status]?.text || "未知" }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="180">
+        <el-table-column label="操作" fixed="right" width="200">
           <template #default="{ row }">
-            <el-button v-if="row.status === 0" type="success" size="small" @click="audit(row, 1)">
+            <!-- 待商户审核（status=0）— 管理员可做初审 -->
+            <el-button
+              v-if="row.status === 0 || row.status === 1"
+              type="success"
+              size="small"
+              @click="auditApprove(row)"
+            >
               通过
             </el-button>
             <el-button
-              v-if="row.status === 0"
+              v-if="row.status === 0 || row.status === 1"
               type="danger"
               size="small"
               @click="openRejectDialog(row)"
             >
               拒绝
+            </el-button>
+            <!-- 已通过（status=2）— 管理员执行退款 -->
+            <el-button
+              v-if="row.status === 2"
+              type="warning"
+              size="small"
+              @click="executeRefund(row)"
+            >
+              执行退款
             </el-button>
             <el-button size="small" @click="viewDetail(row)">详情</el-button>
           </template>
@@ -62,8 +83,8 @@
       <pagination
         v-if="total > 0"
         v-model:total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
+        v-model:page="pageNum"
+        v-model:limit="pageSize"
         @pagination="fetchData"
       />
     </el-card>
@@ -85,53 +106,111 @@
         <el-button type="danger" @click="confirmReject">确认拒绝</el-button>
       </template>
     </el-dialog>
+
+    <!-- 退款进度弹窗 -->
+    <el-dialog v-model="detailDialogVisible" title="退款详情" width="600px">
+      <div v-loading="loadingDetail" class="refund-detail">
+        <!-- 基本信息 -->
+        <div class="detail-info">
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="退款单号">{{ currentDetail?.id }}</el-descriptions-item>
+            <el-descriptions-item label="订单号">{{ currentDetail?.orderNo }}</el-descriptions-item>
+            <el-descriptions-item label="申请用户">
+              {{ currentDetail?.username }}
+            </el-descriptions-item>
+            <el-descriptions-item label="退款金额">
+              ¥{{ currentDetail?.refundAmount }}
+            </el-descriptions-item>
+            <el-descriptions-item label="退款原因">
+              {{ currentDetail?.reasonCategoryName || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="补充说明">
+              {{ currentDetail?.reason || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="申请时间">
+              {{ currentDetail?.applyTime }}
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag :type="statusTagMap[currentDetail?.status || 0]?.type || 'info'">
+                {{ statusTagMap[currentDetail?.status || 0]?.text || "未知" }}
+              </el-tag>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+        <!-- 进度时间线 -->
+        <div v-if="progressLogs.length > 0" class="detail-progress">
+          <h4>处理进度</h4>
+          <el-steps :active="currentProgressStep" align-center>
+            <el-step title="提交申请" />
+            <el-step title="商户审核" />
+            <el-step title="管理员审核" />
+            <el-step title="退款执行" />
+            <el-step title="退款完成" />
+          </el-steps>
+          <div class="progress-timeline">
+            <div v-for="log in progressLogs" :key="log.id" class="timeline-item">
+              <div class="timeline-dot" />
+              <div class="timeline-content">
+                <div class="timeline-node">{{ log.nodeName }}</div>
+                <div class="timeline-meta">
+                  <span>{{ log.operator }}（{{ log.operatorRole }}）</span>
+                  <span>{{ log.createTime }}</span>
+                </div>
+                <div v-if="log.remark" class="timeline-remark">{{ log.remark }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import RefundAPI, { type RefundRecord } from "@/api/eshop/refund";
+import RefundAPI, { type RefundRecord, type RefundProgressLog } from "@/api/eshop/refund";
 import { useExport } from "@/composables/useExport";
-
-interface RefundRecord {
-  id: number;
-  orderId: number;
-  orderNo: string;
-  userId: number;
-  username: string;
-  reason: string;
-  status: number;
-  remark: string;
-  refundAmount: number;
-  applyTime: string;
-  auditTime: string;
-}
 
 const loading = ref(false);
 const list = ref<RefundRecord[]>([]);
 const total = ref(0);
+const pageNum = ref(1);
+const pageSize = ref(10);
 const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
   orderNo: "",
   status: undefined as number | undefined,
 });
 
-const statusMap: Record<number, { text: string; type: string }> = {
-  0: { text: "待审核", type: "warning" },
-  1: { text: "已通过", type: "success" },
-  2: { text: "已拒绝", type: "danger" },
+const statusTagMap: Record<number, { text: string; type: string }> = {
+  0: { text: "待商户审核", type: "warning" },
+  1: { text: "待管理员审核", type: "warning" },
+  2: { text: "已通过", type: "success" },
+  3: { text: "已拒绝", type: "danger" },
+  4: { text: "退款执行中", type: "primary" },
+  5: { text: "已退款", type: "success" },
 };
 
+// 拒绝弹窗
 const rejectDialogVisible = ref(false);
 const currentRecord = ref<RefundRecord | null>(null);
 const rejectForm = reactive({ remark: "" });
 
+// 详情弹窗
+const detailDialogVisible = ref(false);
+const loadingDetail = ref(false);
+const currentDetail = ref<RefundRecord | null>(null);
+const progressLogs = ref<RefundProgressLog[]>([]);
+const currentProgressStep = ref(0);
+
 const fetchData = async () => {
   loading.value = true;
   try {
-    const res = await RefundAPI.getList(queryParams);
+    const res = await RefundAPI.getList({
+      ...queryParams,
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    });
     list.value = res.records;
     total.value = res.total;
   } catch (error) {
@@ -143,23 +222,24 @@ const fetchData = async () => {
 };
 
 const handleSearch = () => {
-  queryParams.pageNum = 1;
+  pageNum.value = 1;
   fetchData();
 };
 
 const resetSearch = () => {
   queryParams.orderNo = "";
   queryParams.status = undefined;
-  queryParams.pageNum = 1;
+  pageNum.value = 1;
   fetchData();
 };
 
-const audit = async (row: RefundRecord, status: number) => {
-  const action = status === 1 ? "通过" : "拒绝";
+// 审核通过（管理员审核）
+const auditApprove = async (row: RefundRecord) => {
   try {
-    await ElMessageBox.confirm(`确认${action}该退款申请？`, "提示", { type: "warning" });
-    await RefundAPI.audit({ refundId: row.id, status, remark: "" });
-    ElMessage.success(`${action}成功`);
+    await ElMessageBox.confirm("确认通过该退款申请？", "提示", { type: "warning" });
+    // 当前是管理员审核，status=2 表示管理员通过
+    await RefundAPI.audit({ refundId: row.id, status: 2, remark: "" });
+    ElMessage.success("审核通过");
     fetchData();
   } catch (error) {
     if (error !== "cancel") console.error(error);
@@ -177,7 +257,7 @@ const confirmReject = async () => {
   try {
     await RefundAPI.audit({
       refundId: currentRecord.value.id,
-      status: 2,
+      status: 3,
       remark: rejectForm.remark,
     });
     ElMessage.success("已拒绝");
@@ -189,20 +269,50 @@ const confirmReject = async () => {
   }
 };
 
-const viewDetail = (row: RefundRecord) => {
-  ElMessageBox.alert(
-    `
-    <p><strong>订单号：</strong>${row.orderNo}</p>
-    <p><strong>用户：</strong>${row.username}</p>
-    <p><strong>退款金额：</strong>¥${row.refundAmount}</p>
-    <p><strong>退款原因：</strong>${row.reason || "-"}</p>
-    <p><strong>申请时间：</strong>${row.applyTime}</p>
-    <p><strong>状态：</strong>${statusMap[row.status]?.text}</p>
-    ${row.remark ? `<p><strong>拒绝原因：</strong>${row.remark}</p>` : ""}
-  `,
-    "退款详情",
-    { dangerouslyUseHTMLString: true }
-  );
+// 执行退款（status=2 → 生效退款）
+const executeRefund = async (row: RefundRecord) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认对订单 ${row.orderNo} 执行退款 ¥${row.refundAmount}？`,
+      "执行退款",
+      { type: "warning" }
+    );
+    // 执行退款操作
+    await RefundAPI.audit({ refundId: row.id, status: 4, remark: "管理员执行退款" });
+    ElMessage.success("退款执行中");
+    fetchData();
+  } catch (error) {
+    if (error !== "cancel") console.error(error);
+  }
+};
+
+const viewDetail = async (row: RefundRecord) => {
+  currentDetail.value = row;
+  detailDialogVisible.value = true;
+  loadingDetail.value = true;
+  progressLogs.value = [];
+  try {
+    const res = await RefundAPI.getProgress(row.id);
+    const logs = Array.isArray(res) ? res : (res as any).data || [];
+    progressLogs.value = logs;
+    const stepMap: Record<string, number> = {
+      提交申请: 0,
+      商户审核: 1,
+      管理员审核: 2,
+      退款执行: 3,
+      退款完成: 4,
+    };
+    let maxStep = 0;
+    logs.forEach((log: RefundProgressLog) => {
+      const step = stepMap[log.nodeName];
+      if (step !== undefined && step >= maxStep) maxStep = step;
+    });
+    currentProgressStep.value = maxStep;
+  } catch {
+    currentProgressStep.value = 0;
+  } finally {
+    loadingDetail.value = false;
+  }
 };
 
 const columns = [
@@ -210,8 +320,9 @@ const columns = [
   { title: "订单号", key: "orderNo", width: 24 },
   { title: "申请用户", key: "username", width: 14 },
   { title: "退款金额", key: "refundAmount", width: 14 },
-  { title: "退款原因", key: "reason", width: 30 },
-  { title: "状态", key: "statusLabel", width: 12 },
+  { title: "退款原因", key: "reasonCategoryName", width: 18 },
+  { title: "补充说明", key: "reason", width: 20 },
+  { title: "状态", key: "statusLabel", width: 14 },
   { title: "申请时间", key: "applyTime", width: 20 },
 ];
 
@@ -220,7 +331,7 @@ const { handleExport } = useExport(
     list.value.map((item) => ({
       ...item,
       refundAmount: "¥" + item.refundAmount,
-      statusLabel: statusMap[item.status]?.text || "未知",
+      statusLabel: statusTagMap[item.status]?.text || "未知",
     })),
   columns,
   "退款审核"
@@ -243,6 +354,70 @@ onMounted(() => {
 
   .search-form {
     margin-bottom: 16px;
+  }
+}
+
+.refund-detail {
+  .detail-info {
+    margin-bottom: 24px;
+  }
+
+  .detail-progress {
+    h4 {
+      margin: 0 0 16px;
+      font-size: 15px;
+    }
+  }
+}
+
+.progress-timeline {
+  margin-top: 20px;
+  padding-left: 8px;
+
+  .timeline-item {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    padding-bottom: 20px;
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      flex-shrink: 0;
+      width: 10px;
+      height: 10px;
+      margin-top: 6px;
+      background: #409eff;
+      border-radius: 50%;
+    }
+
+    .timeline-content {
+      flex: 1;
+
+      .timeline-node {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .timeline-meta {
+        display: flex;
+        gap: 12px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+      }
+
+      .timeline-remark {
+        margin-top: 4px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: #f56c6c;
+        background: #fef0f0;
+        border-radius: 4px;
+      }
+    }
   }
 }
 </style>

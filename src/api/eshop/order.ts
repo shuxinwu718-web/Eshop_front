@@ -25,6 +25,9 @@ export interface OrderVO {
   status: number;
   createTime: string;
   items: OrderItem[];
+  /** 退款相关（仅在退款中状态时存在） */
+  refundStatus?: number;
+  refundId?: number;
 }
 
 export interface OrderPageParams {
@@ -67,6 +70,14 @@ const OrderAPI = {
     });
   },
 
+  /** 确认收货 */
+  confirmReceive(orderId: number) {
+    return request({
+      url: `${BASE_URL}/confirm-receive/${orderId}`,
+      method: "put",
+    });
+  },
+
   getPage(params: OrderPageParams) {
     return request<any, { records: OrderVO[]; total: number }>({
       url: `${BASE_URL}/admin/page`,
@@ -87,12 +98,13 @@ const OrderAPI = {
    * 申请退款
    * @param orderId 订单ID
    * @param reason 退款原因（可选）
+   * @param reasonCategoryId 退款原因分类ID（可选）
    */
-  applyRefund(orderId: number, reason?: string) {
+  applyRefund(orderId: number, reason?: string, reasonCategoryId?: number) {
     return request({
       url: `${BASE_URL}/refund/apply`,
       method: "post",
-      data: { orderId, reason },
+      data: { orderId, reason, reasonCategoryId },
     });
   },
 

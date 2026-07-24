@@ -68,6 +68,8 @@ const statusMap: Record<number, string> = {
   2: "已发货",
   3: "已完成",
   4: "已取消",
+  5: "退款中",
+  6: "已退款",
 };
 const statusType: Record<number, string> = {
   0: "warning",
@@ -75,6 +77,8 @@ const statusType: Record<number, string> = {
   2: "primary",
   3: "success",
   4: "danger",
+  5: "danger",
+  6: "success",
 };
 
 const getStatusText = (status: number) => statusMap[status] || "未知";
