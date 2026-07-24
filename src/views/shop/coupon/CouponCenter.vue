@@ -48,11 +48,13 @@
                 <template v-if="item.couponType === 0">¥{{ item.couponValue }}</template>
                 <template v-else>{{ item.couponValue }}折</template>
                 <span class="coupon-sub">
-                  {{ item.couponMinAmount > 0 ? `满¥${item.couponMinAmount}` : "无门槛" }}
+                  {{ item.minAmount > 0 ? `满¥${item.minAmount}` : "无门槛" }}
                 </span>
               </span>
             </div>
-            <el-button v-if="item.claimed" type="success" size="small" disabled>已领取</el-button>
+            <el-button v-if="item.alreadyClaimed" type="success" size="small" disabled>
+              已领取
+            </el-button>
             <el-button
               v-else-if="item.userConsecutiveDays >= item.requiredSigninDays"
               type="danger"
@@ -338,18 +340,18 @@ onMounted(() => {
 
   .festival-section {
     margin-bottom: 20px;
+    overflow: hidden;
     background: linear-gradient(135deg, #fff5f0 0%, #fff8f5 40%, #fff 100%);
     border: 1px solid #fde2d0;
     border-radius: 12px;
-    overflow: hidden;
 
     .festival-section-header {
       display: flex;
-      align-items: center;
       gap: 10px;
+      align-items: center;
       padding: 16px 20px;
-      background: linear-gradient(90deg, #ff6b35, #f56c6c);
       color: #fff;
+      background: linear-gradient(90deg, #ff6b35, #f56c6c);
 
       .festival-section-icon {
         font-size: 22px;
@@ -377,16 +379,16 @@ onMounted(() => {
     }
 
     .festival-section-list {
-      padding: 12px 20px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      padding: 12px 20px;
     }
 
     .festival-card-item {
       display: flex;
-      align-items: center;
       gap: 16px;
+      align-items: center;
       padding: 14px 16px;
       background: #fff;
       border: 1px solid #fde2d0;
@@ -400,14 +402,14 @@ onMounted(() => {
 
     .festival-card-left {
       display: flex;
-      align-items: center;
-      gap: 10px;
       flex: 1;
+      gap: 10px;
+      align-items: center;
       min-width: 0;
 
       .festival-card-icon {
-        font-size: 24px;
         flex-shrink: 0;
+        font-size: 24px;
       }
 
       .festival-card-info {
@@ -423,10 +425,10 @@ onMounted(() => {
         }
 
         .festival-card-desc {
-          font-size: 12px;
-          color: var(--el-text-color-secondary);
           overflow: hidden;
           text-overflow: ellipsis;
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
           white-space: nowrap;
         }
       }
@@ -437,8 +439,8 @@ onMounted(() => {
 
       .festival-card-progress {
         display: flex;
-        align-items: center;
         gap: 8px;
+        align-items: center;
 
         .progress-label {
           font-size: 12px;
@@ -457,14 +459,14 @@ onMounted(() => {
 
     .festival-card-right {
       display: flex;
-      align-items: center;
-      gap: 12px;
       flex-shrink: 0;
+      gap: 12px;
+      align-items: center;
 
       .festival-card-coupon {
         display: flex;
-        align-items: center;
         gap: 4px;
+        align-items: center;
 
         .coupon-tag {
           display: inline-flex;

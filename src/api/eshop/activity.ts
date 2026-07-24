@@ -8,12 +8,14 @@ export interface SigninStatus {
   totalDays: number;
 }
 
-/** 签到里程碑奖励配置 */
+/** 签到里程碑奖励配置（后端 SigninMilestoneVO） */
 export interface SigninMilestone {
   days: number;
-  label: string;
-  reward: string;
+  rewardName: string;
+  rewardType: string;
+  rewardId: number;
   icon: string;
+  status: number; // 0-未解锁 1-已达成 2-已领取
 }
 
 // ==================== API 方法 ====================
@@ -36,18 +38,14 @@ export const getSignInRecords = () => {
  * 获取今日签到状态及连续天数
  */
 export const getSignInStatus = () => {
-  return request.get<SigninStatus>(
-    "/api/user/activities/signin/status"
-  );
+  return request.get<SigninStatus>("/api/user/activities/signin/status");
 };
 
 /**
  * 获取签到里程碑配置（含每个里程碑对应的奖励信息）
  */
 export const getSigninMilestones = () => {
-  return request.get<SigninMilestone[]>(
-    "/api/user/activities/signin/milestones"
-  );
+  return request.get<SigninMilestone[]>("/api/user/activities/signin/milestones");
 };
 
 export default {

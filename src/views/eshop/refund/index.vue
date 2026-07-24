@@ -371,8 +371,8 @@ onMounted(() => {
 }
 
 .progress-timeline {
-  margin-top: 20px;
   padding-left: 8px;
+  margin-top: 20px;
 
   .timeline-item {
     position: relative;
@@ -410,8 +410,8 @@ onMounted(() => {
       }
 
       .timeline-remark {
-        margin-top: 4px;
         padding: 6px 10px;
+        margin-top: 4px;
         font-size: 12px;
         color: #f56c6c;
         background: #fef0f0;

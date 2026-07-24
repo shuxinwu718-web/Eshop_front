@@ -16,9 +16,9 @@ export interface RefundReasonCategory {
 export interface RefundProgressLog {
   id: number;
   refundId: number;
-  nodeName: string;          // 节点名称：申请提交/商户审核/管理员审核/退款执行/退款完成
-  operator: string;          // 操作人
-  operatorRole: string;      // 操作人角色
+  nodeName: string; // 节点名称：申请提交/商户审核/管理员审核/退款执行/退款完成
+  operator: string; // 操作人
+  operatorRole: string; // 操作人角色
   remark?: string;
   createTime: string;
 }
@@ -33,7 +33,7 @@ export interface RefundRecord {
   reason: string;
   reasonCategoryId?: number;
   reasonCategoryName?: string;
-  status: number;           // 0-待商户审核 1-待管理员审核 2-已通过 3-已拒绝 4-退款执行中 5-已退款
+  status: number; // 0-待商户审核 1-待管理员审核 2-已通过 3-已拒绝 4-退款执行中 5-已退款
   remark: string;
   refundAmount: number;
   applyTime: string;
@@ -47,8 +47,8 @@ export interface RefundRecord {
 /** 退款满意度反馈 */
 export interface RefundSatisfaction {
   refundId: number;
-  rating: number;       // 1-5 星
-  feedback?: string;    // 反馈意见
+  rating: number; // 1-5 星
+  feedback?: string; // 反馈意见
   createTime: string;
 }
 
@@ -63,7 +63,7 @@ export interface RefundQueryParams {
 
 export interface RefundAuditParams {
   refundId: number;
-  status: number;       // 1-商户通过 2-管理员通过 3-拒绝
+  status: number; // 1-商户通过 2-管理员通过 3-拒绝
   remark?: string;
 }
 
