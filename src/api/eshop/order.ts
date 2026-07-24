@@ -2,12 +2,34 @@ import request from "@/utils/request";
 
 const BASE_URL = "/api/order";
 
+/** 订单项发货状态 */
+export type ItemShipStatus = "pending" | "shipped" | "received";
+
+export const shipStatusMap: Record<ItemShipStatus, string> = {
+  pending: "待发货",
+  shipped: "已发货",
+  received: "已签收",
+};
+
+export const shipStatusType: Record<ItemShipStatus, string> = {
+  pending: "warning",
+  shipped: "primary",
+  received: "success",
+};
+
 export interface OrderItem {
+  id?: number;
   productId: number;
   productName?: string;
+  productImage?: string;
   productPrice?: number;
+  price?: number;
   quantity: number;
   totalPrice?: number;
+  /** 所属发货单ID */
+  shipmentId?: number;
+  /** 订单项级发货状态：pending/shipped/received */
+  shipStatus?: ItemShipStatus;
 }
 
 export interface OrderCreateParams {
@@ -44,6 +66,37 @@ export interface CreateOrderDTO {
   receiverAddress?: string;
   remark?: string;
   addressId?: number;
+}
+
+/** 发货单信息 */
+export interface ShipmentInfo {
+  id: number;
+  deliveryStatus: number; // 0-待发货 1-已发货 2-已签收
+  shippingName?: string; // 快递公司
+  shippingNo?: string; // 快递单号
+  shippingTime?: string;
+  receivedTime?: string;
+  /** 该发货单包含的订单项ID列表 */
+  itemIds: number[];
+}
+
+export interface OrderVO {
+  id: number;
+  orderNo: string;
+  userId: number;
+  totalAmount: number;
+  payAmount?: number;
+  status: number;
+  receiverName?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+  createTime: string;
+  items: OrderItem[];
+  /** 发货单列表 */
+  shipments?: ShipmentInfo[];
+  /** 退款相关 */
+  refundStatus?: number;
+  refundId?: number;
 }
 
 const OrderAPI = {

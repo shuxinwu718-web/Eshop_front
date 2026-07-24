@@ -42,7 +42,17 @@
               />
               <div class="product-info">
                 <div>{{ item.productName }}</div>
-                <div>¥{{ item.price }} × {{ item.quantity }}</div>
+                <div class="product-meta">
+                  <span>¥{{ item.price }} × {{ item.quantity }}</span>
+                  <el-tag
+                    v-if="item.shipStatus && (order.status === 2 || order.status === 3)"
+                    :type="shipStatusType[item.shipStatus] || 'info'"
+                    size="small"
+                    class="ship-tag"
+                  >
+                    {{ shipStatusMap[item.shipStatus] || "待发货" }}
+                  </el-tag>
+                </div>
               </div>
             </div>
           </div>
@@ -276,7 +286,7 @@
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import OrderAPI, { type OrderVO } from "@/api/eshop/order";
+import OrderAPI, { type OrderVO, shipStatusMap, shipStatusType } from "@/api/eshop/order";
 import RefundAPI from "@/api/eshop/refund";
 import type { RefundReasonCategory, RefundProgressLog } from "@/api/eshop/refund";
 import { getFullImageUrl } from "@/utils/url";
@@ -624,6 +634,17 @@ onBeforeUnmount(() => {
         height: 80px;
         object-fit: cover;
         border-radius: 4px;
+      }
+
+      .product-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 4px;
+
+        .ship-tag {
+          flex-shrink: 0;
+        }
       }
     }
   }

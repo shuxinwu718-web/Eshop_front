@@ -32,7 +32,7 @@
             <span>个人资料</span>
           </el-menu-item>
           <el-menu-item index="history">
-            <el-icon><ChatDotSquare /></el-icon>
+            <el-icon><Clock /></el-icon>
             <span>浏览历史</span>
           </el-menu-item>
         </el-menu>
@@ -288,7 +288,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { List, Star, Location, User, ChatDotSquare } from "@element-plus/icons-vue";
+import { List, Star, Location, User, ChatDotSquare, Clock } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useUserStore } from "@/store/modules/user";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
