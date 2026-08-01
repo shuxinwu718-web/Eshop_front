@@ -150,6 +150,7 @@ import { ElMessage } from "element-plus";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import MerchantAPI from "@/api/eshop/merchant";
 import type { MerchantShipment } from "@/api/eshop/merchant";
+import type { TagType } from "@/api/eshop/order";
 import { getFullImageUrl } from "@/utils/url";
 
 const route = useRoute();
@@ -160,7 +161,7 @@ const shipments = ref<MerchantShipment[]>([]);
 const defaultImage =
   "https://fastly.picsum.photos/id/20/300/300.jpg?hmac=jE4J8fivrZv_MA5Xu9iSoEgNxfc_ucYlC_m6BgcSNNo";
 
-const deliveryStatusMap: Record<number, { text: string; type: string }> = {
+const deliveryStatusMap: Record<number, { text: string; type: TagType }> = {
   0: { text: "待发货", type: "warning" },
   1: { text: "已发货", type: "primary" },
   2: { text: "已收货", type: "success" },

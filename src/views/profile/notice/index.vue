@@ -132,6 +132,7 @@ import { ElMessage } from "element-plus";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem, NoticeDetail, NoticeQueryParams } from "@/types/api";
+import type { TagType } from "@/api/eshop/order";
 
 defineOptions({ name: "MyNotice" });
 
@@ -153,7 +154,7 @@ const noticeDialogVisible = ref(false);
 const noticeDetail = ref<NoticeDetail | null>(null);
 
 // 通知类型映射（适用于系统公告类通知）
-const noticeTypeMap: Record<number, { text: string; tag: string }> = {
+const noticeTypeMap: Record<number, { text: string; tag: TagType }> = {
   0: { text: "系统公告", tag: "primary" },
   1: { text: "活动通知", tag: "success" },
   2: { text: "订单提醒", tag: "warning" },
@@ -163,7 +164,7 @@ const getNoticeTypeText = (type: number) => noticeTypeMap[type]?.text || "未知
 const getNoticeTypeTag = (type: number) => noticeTypeMap[type]?.tag || "info";
 
 // 通知等级映射
-const noticeLevelMap: Record<number, { text: string; tag: string }> = {
+const noticeLevelMap: Record<number, { text: string; tag: TagType }> = {
   0: { text: "普通", tag: "info" },
   1: { text: "重要", tag: "warning" },
   2: { text: "紧急", tag: "danger" },
@@ -172,15 +173,15 @@ const getNoticeLevelText = (level: number) => noticeLevelMap[level]?.text || "�
 const getNoticeLevelTag = (level: number) => noticeLevelMap[level]?.tag || "info";
 
 // 业务类型映射（适用于订单/留言等业务通知）
-const bizTypeMap: Record<string, { text: string; tag: string }> = {
+const bizTypeMap: Record<string, { text: string; tag: TagType }> = {
   new_order: { text: "新订单", tag: "primary" },
   order_paid: { text: "已付款", tag: "success" },
   order_cancelled: { text: "已取消", tag: "danger" },
   new_message: { text: "新留言", tag: "warning" },
   reply_message: { text: "留言回复", tag: "success" },
 };
-const getBizTypeText = (type: string) => bizTypeMap[type]?.text || "通知";
-const getBizTypeTag = (type: string) => bizTypeMap[type]?.tag || "info";
+const getBizTypeText = (type?: string) => (type ? bizTypeMap[type]?.text || "通知" : "通知");
+const getBizTypeTag = (type?: string) => (type ? bizTypeMap[type]?.tag || "info" : "info");
 
 // 内容预览：系统通知的 HTML 内容去掉标签，业务通知保持原样
 const getContentPreview = (content?: string, bizType?: string) => {

@@ -26,7 +26,6 @@
 <script setup lang="ts">
 import { useWindowSize } from "@vueuse/core";
 import { useLayout } from "./useLayout";
-import { usePermissionStore } from "@/store";
 import BaseLayout from "./BaseLayout.vue";
 import LayoutLogo from "./components/LayoutLogo.vue";
 import LayoutSidebar from "./components/LayoutSidebar.vue";
@@ -34,13 +33,11 @@ import LayoutToolbar from "./components/LayoutToolbar.vue";
 import LayoutTagsView from "./components/LayoutTagsView.vue";
 import LayoutMain from "./components/LayoutMain.vue";
 
-const { showTagsView, showLogo } = useLayout();
+const { showTagsView, showLogo, routes } = useLayout();
 const { width } = useWindowSize();
 
-const permissionStore = usePermissionStore();
-
 const topMenuItems = computed(() => {
-  return permissionStore.routes.filter((item) => !item.meta?.hidden);
+  return routes.value.filter((item) => !item.meta?.hidden);
 });
 
 const isLogoCollapsed = computed(() => width.value < 768);

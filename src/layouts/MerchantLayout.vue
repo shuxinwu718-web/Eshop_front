@@ -36,6 +36,14 @@
           <el-icon><ChatDotSquare /></el-icon>
           <span>用户留言</span>
         </el-menu-item>
+        <el-menu-item index="/merchant/store-design">
+          <el-icon><Brush /></el-icon>
+          <span>小店设计</span>
+        </el-menu-item>
+        <el-menu-item index="/merchant/refund">
+          <el-icon><WarningFilled /></el-icon>
+          <span>退款审核</span>
+        </el-menu-item>
       </el-menu>
     </div>
 
@@ -53,7 +61,16 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Shop, Plus, DataLine, List, Bell, ChatDotSquare } from "@element-plus/icons-vue";
+import {
+  Shop,
+  Plus,
+  DataLine,
+  List,
+  Bell,
+  ChatDotSquare,
+  Brush,
+  WarningFilled,
+} from "@element-plus/icons-vue";
 import { useUserStore } from "@/store/modules/user";
 import { getFullImageUrl } from "@/utils/url";
 import NoticeAPI from "@/api/system/notice";
@@ -69,11 +86,13 @@ const activeMenu = computed(() => {
   // 匹配 /merchant/xxx 形式
   if (path.startsWith("/merchant/products")) return "/merchant/products";
   if (path.startsWith("/merchant/product/create")) return "/merchant/product/create";
-  if (path.startsWith("/merchant/product/edit")) return "/merchant/products"; // 编辑商品时高亮“我的小店”
+  if (path.startsWith("/merchant/product/edit")) return "/merchant/products"; // 编辑商品时高亮"我的小店"
   if (path.startsWith("/merchant/statistics")) return "/merchant/statistics";
   if (path.startsWith("/merchant/orders")) return "/merchant/orders";
   if (path.startsWith("/merchant/notifications")) return "/merchant/notifications";
   if (path.startsWith("/merchant/messages")) return "/merchant/messages";
+  if (path.startsWith("/merchant/store-design")) return "/merchant/store-design";
+  if (path.startsWith("/merchant/refund")) return "/merchant/refund";
   return "/merchant/products";
 });
 
@@ -94,7 +113,7 @@ const handleMenuSelect = (index: string) => {
 
 onMounted(() => {
   // 确保用户信息已加载
-  if (!userInfo.value?.id) {
+  if (!userInfo.value?.userId) {
     userStore.getUserInfo().then((info) => {
       userInfo.value = info;
     });

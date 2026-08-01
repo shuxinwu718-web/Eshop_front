@@ -6,6 +6,8 @@ export interface CartItem {
   id: number;
   userId: number;
   productId: number;
+  skuId?: number; // 选中的SKU ID
+  skuSpecs?: string; // SKU规格描述，如"颜色:黑色, 尺码:41"
   quantity: number;
   selected: number;
   createTime: string;
@@ -24,15 +26,15 @@ const CartAPI = {
     });
   },
 
-  add(productId: number, quantity?: number) {
+  add(productId: number, quantity?: number, skuId?: number) {
     return request({
       url: `${BASE_URL}/add`,
       method: "post",
-      params: { productId, quantity: quantity || 1 },
+      params: { productId, quantity: quantity || 1, skuId },
     });
   },
 
-  update(productId: number, data: { quantity?: number; selected?: number }) {
+  update(productId: number, data: { quantity?: number; selected?: number; skuId?: number }) {
     return request({
       url: `${BASE_URL}/update`,
       method: "put",
@@ -40,11 +42,11 @@ const CartAPI = {
     });
   },
 
-  remove(productId: number) {
+  remove(productId: number, skuId?: number) {
     return request({
       url: `${BASE_URL}/remove`,
       method: "delete",
-      params: { productId },
+      params: { productId, skuId },
     });
   },
 

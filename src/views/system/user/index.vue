@@ -100,7 +100,7 @@
             <el-table-column label="昵称" width="200" align="center" prop="nickname" />
             <el-table-column label="性别" width="100" align="center">
               <template #default="scope">
-                <DictTag v-model="scope.row.gender" code="gender" />
+                <DictTag :value="scope.row.gender" code="gender" />
               </template>
             </el-table-column>
             <el-table-column label="部门" width="120" align="center" prop="deptName" />

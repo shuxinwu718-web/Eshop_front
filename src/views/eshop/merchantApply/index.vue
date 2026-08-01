@@ -108,7 +108,7 @@
           <el-input
             v-model="rejectForm.remark"
             type="textarea"
-            rows="4"
+            :rows="4"
             placeholder="请输入拒绝原因（将反馈给申请人）"
             maxlength="200"
             show-word-limit
@@ -129,6 +129,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { getFullImageUrl } from "@/utils/url";
 import request from "@/utils/request";
 import { useExport } from "@/composables/useExport";
+import type { TagType } from "@/api/eshop/order";
 
 interface ApplyRecord {
   id: number;
@@ -154,7 +155,7 @@ const pageSize = ref(10);
 const statusFilter = ref<number | undefined>(0);
 const defaultImage = "https://placehold.co/60x60?text=无图";
 
-const statusMap: Record<number, { text: string; type: string }> = {
+const statusMap: Record<number, { text: string; type: TagType }> = {
   0: { text: "待审核", type: "warning" },
   1: { text: "已通过", type: "success" },
   2: { text: "已拒绝", type: "danger" },
@@ -177,7 +178,6 @@ const loadData = async () => {
     const data = res.data || res;
     applyList.value = data.records || data.rows || [];
     total.value = data.total || 0;
-    console.log("加载成功", applyList.value.length, "条记录");
   } catch (error) {
     console.error(error);
     ElMessage.error("加载失败");

@@ -16,7 +16,10 @@
                 class="item-img"
                 @error="handleImageError"
               />
-              <span>{{ row.productName }}</span>
+              <div class="cart-item-info">
+                <span>{{ row.productName }}</span>
+                <div v-if="row.skuSpecs" class="cart-item-specs">{{ row.skuSpecs }}</div>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -43,15 +46,16 @@
 
       <!-- 移动端卡片列表视图 -->
       <div v-else v-loading="loading" class="mobile-cart-list">
-        <div v-for="item in cartList" :key="item.productId" class="cart-card">
+        <div v-for="item in cartList" :key="item.id" class="cart-card">
           <div class="card-header">
             <img
-              :src="getFullImageUrl(item.coverImage) || defaultImage"
+              :src="getFullImageUrl(item.productImage) || defaultImage"
               class="card-img"
               @error="handleImageError"
             />
             <div class="card-info">
               <div class="product-name">{{ item.productName }}</div>
+              <div v-if="item.skuSpecs" class="product-specs">{{ item.skuSpecs }}</div>
               <div class="product-price">¥{{ item.productPrice }}</div>
             </div>
             <el-button link type="danger" class="delete-btn" @click="removeItem(item)">
@@ -70,7 +74,7 @@
             </div>
             <div class="subtotal">
               <span class="label">小计</span>
-              <span class="price">¥{{ item.productPrice * item.quantity }}</span>
+              <span class="price">¥{{ (item.productPrice ?? 0) * item.quantity }}</span>
             </div>
           </div>
         </div>
@@ -105,7 +109,7 @@ const handleResize = () => {
 };
 
 const totalPrice = computed(() => {
-  return cartList.value.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
+  return cartList.value.reduce((sum, item) => sum + (item.productPrice ?? 0) * item.quantity, 0);
 });
 
 const fetchCart = async () => {
@@ -119,7 +123,7 @@ const fetchCart = async () => {
 
 const updateQuantity = async (item: CartItem) => {
   try {
-    await CartAPI.update(item.productId, item.quantity);
+    await CartAPI.update(item.productId, { quantity: item.quantity, skuId: item.skuId });
   } catch {
     ElMessage.error("更新失败");
     fetchCart();
@@ -129,7 +133,7 @@ const updateQuantity = async (item: CartItem) => {
 const removeItem = async (item: CartItem) => {
   await ElMessageBox.confirm(`确定删除商品「${item.productName}」？`, "提示");
   try {
-    await CartAPI.remove(item.productId);
+    await CartAPI.remove(item.productId, item.skuId);
     ElMessage.success("删除成功");
     fetchCart();
   } catch {
@@ -176,6 +180,17 @@ onBeforeUnmount(() => {
     object-fit: cover;
     border-radius: 4px;
   }
+
+  .cart-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .cart-item-specs {
+      font-size: 12px;
+      color: #909399;
+    }
+  }
 }
 
 /* 移动端卡片样式 */
@@ -210,6 +225,12 @@ onBeforeUnmount(() => {
       .product-name {
         margin-bottom: 6px;
         font-weight: 500;
+      }
+
+      .product-specs {
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: #909399;
       }
 
       .product-price {

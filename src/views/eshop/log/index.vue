@@ -86,7 +86,7 @@ const queryParams = reactive({
 const fetchData = async () => {
   loading.value = true;
   try {
-    const params = {
+    const params: Record<string, any> = {
       pageNum: queryParams.pageNum,
       pageSize: queryParams.pageSize,
       operatorId: queryParams.operatorId,
@@ -97,7 +97,7 @@ const fetchData = async () => {
       params.startTime = dateRange.value[0];
       params.endTime = dateRange.value[1];
     }
-    const res = await request.get("/api/admin/logs/page", { params });
+    const res = await request.get<any, any>("/api/admin/logs/page", { params });
     list.value = res.records || [];
     total.value = res.total || 0;
   } catch (error) {

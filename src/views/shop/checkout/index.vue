@@ -36,41 +36,69 @@
           <span>商品清单</span>
         </div>
         <div class="product-list">
-          <div v-for="item in cartList" :key="item.productId" class="product-item">
+          <div v-for="item in cartList" :key="item.id || item.productId" class="product-item">
             <img :src="getFullImageUrl(item.productImage) || defaultImage" class="product-img" />
             <div class="product-info">
               <div class="product-name">{{ item.productName }}</div>
+              <div v-if="item.skuSpecs" class="product-specs">{{ item.skuSpecs }}</div>
               <div class="product-price">¥{{ item.productPrice }}</div>
             </div>
             <div class="product-quantity">x{{ item.quantity }}</div>
-            <div class="product-subtotal">¥{{ item.productPrice * item.quantity }}</div>
+            <div class="product-subtotal">¥{{ (item.productPrice ?? 0) * item.quantity }}</div>
           </div>
         </div>
       </div>
 
-      <el-form-item label="优惠券">
-        <div v-if="selectedUserCouponId && selectedCoupon" class="selected-coupon">
-          <div class="coupon-badge">
-            <span class="coupon-name">{{ selectedCoupon.name }}</span>
-            <span class="coupon-detail">
-              {{
-                selectedCoupon.type === 0
-                  ? `减¥${selectedCoupon.value}`
-                  : `${selectedCoupon.value}折`
-              }}
-              满¥{{ selectedCoupon.minAmount }}
-            </span>
+      <!-- 优惠券（视觉增强） -->
+      <div class="section">
+        <div class="section-header">
+          <span>
+            <el-icon class="section-header-icon"><Present /></el-icon>
+            优惠券
+          </span>
+          <span class="coupon-hint" @click="openCouponDrawer">
+            {{ usableCoupons.length }} 张可用
+            <el-icon><ArrowRight /></el-icon>
+          </span>
+        </div>
+        <div class="coupon-select-area" @click="openCouponDrawer">
+          <!-- 已选优惠券 -->
+          <div v-if="selectedUserCouponId && selectedCoupon" class="coupon-selected-card">
+            <div class="coupon-selected-left">
+              <div class="coupon-selected-tag">
+                <span class="coupon-selected-value">
+                  {{
+                    selectedCoupon.type === 0
+                      ? `¥${selectedCoupon.value}`
+                      : `${selectedCoupon.value}折`
+                  }}
+                </span>
+              </div>
+              <div class="coupon-selected-info">
+                <div class="coupon-selected-name">{{ selectedCoupon.name }}</div>
+                <div class="coupon-selected-d etail">满¥{{ selectedCoupon.minAmount }}可用</div>
+              </div>
+            </div>
+            <div class="coupon-selected-right">
+              <span class="coupon-saved-tag">
+                已优惠 ¥{{ (totalAmount - discountedAmount).toFixed(2) }}
+              </span>
+              <el-button text type="primary" size="small">更换</el-button>
+            </div>
           </div>
-          <el-button link type="primary" @click="openCouponDrawer">更换</el-button>
+          <!-- 未选优惠券 -->
+          <div v-else class="coupon-no-selected">
+            <div class="coupon-no-left">
+              <el-icon class="coupon-icon-big"><Present /></el-icon>
+              <div class="coupon-no-text">
+                <span class="coupon-no-title">选择优惠券</span>
+                <span class="coupon-no-desc">点击选择可用优惠券，享受更多优惠</span>
+              </div>
+            </div>
+            <el-icon class="coupon-arrow"><ArrowRight /></el-icon>
+          </div>
         </div>
-        <div v-else class="no-coupon" @click="openCouponDrawer">
-          <el-icon><Present /></el-icon>
-          <span>请选择优惠券</span>
-        </div>
-        <div v-if="discountedAmount < totalAmount" class="discount-info">
-          已优惠 ¥{{ (totalAmount - discountedAmount).toFixed(2) }}
-        </div>
-      </el-form-item>
+      </div>
 
       <!-- 优惠券选择抽屉（或弹窗） -->
       <el-drawer v-model="couponDrawerVisible" title="选择优惠券" direction="btt" size="auto">
@@ -81,12 +109,20 @@
             class="coupon-item"
             @click="selectCoupon(item)"
           >
-            <div class="coupon-info">
-              <div class="coupon-name">{{ item.name }}</div>
-              <div class="coupon-detail">
-                {{ item.type === 0 ? `减¥${item.value}` : `${item.value}折` }} 满¥{{
-                  item.minAmount
-                }}
+            <div class="coupon-item-left">
+              <div class="coupon-item-tag">
+                <span class="coupon-item-value">
+                  {{ item.type === 0 ? `¥${item.value}` : `${item.value}折` }}
+                </span>
+              </div>
+              <div class="coupon-item-info">
+                <div class="coupon-item-name">{{ item.name }}</div>
+                <div class="coupon-item-detail">
+                  满¥{{ item.minAmount }}
+                  {{ item.type === 0 ? `减¥${item.value}` : `${item.value}折` }}
+                  <template v-if="item.maxDiscount">（最高减¥{{ item.maxDiscount }}）</template>
+                </div>
+                <div class="coupon-item-end">有效期至：{{ item.expireTime }}</div>
               </div>
             </div>
             <el-radio :model-value="selectedUserCouponId === item.userCouponId" />
@@ -114,7 +150,7 @@
         <el-input
           v-model="remark"
           type="textarea"
-          rows="2"
+          :rows="2"
           placeholder="选填，可填写特殊要求"
           maxlength="200"
           show-word-limit
@@ -151,7 +187,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { Present } from "@element-plus/icons-vue";
+import { ArrowRight, Present } from "@element-plus/icons-vue";
 import CartAPI, { type CartItem } from "@/api/eshop/cart";
 import OrderAPI from "@/api/eshop/order";
 import AddressAPI, { type AddressItem } from "@/api/eshop/address";
@@ -183,7 +219,7 @@ const selectCoupon = (coupon: UsableCouponItem) => {
 };
 
 const totalAmount = computed(() => {
-  return cartList.value.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
+  return cartList.value.reduce((sum, item) => sum + (item.productPrice ?? 0) * item.quantity, 0);
 });
 
 const fetchCart = async () => {
@@ -248,7 +284,6 @@ const fetchUsableCoupons = async () => {
     // 兼容两种返回格式：如果 res 是数组直接使用，否则取 res.data
     const data = Array.isArray(res) ? res : (res as any).data || [];
     usableCoupons.value = data;
-    console.log("可用优惠券:", data); // 调试输出
   } catch (error) {
     console.error(error);
     ElMessage.error("获取优惠券失败");
@@ -270,6 +305,7 @@ const submitOrder = async () => {
   const items = cartList.value.map((item) => ({
     productId: item.productId,
     quantity: item.quantity,
+    skuId: item.skuId,
   }));
 
   try {
@@ -360,6 +396,12 @@ onMounted(() => {
         font-weight: 500;
       }
 
+      .product-specs {
+        margin-top: 2px;
+        font-size: 12px;
+        color: #909399;
+      }
+
       .product-price {
         font-size: 14px;
         color: #f40;
@@ -380,52 +422,202 @@ onMounted(() => {
   }
 }
 
-.selected-coupon {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #ecf5ff;
-  border-radius: 8px;
-
-  .coupon-badge {
-    display: flex;
-    flex-direction: column;
-
-    .coupon-name {
-      font-weight: 600;
-    }
-
-    .coupon-detail {
-      font-size: 12px;
-      color: #409eff;
-    }
-  }
+.section-header-icon {
+  margin-right: 4px;
+  vertical-align: -2px;
 }
 
-.no-coupon {
+.coupon-hint {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
-  color: #909399;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--el-color-primary);
   cursor: pointer;
 
   &:hover {
-    color: #409eff;
+    opacity: 0.8;
   }
 }
+
+/* ======== 优惠券选择区域（增强卡片样式） ======== */
+
+.coupon-select-area {
+  cursor: pointer;
+  background: #fafbfc;
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #f0f7ff;
+    border-color: var(--el-color-primary);
+    box-shadow: 0 2px 12px rgba(64, 158, 255, 0.12);
+  }
+}
+
+/* 已选优惠券卡片 */
+.coupon-selected-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+
+  .coupon-selected-left {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+
+    .coupon-selected-tag {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      border-radius: 10px;
+
+      .coupon-selected-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .coupon-selected-info {
+      .coupon-selected-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #303133;
+      }
+
+      .coupon-selected-detail {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+  }
+
+  .coupon-selected-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+
+    .coupon-saved-tag {
+      padding: 2px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e6a23c;
+      white-space: nowrap;
+      background: #fdf6ec;
+      border-radius: 20px;
+    }
+  }
+}
+
+/* 未选优惠券 */
+.coupon-no-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+
+  .coupon-no-left {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+
+    .coupon-icon-big {
+      font-size: 32px;
+      color: var(--el-color-primary);
+    }
+
+    .coupon-no-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .coupon-no-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #303133;
+      }
+
+      .coupon-no-desc {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+  }
+
+  .coupon-arrow {
+    font-size: 20px;
+    color: #c0c4cc;
+  }
+}
+
+/* ======== 优惠券清单 ======== */
 
 .coupon-list {
   .coupon-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px;
+    padding: 16px;
+    margin: 0 12px 8px;
     cursor: pointer;
-    border-bottom: 1px solid #eee;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    transition: all 0.2s;
 
     &:hover {
-      background: #f5f5f5;
+      background: #ecf5ff;
+      border-color: var(--el-color-primary);
+    }
+
+    .coupon-item-left {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      .coupon-item-tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        border-radius: 8px;
+
+        .coupon-item-value {
+          font-size: 16px;
+          font-weight: 700;
+          color: #fff;
+        }
+      }
+
+      .coupon-item-info {
+        .coupon-item-name {
+          font-weight: 600;
+          color: #303133;
+        }
+
+        .coupon-item-detail {
+          margin-top: 4px;
+          font-size: 13px;
+          color: #909399;
+        }
+
+        .coupon-item-end {
+          margin-top: 2px;
+          font-size: 12px;
+          color: #c0c4cc;
+        }
+      }
     }
   }
 }

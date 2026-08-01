@@ -42,6 +42,7 @@
               />
               <div class="product-info">
                 <div>{{ item.productName }}</div>
+                <div v-if="item.skuSpecs" class="product-specs">{{ item.skuSpecs }}</div>
                 <div class="product-meta">
                   <span>¥{{ item.price }} × {{ item.quantity }}</span>
                   <el-tag
@@ -127,11 +128,12 @@
             <!-- 已退款: 评价反馈 -->
             <el-button
               v-if="order.status === 6"
-              type="info"
+              :type="order.evaluated ? 'default' : 'info'"
               size="small"
+              :disabled="order.evaluated"
               @click="openSatisfactionDialog(order)"
             >
-              反馈评价
+              {{ order.evaluated ? "已评价" : "反馈评价" }}
             </el-button>
 
             <el-button size="small" @click="viewDetail(order.id)">查看详情</el-button>
@@ -210,7 +212,7 @@
           <el-input
             v-model="refundReason"
             type="textarea"
-            rows="3"
+            :rows="3"
             placeholder="请补充说明（选填）"
           />
         </el-form-item>
@@ -267,7 +269,7 @@
         <el-input
           v-model="satisfactionFeedback"
           type="textarea"
-          rows="3"
+          :rows="3"
           placeholder="写下你的反馈意见（选填）"
           style="margin-top: 16px"
         />
@@ -286,7 +288,12 @@
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import OrderAPI, { type OrderVO, shipStatusMap, shipStatusType } from "@/api/eshop/order";
+import OrderAPI, {
+  type OrderVO,
+  type TagType,
+  shipStatusMap,
+  shipStatusType,
+} from "@/api/eshop/order";
 import RefundAPI from "@/api/eshop/refund";
 import type { RefundReasonCategory, RefundProgressLog } from "@/api/eshop/refund";
 import { getFullImageUrl } from "@/utils/url";
@@ -310,7 +317,7 @@ const statusMap: Record<number, string> = {
   5: "退款中",
   6: "已退款",
 };
-const statusType: Record<number, string> = {
+const statusType: Record<number, TagType> = {
   0: "warning",
   1: "info",
   2: "primary",
@@ -321,7 +328,7 @@ const statusType: Record<number, string> = {
 };
 
 const getStatusText = (status: number) => statusMap[status] || "未知";
-const getStatusType = (status: number) => statusType[status] || "info";
+const getStatusType = (status: number): TagType => statusType[status] ?? "info";
 const defaultImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f0f0f0' width='300' height='300'/%3E%3Ctext fill='%23ccc' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20'%3E暂无图片%3C/text%3E%3C/svg%3E";
 
@@ -342,7 +349,10 @@ const confirmPay = async () => {
   paying.value = true;
   await new Promise((resolve) => setTimeout(resolve, 1500));
   try {
-    await OrderAPI.pay(payingOrder.value.id, payingOrder.value.payAmount);
+    await OrderAPI.pay(
+      payingOrder.value.id,
+      payingOrder.value.payAmount ?? payingOrder.value.totalAmount
+    );
     ElMessage.success(`支付成功（${payMethod.value === "wechat" ? "微信支付" : "支付宝支付"}）`);
     payDialogVisible.value = false;
     fetchOrders();
@@ -532,7 +542,7 @@ const viewRefundProgress = async (refundId?: number) => {
       退款完成: 4,
     };
     let maxStep = 0;
-    logs.forEach((log) => {
+    logs.forEach((log: RefundProgressLog) => {
       const step = stepMap[log.nodeName];
       if (step !== undefined && step >= maxStep) maxStep = step;
     });
@@ -574,6 +584,11 @@ const submitSatisfaction = async () => {
     });
     ElMessage.success("感谢你的反馈！");
     satisfactionDialogVisible.value = false;
+    // 更新本地订单状态，立即反映已评价
+    if (satisfactionOrder.value) {
+      const found = orderList.value.find((o: any) => o.id === satisfactionOrder.value!.id);
+      if (found) found.evaluated = true;
+    }
   } catch {
     ElMessage.error("提交失败");
   } finally {
@@ -645,6 +660,12 @@ onBeforeUnmount(() => {
         .ship-tag {
           flex-shrink: 0;
         }
+      }
+
+      .product-specs {
+        margin-top: 2px;
+        font-size: 12px;
+        color: #909399;
       }
     }
   }

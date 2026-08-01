@@ -25,6 +25,7 @@
             <el-option label="待收货" :value="2" />
             <el-option label="已完成" :value="3" />
             <el-option label="已取消" :value="4" />
+            <el-option label="已退款" :value="6" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -125,7 +126,7 @@
 <script setup lang="ts">
 defineOptions({ name: "EshopOrder" });
 
-import OrderAPI, { type OrderVO, type OrderPageParams } from "@/api/eshop/order";
+import OrderAPI, { type OrderVO, type OrderPageParams, type TagType } from "@/api/eshop/order";
 import { useExport } from "@/composables/useExport";
 
 const loading = ref(false);
@@ -142,12 +143,13 @@ const queryParams = reactive<OrderPageParams>({
 const detailVisible = ref(false);
 const currentOrder = ref<OrderVO | null>(null);
 
-const statusMap: Record<number, { label: string; type: string }> = {
+const statusMap: Record<number, { label: string; type: TagType }> = {
   0: { label: "待付款", type: "warning" },
   1: { label: "待发货", type: "primary" },
   2: { label: "待收货", type: "info" },
   3: { label: "已完成", type: "success" },
   4: { label: "已取消", type: "danger" },
+  6: { label: "已退款", type: "danger" },
 };
 
 function statusLabel(status: number) {
@@ -183,7 +185,7 @@ async function fetchData() {
 
 async function viewDetail(row: OrderVO) {
   try {
-    currentOrder.value = await OrderAPI.getDetail(row.id);
+    currentOrder.value = await OrderAPI.adminGetDetail(row.id);
     detailVisible.value = true;
   } catch {
     currentOrder.value = row;
@@ -192,7 +194,7 @@ async function viewDetail(row: OrderVO) {
 }
 
 async function handlePay(row: OrderVO) {
-  await OrderAPI.pay(row.id);
+  await OrderAPI.pay(row.id, row.payAmount ?? row.totalAmount);
   ElMessage.success("支付成功");
   fetchData();
 }

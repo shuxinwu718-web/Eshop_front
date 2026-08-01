@@ -40,8 +40,8 @@
             </div>
           </div>
         </div>
-        <el-empty v-if="!loading && list.length === 0" description="暂无优惠券" />
       </div>
+      <el-empty v-if="!loading && list.length === 0" description="暂无优惠券" />
     </el-card>
   </div>
 </template>

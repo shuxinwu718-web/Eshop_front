@@ -39,7 +39,7 @@
           <el-input
             v-model="form.businessScope"
             type="textarea"
-            rows="3"
+            :rows="3"
             placeholder="请简述经营范围"
           />
         </el-form-item>

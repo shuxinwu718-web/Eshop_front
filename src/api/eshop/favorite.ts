@@ -30,7 +30,7 @@ const FavoriteAPI = {
   },
   // 分页查询收藏列表
   getPage(pageNum: number, pageSize: number) {
-    return request<any, PageResult<FavoriteItem>>({
+    return request<any, { records: FavoriteItem[]; total: number }>({
       url: `${BASE_URL}/page`,
       method: "get",
       params: { pageNum, pageSize },

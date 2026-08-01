@@ -150,8 +150,6 @@ export interface PasswordVerifyForm {
 export interface MobileUpdateForm {
   /** 手机号 */
   mobile?: string;
-  /** 验证码 */
-  code?: string;
   /** 当前密码 */
   password?: string;
 }

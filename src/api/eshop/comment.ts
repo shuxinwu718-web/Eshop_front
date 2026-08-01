@@ -52,7 +52,7 @@ export interface CommentVO {
 const CommentAPI = {
   // 分页查询评论（管理员）
   getPage(params: CommentQueryParams) {
-    return request<any, PageResult<CommentItem>>({
+    return request<any, { records: CommentItem[]; total: number }>({
       url: `${BASE_URL}/admin/page`,
       method: "get",
       params,

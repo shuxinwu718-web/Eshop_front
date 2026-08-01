@@ -14,6 +14,41 @@ export interface ProductItem {
   status: number;
   sales?: number;
   createTime: string;
+  /** 商家ID（后端Product实体自带） */
+  merchantId?: number;
+  /** 商家名称/店铺名称（需后端从merchant_apply联查返回） */
+  merchantName?: string;
+  /** 商家头像（需后端从user表联查返回） */
+  merchantAvatar?: string;
+  /** 尺寸表数据 */
+  sizeChartTitle?: string;
+  sizeChartColumns?: string[];
+  sizeChartRows?: string[][];
+  /** 商品规格模板 */
+  specs?: ProductSpec[];
+  /** 商品SKU列表 */
+  skus?: ProductSku[];
+}
+
+/** 商品规格模板 */
+export interface ProductSpec {
+  id: number;
+  productId: number;
+  specName: string; // 规格名，如"颜色"、"尺码"
+  specValues: string; // JSON数组字符串，如'["黑色","白色"]'（需前端 parse）
+  sortOrder: number;
+}
+
+/** 商品SKU */
+export interface ProductSku {
+  id: number;
+  productId: number;
+  specs: string; // JSON对象字符串，如'{"颜色":"黑色","尺码":"41"}'（需前端 parse）
+  price: number;
+  stock: number;
+  skuCode?: string;
+  image?: string;
+  sales?: number;
 }
 
 export interface ProductImageItem {
@@ -88,6 +123,16 @@ export interface SearchParams {
   page?: number;
   size?: number;
   sortBy?: string;
+}
+
+/** 店铺公开信息（商家维度） */
+export interface StoreInfo {
+  merchantId: number;
+  shopName: string;
+  avatar?: string;
+  productCount?: number;
+  /** 背景色（小店设计） */
+  backgroundColor?: string;
 }
 
 const ProductAPI = {
@@ -166,6 +211,25 @@ const ProductAPI = {
     return request({
       url: `${BASE_URL}/es/reindex`,
       method: "post",
+    });
+  },
+
+  // ========== 商家小店 ==========
+
+  /** 获取商家店铺公开信息（需后端新增接口） */
+  getStoreInfo(merchantId: number) {
+    return request<any, StoreInfo>({
+      url: `/api/merchant/${merchantId}/store`,
+      method: "get",
+    });
+  },
+
+  /** 按商家ID获取商品列表（需后端新增接口） */
+  getByMerchant(merchantId: number, params: { pageNum?: number; pageSize?: number }) {
+    return request<any, { records: ProductItem[]; total: number }>({
+      url: `${BASE_URL}/merchant/${merchantId}`,
+      method: "get",
+      params,
     });
   },
 };

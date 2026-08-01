@@ -46,6 +46,8 @@ export interface LoginResponse {
 export interface UserInfoResponse {
   id: number;
   username: string;
+  nickname?: string;
+  avatar?: string;
   phone: string;
   email: string;
   role: string;

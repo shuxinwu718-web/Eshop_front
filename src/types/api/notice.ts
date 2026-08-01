@@ -25,11 +25,13 @@ export interface NoticeForm {
   /** 通知类型 */
   type?: number;
   /** 通知等级 */
-  level?: string;
+  level?: number;
   /** 发布状态(0:草稿;1:已发布;-1:已撤回) */
   status?: number;
   /** 目标用户ID列表 */
   targetUsers?: number[];
+  /** 目标用户ID字符串（后端表单返回，逗号分隔） */
+  targetUserIds?: string;
   /** 目标类型 (1:全部,2:指定用户等) */
   targetType?: number;
 }
@@ -44,8 +46,8 @@ export interface NoticeItem {
   content: string;
   /** 通知类型 */
   type: number;
-  /** 通知等级 */
-  level: string;
+  /** 通知等级(0=普通,1=重要,2=紧急) */
+  level: number;
   /** 发布状态 */
   publishStatus: number;
   /** 是否已读 */
@@ -58,6 +60,10 @@ export interface NoticeItem {
   bizType?: string;
   /** 业务ID（如订单ID、留言ID） */
   bizId?: number | string;
+  /** 发布人名称 */
+  publisherName?: string;
+  /** 创建时间 */
+  createTime?: Date | string;
 }
 
 /** 通知详情对象 */
@@ -70,8 +76,8 @@ export interface NoticeDetail {
   content?: string;
   /** 通知类型 */
   type?: number;
-  /** 通知等级 */
-  level?: string;
+  /** 通知等级(0=普通,1=重要,2=紧急) */
+  level?: number;
   /** 发布状态 */
   publishStatus?: number;
   /** 目标用户ID */

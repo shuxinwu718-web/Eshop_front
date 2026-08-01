@@ -154,7 +154,7 @@ const total = ref(0);
 const loading = ref(false);
 
 const { handleExport } = useExport(
-  () => pageData.value,
+  () => pageData.value ?? [],
   [
     { title: "操作标题", key: "title" },
     { title: "状态", key: "status" },

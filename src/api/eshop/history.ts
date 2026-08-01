@@ -1,4 +1,5 @@
 import request from "@/utils/request";
+import type { ProductItem } from "@/api/eshop/product";
 const BASE_URL = "/api/product/history";
 
 const HistoryAPI = {

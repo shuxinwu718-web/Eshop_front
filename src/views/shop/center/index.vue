@@ -52,6 +52,8 @@
             <el-tab-pane label="已付款" value="1"></el-tab-pane>
             <el-tab-pane label="已发货" value="2"></el-tab-pane>
             <el-tab-pane label="已完成" value="3"></el-tab-pane>
+            <el-tab-pane label="退款中" value="5"></el-tab-pane>
+            <el-tab-pane label="已退款" value="6"></el-tab-pane>
             <el-tab-pane label="已取消" value="4"></el-tab-pane>
           </el-tabs>
           <div v-loading="orderLoading">
@@ -125,15 +127,15 @@
                 </el-button>
               </div>
             </div>
-            <el-empty v-if="!favoriteLoading && favoriteList.length === 0" description="暂无收藏" />
           </div>
+          <el-empty v-if="!favoriteLoading && favoriteList.length === 0" description="暂无收藏" />
         </div>
 
         <!-- 收货地址（完整功能） -->
         <div v-show="activeMenu === 'address'" class="address-section">
           <div class="section-header">
             <span>收货地址</span>
-            <el-button type="primary" link @click="openAddressDialog">新增地址</el-button>
+            <el-button type="primary" link @click="openAddressDialog()">新增地址</el-button>
           </div>
           <div v-loading="addressLoading">
             <div v-for="addr in addressList" :key="addr.id" class="address-item">
@@ -151,12 +153,12 @@
               </div>
               <div class="address-actions">
                 <el-button link type="primary" @click="editAddress(addr)">编辑</el-button>
-                <el-button link type="danger" @click="deleteAddress(addr.id)">删除</el-button>
+                <el-button link type="danger" @click="deleteAddress(addr.id!)">删除</el-button>
                 <el-button
                   v-if="!addr.isDefault"
                   link
                   type="primary"
-                  @click="setDefaultAddress(addr.id)"
+                  @click="setDefaultAddress(addr.id!)"
                 >
                   设为默认
                 </el-button>
@@ -199,7 +201,7 @@
                 <el-input v-model="addressForm.district" />
               </el-form-item>
               <el-form-item label="详细地址" prop="detailAddress">
-                <el-input v-model="addressForm.detailAddress" type="textarea" rows="2" />
+                <el-input v-model="addressForm.detailAddress" type="textarea" :rows="2" />
               </el-form-item>
               <el-form-item label="设为默认">
                 <el-switch v-model="addressForm.isDefault" />
@@ -248,7 +250,7 @@
               {{ userInfo.nickname || "未设置" }}
             </el-descriptions-item>
             <el-descriptions-item label="手机号">
-              {{ userInfo.phone || "未绑定" }}
+              {{ userInfo.mobile || "未绑定" }}
             </el-descriptions-item>
             <el-descriptions-item label="邮箱">
               {{ userInfo.email || "未绑定" }}
@@ -273,11 +275,8 @@
               <div class="history-name">{{ item.name }}</div>
               <div class="history-price">¥{{ item.price }}</div>
             </div>
-            <el-empty
-              v-if="!historyLoading && historyList.length === 0"
-              description="暂无浏览记录"
-            />
           </div>
+          <el-empty v-if="!historyLoading && historyList.length === 0" description="暂无浏览记录" />
         </div>
       </div>
     </div>
@@ -298,6 +297,8 @@ import UserAPI from "@/api/system/user";
 import AddressAPI, { type AddressItem, type AddressSaveParams } from "@/api/eshop/address";
 import MessageAPI, { type MerchantMessage } from "@/api/eshop/merchant-message";
 import HistoryAPI from "@/api/eshop/history";
+import type { ProductItem } from "@/api/eshop/product";
+import type { UserInfo } from "@/types/api/user";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -352,6 +353,8 @@ const getOrderStatusText = (status: number) => {
     2: "已发货",
     3: "已完成",
     4: "已取消",
+    5: "退款中",
+    6: "已退款",
   };
   return map[status] || "未知";
 };
@@ -359,7 +362,11 @@ const getOrderStatusText = (status: number) => {
 const fetchOrders = async () => {
   orderLoading.value = true;
   try {
-    const params = { pageNum: 1, pageSize: 10, status: orderStatus.value || undefined };
+    const params = {
+      pageNum: 1,
+      pageSize: 10,
+      status: orderStatus.value ? Number(orderStatus.value) : undefined,
+    };
     const res = await OrderAPI.getUserPage(params);
     orderList.value = res.records;
   } finally {
@@ -406,7 +413,16 @@ const openAddressDialog = (addr?: AddressItem) => {
   if (addr) {
     isEditAddress.value = true;
     addressDialogTitle.value = "编辑地址";
-    addressForm.value = { ...addr };
+    addressForm.value = {
+      id: addr.id,
+      receiverName: addr.receiverName,
+      receiverPhone: addr.receiverPhone,
+      province: addr.province ?? "",
+      city: addr.city ?? "",
+      district: addr.district ?? "",
+      detailAddress: addr.detailAddress,
+      isDefault: addr.isDefault === 1,
+    };
   } else {
     isEditAddress.value = false;
     addressDialogTitle.value = "新增地址";
@@ -484,7 +500,8 @@ const viewOrderDetail = (orderId: number) => {
 const payOrder = async (orderId: number) => {
   await ElMessageBox.confirm("确认支付该订单？", "提示");
   try {
-    await OrderAPI.pay(orderId);
+    const order = orderList.value.find((o) => o.id === orderId);
+    await OrderAPI.pay(orderId, order?.payAmount ?? order?.totalAmount ?? 0);
     ElMessage.success("支付成功");
     fetchOrders();
   } catch {
@@ -569,7 +586,7 @@ const handleMenuSelect = (index: string) => {
 // 加载用户信息
 const loadUserInfo = async () => {
   const data = await UserAPI.getProfile();
-  userInfo.value = data;
+  Object.assign(userInfo.value, data as Partial<UserInfo>);
 };
 
 onMounted(async () => {

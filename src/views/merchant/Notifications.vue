@@ -90,6 +90,7 @@ import { useRouter } from "vue-router";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem, NoticeQueryParams } from "@/types/api";
+import type { TagType } from "@/api/eshop/order";
 
 defineOptions({ name: "MerchantNotifications" });
 
@@ -104,7 +105,7 @@ const pageData = ref<NoticeItem[]>([]);
 const total = ref(0);
 const loading = ref(false);
 
-const bizTypeMap: Record<string, { text: string; tag: string }> = {
+const bizTypeMap: Record<string, { text: string; tag: TagType }> = {
   new_order: { text: "新订单", tag: "primary" },
   order_paid: { text: "已付款", tag: "success" },
   order_cancelled: { text: "已取消", tag: "danger" },

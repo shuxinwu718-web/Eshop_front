@@ -25,14 +25,11 @@ const contentConfig: IContentConfig<UserQueryParams, UserItem> = {
   exportAction: UserAPI.export,
   importTemplate: UserAPI.downloadTemplate,
   importsAction(data) {
-    // 模拟导入数据
-    console.log("importsAction", data);
     return Promise.resolve();
   },
   async exportsAction(params) {
     // 模拟获取到的是全量数据
     const data = await UserAPI.getPage(params);
-    console.log("exportsAction", data.list);
     return data.list;
   },
   pk: "id",

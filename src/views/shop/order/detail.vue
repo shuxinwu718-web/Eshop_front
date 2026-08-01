@@ -73,6 +73,7 @@
           />
           <div class="item-info">
             <div class="item-name">{{ item.productName }}</div>
+            <div v-if="item.skuSpecs" class="item-sku-specs">{{ item.skuSpecs }}</div>
             <div class="item-spec">
               ¥{{ item.price || item.productPrice }} × {{ item.quantity }}
             </div>
@@ -96,6 +97,22 @@
           <el-step title="已发货" />
           <el-step title="已签收" />
         </el-steps>
+        <div v-if="group.shipmentId" class="shipment-step-status">
+          当前状态：
+          <span :style="{ color: statusColorMap[group.stepActive] }">{{ group.statusText }}</span>
+          <template v-if="group.shippingName">
+            · {{ group.shippingName }}
+            <span class="tracking-no">{{ group.shippingNo }}</span>
+          </template>
+        </div>
+
+        <!-- 确认收货按钮（该发货单已发货且订单未取消/退款） -->
+        <div
+          v-if="group.stepActive === 1 && order.status !== 4 && order.status !== 6"
+          class="shipment-confirm"
+        >
+          <el-button type="success" @click="handleConfirmReceive(order.id)">确认收货</el-button>
+        </div>
       </el-card>
 
       <!-- 兜底：无商品时 -->
@@ -111,10 +128,12 @@ import OrderAPI, {
   type OrderVO,
   type ShipmentInfo,
   type OrderItem,
+  type TagType,
   shipStatusMap,
   shipStatusType,
 } from "@/api/eshop/order";
 import { getFullImageUrl } from "@/utils/url";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 const route = useRoute();
 const loading = ref(false);
@@ -133,7 +152,7 @@ const statusMap: Record<number, string> = {
   5: "退款中",
   6: "已退款",
 };
-const statusType: Record<number, string> = {
+const statusType: Record<number, TagType> = {
   0: "warning",
   1: "info",
   2: "primary",
@@ -144,14 +163,21 @@ const statusType: Record<number, string> = {
 };
 
 const getStatusText = (status: number) => statusMap[status] || "未知";
-const getStatusType = (status: number) => statusType[status] || "info";
+const getStatusType = (status: number): TagType => statusType[status] ?? "info";
+
+const statusColorMap: Record<number, string> = {
+  [-1]: "#909399",
+  0: "#e6a23c",
+  1: "#409eff",
+  2: "#67c23a",
+};
 
 // ============ 按发货单分组 ============
 
 interface ShipmentGroup {
   shipmentId: number;
   statusText: string;
-  statusType: string;
+  statusType: TagType;
   stepActive: number;
   shippingName?: string;
   shippingNo?: string;
@@ -166,9 +192,9 @@ const shipmentGroups = computed<ShipmentGroup[]>(() => {
   if (o.shipments && o.shipments.length > 0) {
     return o.shipments.map((s: ShipmentInfo) => {
       const items = o.items.filter((it) => it.shipmentId === s.id || s.itemIds.includes(it.id!));
-      const stepMap: Record<number, number> = { 0: 0, 1: 1, 2: 2 };
+      const stepMap: Record<number, number> = { 0: -1, 1: 1, 2: 2 };
       const textMap: Record<number, string> = { 0: "待发货", 1: "已发货", 2: "已签收" };
-      const typeMap: Record<number, string> = { 0: "warning", 1: "primary", 2: "success" };
+      const typeMap: Record<number, TagType> = { 0: "warning", 1: "primary", 2: "success" };
       return {
         shipmentId: s.id,
         stepActive: stepMap[s.deliveryStatus] ?? 0,
@@ -225,6 +251,17 @@ const fetchDetail = async () => {
     order.value = await OrderAPI.getDetail(id);
   } finally {
     loading.value = false;
+  }
+};
+
+const handleConfirmReceive = async (orderId: number) => {
+  try {
+    await ElMessageBox.confirm("确认已收到全部商品？", "提示");
+    await OrderAPI.confirmReceive(orderId);
+    ElMessage.success("确认收货成功");
+    fetchDetail();
+  } catch {
+    // user cancelled or error
   }
 };
 
@@ -340,11 +377,17 @@ onMounted(() => {
       min-width: 0;
 
       .item-name {
-        font-size: 14px;
-        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-size: 14px;
+        font-weight: 500;
         white-space: nowrap;
+      }
+
+      .item-sku-specs {
+        margin-top: 2px;
+        font-size: 12px;
+        color: #909399;
       }
 
       .item-spec {
@@ -360,7 +403,25 @@ onMounted(() => {
   }
 
   .shipment-steps {
-    margin: 16px 0 8px;
+    margin: 16px 0 4px;
+  }
+
+  .shipment-step-status {
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+
+    .tracking-no {
+      font-family: monospace;
+      color: var(--el-color-primary);
+    }
+  }
+
+  .shipment-confirm {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
   }
 }
 

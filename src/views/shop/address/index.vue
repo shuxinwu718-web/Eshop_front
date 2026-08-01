@@ -20,11 +20,11 @@
           <el-tag type="success" size="small">默认地址</el-tag>
         </div>
         <div class="addr-buttons">
-          <el-button v-if="!addr.isDefault" link type="primary" @click="setDefault(addr.id)">
+          <el-button v-if="!addr.isDefault" link type="primary" @click="setDefault(addr.id!)">
             设为默认
           </el-button>
           <el-button link type="primary" @click="openDialog(addr)">编辑</el-button>
-          <el-button link type="danger" @click="deleteAddress(addr.id)">删除</el-button>
+          <el-button link type="danger" @click="deleteAddress(addr.id!)">删除</el-button>
         </div>
       </div>
       <el-empty v-if="!loading && list.length === 0" description="暂无地址" />
@@ -57,7 +57,7 @@
           <el-input
             v-model="form.detailAddress"
             type="textarea"
-            rows="2"
+            :rows="2"
             placeholder="街道、门牌号"
           />
         </el-form-item>
@@ -122,7 +122,16 @@ const fetchList = async () => {
 const openDialog = (addr?: AddressItem) => {
   if (addr) {
     isEdit.value = true;
-    form.value = { ...addr };
+    form.value = {
+      id: addr.id,
+      receiverName: addr.receiverName,
+      receiverPhone: addr.receiverPhone,
+      province: addr.province || "",
+      city: addr.city || "",
+      district: addr.district || "",
+      detailAddress: addr.detailAddress,
+      isDefault: addr.isDefault === 1,
+    };
   } else {
     isEdit.value = false;
     form.value = {

@@ -64,7 +64,6 @@ const loadingStatus = ref("加载中...");
 const loadData = async () => {
   try {
     const res = await request.get("/merchant/my-apply");
-    console.log("接口完整响应:", res);
     // 兼容两种响应结构：直接数据对象 或 { code, data }
     applyInfo.value = res.data || res;
     loadingStatus.value = "加载成功";

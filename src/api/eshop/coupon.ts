@@ -17,6 +17,8 @@ export interface CouponItem {
   status: number;
   description: string;
   createTime: string;
+  /** 状态切换 loading（前端临时字段） */
+  _statusLoading?: boolean;
 }
 
 export interface CouponPageParams {

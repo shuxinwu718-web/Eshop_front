@@ -22,9 +22,13 @@
             </div>
             <div v-if="appConfig.version || tenantEnabled" class="auth-panel__version-row">
               <el-tag v-if="appConfig.version" size="small" effect="light" round></el-tag>
-              <el-tag v-if="tenantEnabled" type="success" size="small" effect="light" round>
-                多租户
-              </el-tag>
+              <el-tag
+                v-if="tenantEnabled"
+                type="success"
+                size="small"
+                effect="light"
+                round
+              ></el-tag>
             </div>
           </div>
         </div>
@@ -50,12 +54,7 @@ const tenantEnabled = appConfig.tenantEnabled;
 
 const formComponents = {
   login: defineAsyncComponent(() => import("./components/Login.vue")),
-  register: defineAsyncComponent(() =>
-    import("./components/Register.vue").catch((err) => {
-      console.error("注册组件加载失败", err);
-      return { template: "<div>加载失败</div>" };
-    })
-  ),
+  register: defineAsyncComponent(() => import("./components/Register.vue")),
   resetPwd: defineAsyncComponent(() => import("./components/ResetPwd.vue")),
 };
 </script>

@@ -197,7 +197,11 @@
           <el-input v-model="userProfileForm.nickname" />
         </el-form-item>
         <el-form-item label="性别">
-          <DictSelect v-model="userProfileForm.gender" code="gender" />
+          <el-select v-model="userProfileForm.gender" placeholder="请选择性别" clearable>
+            <el-option label="未知" :value="0" />
+            <el-option label="男" :value="1" />
+            <el-option label="女" :value="2" />
+          </el-select>
         </el-form-item>
       </el-form>
 
@@ -230,15 +234,6 @@
       >
         <el-form-item label="手机号码" prop="mobile">
           <el-input v-model="mobileUpdateForm.mobile" style="width: 250px" />
-        </el-form-item>
-        <el-form-item label="验证码" prop="code">
-          <el-input v-model="mobileUpdateForm.code" style="width: 250px">
-            <template #append>
-              <el-button :disabled="mobileCountdown > 0" @click="handleSendMobileCode">
-                {{ mobileCountdown > 0 ? `${mobileCountdown}s后重新发送` : "发送验证码" }}
-              </el-button>
-            </template>
-          </el-input>
         </el-form-item>
         <el-form-item label="当前密码" prop="password">
           <el-input
@@ -343,9 +338,6 @@ enum DialogType {
   MOBILE = "mobile",
   EMAIL = "email",
 }
-const mobileCountdown = ref(0);
-const mobileTimer = ref();
-
 const emailCountdown = ref(0);
 const emailTimer = ref();
 
@@ -377,7 +369,6 @@ const mobileBindingRules = {
       trigger: "blur",
     },
   ],
-  code: [{ required: true, message: "请输入验证码", trigger: "blur" }],
   password: [{ required: true, message: "请输入当前密码", trigger: "blur" }],
 };
 
@@ -436,7 +427,6 @@ const handleOpenDialog = (type: DialogType) => {
     case DialogType.MOBILE:
       dialogState.title = userProfile.value.mobile ? "更换手机号" : "绑定手机号";
       mobileUpdateForm.mobile = "";
-      mobileUpdateForm.code = "";
       mobileUpdateForm.password = "";
       break;
     case DialogType.EMAIL:
@@ -486,29 +476,6 @@ async function handleUnbindEmail() {
   } catch {
     // ignore
   }
-}
-
-function handleSendMobileCode() {
-  if (!mobileUpdateForm.mobile) {
-    ElMessage.error("请输入手机号");
-    return;
-  }
-  const reg = /^1[3-9]\d{9}$/;
-  if (!reg.test(mobileUpdateForm.mobile)) {
-    ElMessage.error("手机号格式不正确");
-    return;
-  }
-  UserAPI.sendMobileCode(mobileUpdateForm.mobile).then(() => {
-    ElMessage.success("验证码发送成功");
-    mobileCountdown.value = 60;
-    mobileTimer.value = setInterval(() => {
-      if (mobileCountdown.value > 0) {
-        mobileCountdown.value -= 1;
-      } else {
-        clearInterval(mobileTimer.value!);
-      }
-    }, 1000);
-  });
 }
 
 function handleSendEmailCode() {
@@ -615,9 +582,6 @@ const loadUserProfile = async () => {
 };
 
 onMounted(async () => {
-  if (mobileTimer.value) {
-    clearInterval(mobileTimer.value);
-  }
   if (emailTimer.value) {
     clearInterval(emailTimer.value);
   }
@@ -625,9 +589,6 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  if (mobileTimer.value) {
-    clearInterval(mobileTimer.value);
-  }
   if (emailTimer.value) {
     clearInterval(emailTimer.value);
   }

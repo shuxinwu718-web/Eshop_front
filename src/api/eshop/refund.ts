@@ -72,7 +72,7 @@ export interface RefundAuditParams {
 const RefundAPI = {
   // 获取退款申请列表
   getList(params: RefundQueryParams) {
-    return request<any, PageResult<RefundRecord>>({
+    return request<any, { records: RefundRecord[]; total: number }>({
       url: `${BASE_URL}/list`,
       method: "get",
       params,
@@ -88,14 +88,14 @@ const RefundAPI = {
   },
   // 获取退款进度
   getProgress(refundId: number) {
-    return request<RefundProgressLog[]>({
+    return request<any, RefundProgressLog[]>({
       url: `${BASE_URL}/progress/${refundId}`,
       method: "get",
     });
   },
   // 获取退款原因分类列表
   getReasonCategories() {
-    return request<RefundReasonCategory[]>({
+    return request<any, RefundReasonCategory[]>({
       url: "/api/refund/reason-categories",
       method: "get",
     });
@@ -106,6 +106,13 @@ const RefundAPI = {
       url: `${BASE_URL}/satisfaction`,
       method: "post",
       data,
+    });
+  },
+  // 获取退款满意度评价
+  getSatisfaction(refundId: number) {
+    return request<any, RefundSatisfaction | null>({
+      url: `${BASE_URL}/satisfaction/${refundId}`,
+      method: "get",
     });
   },
 };

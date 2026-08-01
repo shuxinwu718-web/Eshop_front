@@ -51,11 +51,52 @@
       <!-- 右侧：商品信息 -->
       <div class="info">
         <h1>{{ product.name }}</h1>
-        <div class="price">¥{{ product.price }}</div>
-        <div class="meta">
-          <span class="stock">库存：{{ product.stock }}件</span>
-          <span class="sales">已售：{{ product.sales || 0 }}件</span>
+        <div class="price">
+          <template v-if="selectedSku">¥{{ selectedSku.price }}</template>
+          <template v-else>¥{{ product.price }}</template>
         </div>
+        <div class="meta">
+          <template v-if="selectedSku">
+            <span class="stock">库存：{{ selectedSku.stock }}件</span>
+          </template>
+          <template v-else-if="product.skus && product.skus.length > 0 && !allSpecsSelected">
+            <span class="stock">请选择规格</span>
+          </template>
+          <template v-else>
+            <span class="stock">库存：{{ product.stock }}件</span>
+          </template>
+          <span class="sales">已售：{{ (selectedSku?.sales ?? product.sales) || 0 }}件</span>
+        </div>
+
+        <!-- SKU 多规格选择器 -->
+        <div v-if="parsedSpecs.length > 0" class="sku-selector">
+          <div v-for="spec in parsedSpecs" :key="spec.specName" class="spec-group">
+            <div class="spec-label">{{ spec.specName }}：</div>
+            <div class="spec-values">
+              <div
+                v-for="val in spec.values"
+                :key="val"
+                class="spec-tag"
+                :class="{ active: selectedSpecMap[spec.specName] === val }"
+                @click="selectSpecValue(spec.specName, val)"
+              >
+                {{ val }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 商家小店入口 -->
+        <div v-if="product.merchantId" class="store-entry" @click="goStore(product.merchantId!)">
+          <el-avatar :size="36" :src="getFullImageUrl(product.merchantAvatar)" class="store-avatar">
+            {{ product.merchantName?.charAt(0) || "店" }}
+          </el-avatar>
+          <div class="store-info">
+            <div class="store-name">{{ product.merchantName || "商家小店" }}</div>
+            <div class="store-hint">进入店铺 ></div>
+          </div>
+        </div>
+
         <div class="actions">
           <el-input-number v-model="quantity" :min="1" :max="product.stock" size="large" />
           <el-button type="primary" size="large" @click="addToCart">加入购物车</el-button>
@@ -69,6 +110,30 @@
           <p>{{ product.description }}</p>
         </div>
       </div>
+    </div>
+
+    <!-- 尺寸表展示 -->
+    <div
+      v-if="product.sizeChartColumns && product.sizeChartColumns.length"
+      class="size-chart-section"
+    >
+      <h2 class="section-title">
+        <el-icon><List /></el-icon>
+        {{ product.sizeChartTitle || "尺寸表" }}
+      </h2>
+      <el-table :data="sizeChartDisplayData" border size="small" class="size-chart-table">
+        <el-table-column
+          v-for="(col, colIdx) in product.sizeChartColumns"
+          :key="colIdx"
+          :label="col"
+          min-width="100"
+          align="center"
+        >
+          <template #default="{ row }">
+            {{ row["col_" + colIdx] || "-" }}
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
     <!-- 评论区 -->
@@ -187,7 +252,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/store/modules/user";
 import ProductAPI, { type ProductItem, type ProductImageItem } from "@/api/eshop/product";
@@ -197,14 +262,71 @@ import FavoriteAPI from "@/api/eshop/favorite";
 import MessageAPI from "@/api/eshop/merchant-message";
 import { getFullImageUrl } from "@/utils/url";
 import HistoryAPI from "@/api/eshop/history";
+import { List } from "@element-plus/icons-vue";
+import type { ProductSpec, ProductSku } from "@/api/eshop/product";
 
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
 const product = ref<ProductItem>({} as ProductItem);
 const images = ref<ProductImageItem[]>([]);
 const quantity = ref(1);
 const defaultImage = "https://via.placeholder.com/400";
+
+// ============ SKU 多规格选择 ============
+/** 解析后的规格列表 */
+const parsedSpecs = computed(() => {
+  const specs = product.value.specs;
+  if (!specs || specs.length === 0) return [];
+  return specs
+    .map((s: ProductSpec) => {
+      let values: string[];
+      try {
+        const parsed = JSON.parse(s.specValues);
+        values = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        values = [];
+      }
+      return { specName: s.specName, values };
+    })
+    .filter((s) => s.values.length > 0);
+});
+
+/** 当前选中的规格值映射，如 { "颜色": "黑色", "尺码": "41" } */
+const selectedSpecMap = reactive<Record<string, string>>({});
+
+/** 是否所有规格都已选中 */
+const allSpecsSelected = computed(() => {
+  return parsedSpecs.value.every((s) => selectedSpecMap[s.specName]);
+});
+
+/** 根据已选规格找到匹配的 SKU */
+const selectedSku = computed<ProductSku | null>(() => {
+  if (!allSpecsSelected.value) return null;
+  const skus = product.value.skus;
+  if (!skus || skus.length === 0) return null;
+  return (
+    skus.find((sku: ProductSku) => {
+      try {
+        const skuSpecs: Record<string, string> = JSON.parse(sku.specs);
+        return Object.entries(selectedSpecMap).every(([key, val]) => skuSpecs[key] === val);
+      } catch {
+        return false;
+      }
+    }) || null
+  );
+});
+
+/** 选择/切换规格值 */
+const selectSpecValue = (specName: string, value: string) => {
+  if (selectedSpecMap[specName] === value) {
+    // 点击已选中的取消选择
+    delete selectedSpecMap[specName];
+  } else {
+    selectedSpecMap[specName] = value;
+  }
+};
 
 // 轮播图
 const carouselRef = ref();
@@ -235,6 +357,20 @@ const avgRating = computed(() => {
   return total / comments.value.length;
 });
 
+// 尺寸表展示数据（将 rows 转为 el-table 可用格式）
+const sizeChartDisplayData = computed(() => {
+  if (!product.value.sizeChartRows) return [];
+  return product.value.sizeChartRows.map((row) => {
+    const obj: Record<string, string> = {};
+    (product.value.sizeChartColumns || []).forEach((_, idx) => {
+      obj[`col_${idx}`] = row[idx] || "";
+    });
+    // 保留原始索引访问能力
+    (obj as any).__raw = row;
+    return obj;
+  });
+});
+
 const fetchDetail = async () => {
   const id = Number(route.params.id);
   loading.value = true;
@@ -256,15 +392,32 @@ const fetchDetail = async () => {
 };
 
 const addToCart = async () => {
-  if (quantity.value > product.value.stock) {
-    ElMessage.warning(`库存不足，当前库存 ${product.value.stock} 件`);
-    return;
-  }
-  try {
-    await CartAPI.add(product.value.id, quantity.value);
-    ElMessage.success("已加入购物车");
-  } catch {
-    ElMessage.error("添加失败");
+  if (product.value.skus && product.value.skus.length > 0) {
+    if (!selectedSku.value) {
+      ElMessage.warning("请先选择商品规格");
+      return;
+    }
+    if (quantity.value > selectedSku.value.stock) {
+      ElMessage.warning(`规格库存不足，当前库存 ${selectedSku.value.stock} 件`);
+      return;
+    }
+    try {
+      await CartAPI.add(product.value.id, quantity.value, selectedSku.value.id);
+      ElMessage.success("已加入购物车");
+    } catch {
+      ElMessage.error("添加失败");
+    }
+  } else {
+    if (quantity.value > product.value.stock) {
+      ElMessage.warning(`库存不足，当前库存 ${product.value.stock} 件`);
+      return;
+    }
+    try {
+      await CartAPI.add(product.value.id, quantity.value);
+      ElMessage.success("已加入购物车");
+    } catch {
+      ElMessage.error("添加失败");
+    }
   }
 };
 
@@ -355,6 +508,10 @@ function buildCommentTree(flatList: CommentVO[]): CommentVO[] {
 
   return roots;
 }
+
+const goStore = (merchantId: number) => {
+  router.push(`/store/${merchantId}`);
+};
 
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
@@ -543,6 +700,99 @@ onMounted(() => {
       margin: 20px 0;
     }
 
+    /* SKU 多规格选择器 */
+    .sku-selector {
+      margin: 16px 0;
+
+      .spec-group {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+
+        .spec-label {
+          flex-shrink: 0;
+          width: 60px;
+          margin-top: 6px;
+          font-size: 14px;
+          color: var(--el-text-color-secondary);
+        }
+
+        .spec-values {
+          display: flex;
+          flex: 1;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .spec-tag {
+          padding: 6px 16px;
+          font-size: 13px;
+          color: var(--el-text-color-regular);
+          cursor: pointer;
+          user-select: none;
+          background: var(--el-fill-color-light);
+          border: 1px solid var(--el-border-color-light);
+          border-radius: 4px;
+          transition: all 0.2s;
+
+          &:hover {
+            color: var(--el-color-primary);
+            background: var(--el-color-primary-light-9);
+            border-color: var(--el-color-primary-light-5);
+          }
+
+          &.active {
+            color: #fff;
+            background: var(--el-color-primary);
+            border-color: var(--el-color-primary);
+          }
+        }
+      }
+    }
+
+    /* 商家小店入口 */
+    .store-entry {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      margin: 16px 0;
+      cursor: pointer;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f0f6ff;
+        border-color: #409eff;
+      }
+
+      .store-avatar {
+        flex-shrink: 0;
+      }
+
+      .store-info {
+        flex: 1;
+        min-width: 0;
+
+        .store-name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+          white-space: nowrap;
+        }
+
+        .store-hint {
+          margin-top: 2px;
+          font-size: 12px;
+          color: #409eff;
+        }
+      }
+    }
+
     .description {
       padding-top: 20px;
       margin-top: 20px;
@@ -555,6 +805,43 @@ onMounted(() => {
       p {
         line-height: 1.6;
         color: #666;
+      }
+    }
+  }
+
+  /* 尺寸表展示区域 */
+  .size-chart-section {
+    padding: 24px;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+
+    .section-title {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+
+      .el-icon {
+        font-size: 20px;
+        color: var(--el-color-primary);
+      }
+    }
+
+    .size-chart-table {
+      width: 100%;
+
+      :deep(th.el-table__cell) {
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+        background: var(--el-fill-color-light);
+      }
+
+      :deep(td.el-table__cell) {
+        color: var(--el-text-color-regular);
       }
     }
   }

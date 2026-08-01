@@ -26,7 +26,7 @@
             })
           "
         >
-          {{ translateRouteTitle(tag.title) }}
+          {{ translateRouteTitle(tag.title || "") }}
         </el-tag>
       </div>
     </el-scrollbar>
@@ -72,6 +72,7 @@ import { useRoute, useRouter, type RouteRecordRaw } from "vue-router";
 import { resolve } from "path-browserify";
 import { translateRouteTitle } from "@/lang/utils";
 import { usePermissionStore, useTagsViewStore } from "@/store";
+import { useUserStore } from "@/store";
 
 interface ContextMenu {
   visible: boolean;
@@ -125,14 +126,24 @@ const isLastView = computed(() => {
   return selectedTag.value.fullPath === visitedViews.value[visitedViews.value.length - 1]?.fullPath;
 });
 
-/**
- * 递归提取固定标签
- */
+/** 递归提取固定标签（按角色过滤） */
 const extractAffixTags = (routes: RouteRecordRaw[], basePath = "/"): TagView[] => {
   const affixTags: TagView[] = [];
+  const userStore = useUserStore();
+  const currentRole = userStore.userInfo.roles?.[0] || "USER";
+
+  const hasAccess = (route: RouteRecordRaw) => {
+    if (route.meta?.roles && Array.isArray(route.meta.roles)) {
+      return (route.meta.roles as string[]).includes(currentRole);
+    }
+    return true;
+  };
 
   const traverse = (routeList: RouteRecordRaw[], currentBasePath: string) => {
     routeList.forEach((route) => {
+      // 跳过当前用户无权限的路由
+      if (!hasAccess(route)) return;
+
       const fullPath = resolve(currentBasePath, route.path);
 
       // 如果是固定标签，添加到列表

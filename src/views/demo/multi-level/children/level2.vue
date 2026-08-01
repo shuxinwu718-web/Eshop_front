@@ -7,7 +7,5 @@ defineOptions({ name: "MultiLevel2" });
 
 const value = ref("");
 
-onMounted(() => {
-  console.log("MultiLevel2 mounted");
-});
+onMounted(() => {});
 </script>

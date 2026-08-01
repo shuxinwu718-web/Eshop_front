@@ -20,7 +20,7 @@ const AuthAPI = {
 
   /** 注册接口 */
   register(data: RegisterRequest) {
-    return request<any, { message: string }>({
+    return request<any, string>({
       url: `${AUTH_BASE_URL}/register`,
       method: "post",
       data: {
@@ -37,6 +37,26 @@ const AuthAPI = {
     return request<any, UserInfoResponse>({
       url: `${AUTH_BASE_URL}/info`,
       method: "get",
+    });
+  },
+
+  // ========== 邮箱免密登录 ==========
+
+  /** 发送邮箱验证码 */
+  sendEmailCode(email: string) {
+    return request<any, { message: string }>({
+      url: `/api/auth/email/code`,
+      method: "post",
+      params: { email },
+    });
+  },
+
+  /** 邮箱验证码登录 */
+  emailLogin(data: { email: string; code: string }) {
+    return request<any, { token: string }>({
+      url: `/api/auth/email/login`,
+      method: "post",
+      data,
     });
   },
 };

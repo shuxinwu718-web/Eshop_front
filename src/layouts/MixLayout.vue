@@ -119,8 +119,15 @@ const appStore = useAppStore();
 const permissionStore = usePermissionStore();
 const settingsStore = useSettingsStore();
 
-const { showTagsView, showLogo, isSidebarOpen, toggleSidebar, sideMenuRoutes, activeTopMenuPath } =
-  useLayout();
+const {
+  showTagsView,
+  showLogo,
+  isSidebarOpen,
+  toggleSidebar,
+  sideMenuRoutes,
+  activeTopMenuPath,
+  routes,
+} = useLayout();
 
 const isLogoCollapsed = computed(() => width.value < 768);
 
@@ -132,9 +139,9 @@ const useMenuColors = computed(
 
 // 顶部菜单项（处理单子菜单显示优化）
 const topMenuItems = computed(() => {
-  const routes = permissionStore.routes.filter((item) => !item.meta?.hidden);
+  const routeList = routes.value.filter((item) => !item.meta?.hidden);
 
-  return routes.map((route) => {
+  return routeList.map((route) => {
     // alwaysShow 或无子菜单，直接返回
     if (route.meta?.alwaysShow || !route.children?.length) return route;
 

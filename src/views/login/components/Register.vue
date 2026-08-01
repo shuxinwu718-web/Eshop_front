@@ -151,7 +151,7 @@ const submit = async () => {
       email: model.value.email,
     });
     await ElMessageBox.alert(
-      res?.msg || "恭喜注册成功！您已获得新人礼包（5张优惠券），请登录后查看。",
+      res || "恭喜注册成功！您已获得新人礼包（5张优惠券），请登录后查看。",
       "🎁 新人礼包",
       {
         confirmButtonText: "去登录",

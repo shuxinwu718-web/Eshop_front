@@ -488,9 +488,9 @@ function handleSubmit() {
     loading.value = true;
     const payload = {
       ...formData,
-      targetUserIds: formData.targetType === 2 ? (formData.targetUsers ?? []) : [],
+      targetUsers: formData.targetType === 2 ? (formData.targetUsers ?? []) : [],
     };
-    delete (payload as any).targetUsers;
+    delete (payload as any).targetUserIds;
     const id = formData.id;
     const request = id ? NoticeAPI.update(id, payload) : NoticeAPI.create(payload);
     request

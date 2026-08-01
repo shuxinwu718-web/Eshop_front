@@ -130,14 +130,6 @@
         />
         <div class="product-name">{{ item.name }}</div>
         <div class="product-price">¥{{ item.price }}</div>
-        <div class="product-actions">
-          <el-button type="primary" size="small" @click.stop="addToCart(item.id)">
-            加入购物车
-          </el-button>
-          <el-button type="danger" size="small" @click.stop="addFavorite(item.id)">
-            ❤️ 收藏
-          </el-button>
-        </div>
       </el-card>
     </div>
 
@@ -159,7 +151,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
 import { Search, ArrowDown, TrendCharts } from "@element-plus/icons-vue";
 import ProductAPI, {
   type ProductItem,
@@ -167,8 +158,6 @@ import ProductAPI, {
   type ESSearchProductItem,
 } from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
-import CartAPI from "@/api/eshop/cart";
-import FavoriteAPI from "@/api/eshop/favorite";
 import { getFullImageUrl } from "@/utils/url";
 
 const router = useRouter();
@@ -274,27 +263,9 @@ const goDetail = (id: number) => {
   router.push(`/product/${id}`);
 };
 
-const addToCart = async (productId: number) => {
-  try {
-    await CartAPI.add(productId, 1);
-    ElMessage.success("已加入购物车");
-  } catch {
-    ElMessage.error("添加失败");
-  }
-};
-
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = defaultImage;
-};
-
-const addFavorite = async (productId: number) => {
-  try {
-    await FavoriteAPI.add(productId);
-    ElMessage.success("收藏成功");
-  } catch {
-    ElMessage.error("收藏失败");
-  }
 };
 
 const fetchHotProducts = async () => {
@@ -473,11 +444,6 @@ onMounted(() => {
     font-size: 18px;
     color: #f40;
   }
-
-  .product-actions {
-    display: flex;
-    justify-content: space-between;
-  }
 }
 
 .pagination {
@@ -634,16 +600,6 @@ onMounted(() => {
 
     .product-price {
       font-size: 16px;
-    }
-
-    .product-actions {
-      flex-direction: column;
-      gap: 6px;
-
-      .el-button {
-        width: 100%;
-        margin: 0;
-      }
     }
   }
 }

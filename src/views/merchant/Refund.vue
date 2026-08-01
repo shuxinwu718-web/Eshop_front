@@ -1,10 +1,10 @@
 <template>
-  <div class="refund-manage">
-    <el-card>
+  <div class="merchant-refund">
+    <el-card shadow="never">
       <template #header>
         <div class="card-header">
           <span>退款审核</span>
-          <el-button type="primary" @click="handleExport">导出Excel</el-button>
+          <div class="header-hint">管理您店铺商品的退款申请</div>
         </div>
       </template>
 
@@ -30,11 +30,11 @@
       </el-form>
 
       <!-- 表格 -->
-      <el-table v-loading="loading" :data="list" border>
-        <el-table-column prop="id" label="ID" width="80" />
+      <el-table v-loading="loading" :data="list" border stripe>
+        <el-table-column prop="id" label="退款单" width="80" />
         <el-table-column prop="orderNo" label="订单号" min-width="180" />
-        <el-table-column prop="username" label="申请用户" width="120" />
-        <el-table-column prop="refundAmount" label="退款金额" width="120">
+        <el-table-column prop="username" label="申请用户" width="110" />
+        <el-table-column label="退款金额" width="110">
           <template #default="{ row }">¥{{ row.refundAmount }}</template>
         </el-table-column>
         <el-table-column prop="reasonCategoryName" label="退款原因" min-width="120" />
@@ -49,32 +49,14 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="200">
           <template #default="{ row }">
-            <!-- 待商户审核（status=0）— 管理员可做初审 -->
-            <el-button
-              v-if="row.status === 0 || row.status === 1"
-              type="success"
-              size="small"
-              @click="auditApprove(row)"
-            >
-              通过
-            </el-button>
-            <el-button
-              v-if="row.status === 0 || row.status === 1"
-              type="danger"
-              size="small"
-              @click="openRejectDialog(row)"
-            >
-              拒绝
-            </el-button>
-            <!-- 已通过（status=2）— 管理员执行退款 -->
-            <el-button
-              v-if="row.status === 2"
-              type="warning"
-              size="small"
-              @click="executeRefund(row)"
-            >
-              执行退款
-            </el-button>
+            <!-- 待商户审核（status=0）— 商家审核 -->
+            <template v-if="row.status === 0">
+              <el-button type="success" size="small" @click="approve(row)">通过</el-button>
+              <el-button type="danger" size="small" @click="openRejectDialog(row)">拒绝</el-button>
+            </template>
+            <template v-else>
+              <el-tag type="info" size="small" effect="plain">已处理</el-tag>
+            </template>
             <el-button size="small" @click="viewDetail(row)">详情</el-button>
           </template>
         </el-table-column>
@@ -97,47 +79,46 @@
             v-model="rejectForm.remark"
             type="textarea"
             :rows="3"
-            placeholder="请输入拒绝原因"
+            placeholder="请填写拒绝原因（必填）"
           />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="rejectDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="confirmReject">确认拒绝</el-button>
+        <el-button type="danger" :disabled="!rejectForm.remark.trim()" @click="confirmReject">
+          确认拒绝
+        </el-button>
       </template>
     </el-dialog>
 
-    <!-- 退款进度弹窗 -->
+    <!-- 退款详情弹窗（含进度） -->
     <el-dialog v-model="detailDialogVisible" title="退款详情" width="600px">
       <div v-loading="loadingDetail" class="refund-detail">
-        <!-- 基本信息 -->
-        <div class="detail-info">
-          <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="退款单号">{{ currentDetail?.id }}</el-descriptions-item>
-            <el-descriptions-item label="订单号">{{ currentDetail?.orderNo }}</el-descriptions-item>
-            <el-descriptions-item label="申请用户">
-              {{ currentDetail?.username }}
-            </el-descriptions-item>
-            <el-descriptions-item label="退款金额">
-              ¥{{ currentDetail?.refundAmount }}
-            </el-descriptions-item>
-            <el-descriptions-item label="退款原因">
-              {{ currentDetail?.reasonCategoryName || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="补充说明">
-              {{ currentDetail?.reason || "-" }}
-            </el-descriptions-item>
-            <el-descriptions-item label="申请时间">
-              {{ currentDetail?.applyTime }}
-            </el-descriptions-item>
-            <el-descriptions-item label="状态">
-              <el-tag :type="statusTagMap[currentDetail?.status || 0]?.type || 'info'">
-                {{ statusTagMap[currentDetail?.status || 0]?.text || "未知" }}
-              </el-tag>
-            </el-descriptions-item>
-          </el-descriptions>
-        </div>
-        <!-- 进度时间线 -->
+        <el-descriptions :column="2" border size="small">
+          <el-descriptions-item label="退款单号">{{ currentDetail?.id }}</el-descriptions-item>
+          <el-descriptions-item label="订单号">{{ currentDetail?.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="申请用户">
+            {{ currentDetail?.username }}
+          </el-descriptions-item>
+
+          <el-descriptions-item label="退款金额">
+            ¥{{ currentDetail?.refundAmount }}
+          </el-descriptions-item>
+          <el-descriptions-item label="退款原因">
+            {{ currentDetail?.reasonCategoryName || "-" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="补充说明">
+            {{ currentDetail?.reason || "-" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="申请时间">
+            {{ currentDetail?.applyTime }}
+          </el-descriptions-item>
+          <el-descriptions-item label="状态">
+            <el-tag :type="statusTagMap[currentDetail?.status || 0]?.type || 'info'">
+              {{ statusTagMap[currentDetail?.status || 0]?.text || "未知" }}
+            </el-tag>
+          </el-descriptions-item>
+        </el-descriptions>
         <div v-if="progressLogs.length > 0" class="detail-progress">
           <h4>处理进度</h4>
           <el-steps :active="currentProgressStep" align-center>
@@ -161,6 +142,7 @@
             </div>
           </div>
         </div>
+        <el-empty v-else-if="!loadingDetail && currentDetail !== null" description="暂无进度记录" />
 
         <!-- 用户满意度反馈 -->
         <div v-if="refundSatisfaction" class="detail-satisfaction">
@@ -188,13 +170,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import MerchantAPI from "@/api/eshop/merchant";
+import type { TagType } from "@/api/eshop/order";
 import RefundAPI, {
   type RefundRecord,
   type RefundProgressLog,
   type RefundSatisfaction,
 } from "@/api/eshop/refund";
-import { useExport } from "@/composables/useExport";
-import type { TagType } from "@/api/eshop/order";
 
 const loading = ref(false);
 const list = ref<RefundRecord[]>([]);
@@ -231,15 +213,14 @@ const refundSatisfaction = ref<RefundSatisfaction | null>(null);
 const fetchData = async () => {
   loading.value = true;
   try {
-    const res = await RefundAPI.getList({
+    const res = await MerchantAPI.getRefundList({
       ...queryParams,
       pageNum: pageNum.value,
       pageSize: pageSize.value,
     });
     list.value = res.records;
     total.value = res.total;
-  } catch (error) {
-    console.error(error);
+  } catch {
     ElMessage.error("加载失败");
   } finally {
     loading.value = false;
@@ -250,7 +231,6 @@ const handleSearch = () => {
   pageNum.value = 1;
   fetchData();
 };
-
 const resetSearch = () => {
   queryParams.orderNo = "";
   queryParams.status = undefined;
@@ -258,13 +238,17 @@ const resetSearch = () => {
   fetchData();
 };
 
-// 审核通过（管理员审核）
-const auditApprove = async (row: RefundRecord) => {
+// ========== 审核操作 ==========
+
+const approve = async (row: RefundRecord) => {
   try {
-    await ElMessageBox.confirm("确认通过该退款申请？", "提示", { type: "warning" });
-    // 当前是管理员审核，status=2 表示管理员通过
-    await RefundAPI.audit({ refundId: row.id, status: 2, remark: "" });
-    ElMessage.success("审核通过");
+    await ElMessageBox.confirm(
+      `确认通过订单 ${row.orderNo} 的退款申请（¥${row.refundAmount}）？`,
+      "审核通过",
+      { type: "warning" }
+    );
+    await MerchantAPI.auditRefund({ refundId: row.id, status: 1, remark: "商户审核通过" });
+    ElMessage.success("已通过");
     fetchData();
   } catch (error) {
     if (error !== "cancel") console.error(error);
@@ -278,9 +262,9 @@ const openRejectDialog = (row: RefundRecord) => {
 };
 
 const confirmReject = async () => {
-  if (!currentRecord.value) return;
+  if (!currentRecord.value || !rejectForm.remark.trim()) return;
   try {
-    await RefundAPI.audit({
+    await MerchantAPI.auditRefund({
       refundId: currentRecord.value.id,
       status: 3,
       remark: rejectForm.remark,
@@ -288,28 +272,12 @@ const confirmReject = async () => {
     ElMessage.success("已拒绝");
     rejectDialogVisible.value = false;
     fetchData();
-  } catch (error) {
-    console.error(error);
+  } catch {
     ElMessage.error("操作失败");
   }
 };
 
-// 执行退款（status=2 → 生效退款）
-const executeRefund = async (row: RefundRecord) => {
-  try {
-    await ElMessageBox.confirm(
-      `确认对订单 ${row.orderNo} 执行退款 ¥${row.refundAmount}？`,
-      "执行退款",
-      { type: "warning" }
-    );
-    // 执行退款操作
-    await RefundAPI.audit({ refundId: row.id, status: 4, remark: "管理员执行退款" });
-    ElMessage.success("退款执行中");
-    fetchData();
-  } catch (error) {
-    if (error !== "cancel") console.error(error);
-  }
-};
+// ========== 查看详情 ==========
 
 const viewDetail = async (row: RefundRecord) => {
   currentDetail.value = row;
@@ -318,11 +286,12 @@ const viewDetail = async (row: RefundRecord) => {
   progressLogs.value = [];
   refundSatisfaction.value = null;
   try {
-    const res = await RefundAPI.getProgress(row.id);
+    const res = await MerchantAPI.getRefundProgress(row.id);
     const logs = Array.isArray(res) ? res : (res as any).data || [];
     progressLogs.value = logs;
     const stepMap: Record<string, number> = {
       提交申请: 0,
+
       商户审核: 1,
       管理员审核: 2,
       退款执行: 3,
@@ -351,41 +320,27 @@ const viewDetail = async (row: RefundRecord) => {
   }
 };
 
-const columns = [
-  { title: "退款单号", key: "id", width: 12 },
-  { title: "订单号", key: "orderNo", width: 24 },
-  { title: "申请用户", key: "username", width: 14 },
-  { title: "退款金额", key: "refundAmount", width: 14 },
-  { title: "退款原因", key: "reasonCategoryName", width: 18 },
-  { title: "补充说明", key: "reason", width: 20 },
-  { title: "状态", key: "statusLabel", width: 14 },
-  { title: "申请时间", key: "applyTime", width: 20 },
-];
-
-const { handleExport } = useExport(
-  () =>
-    list.value.map((item) => ({
-      ...item,
-      refundAmount: "¥" + item.refundAmount,
-      statusLabel: statusTagMap[item.status]?.text || "未知",
-    })),
-  columns,
-  "退款审核"
-);
-
 onMounted(() => {
   fetchData();
 });
 </script>
 
 <style scoped lang="scss">
-.refund-manage {
+.merchant-refund {
   padding: 20px;
 
   .card-header {
     display: flex;
+    gap: 12px;
     align-items: center;
-    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 600;
+
+    .header-hint {
+      font-size: 13px;
+      font-weight: 400;
+      color: #909399;
+    }
   }
 
   .search-form {
@@ -394,11 +349,9 @@ onMounted(() => {
 }
 
 .refund-detail {
-  .detail-info {
-    margin-bottom: 24px;
-  }
-
   .detail-progress {
+    margin-top: 24px;
+
     h4 {
       margin: 0 0 16px;
       font-size: 15px;
@@ -412,6 +365,7 @@ onMounted(() => {
 
   .timeline-item {
     position: relative;
+
     display: flex;
     gap: 12px;
     padding-bottom: 20px;
@@ -431,12 +385,10 @@ onMounted(() => {
 
     .timeline-content {
       flex: 1;
-
       .timeline-node {
         font-size: 14px;
         font-weight: 600;
       }
-
       .timeline-meta {
         display: flex;
         gap: 12px;
@@ -444,7 +396,6 @@ onMounted(() => {
         font-size: 12px;
         color: var(--el-text-color-secondary);
       }
-
       .timeline-remark {
         padding: 6px 10px;
         margin-top: 4px;
@@ -454,6 +405,18 @@ onMounted(() => {
         border-radius: 4px;
       }
     }
+  }
+}
+
+/* 暗黑模式 */
+html.dark {
+  .merchant-refund {
+    min-height: 100vh;
+    background: #0d1117;
+  }
+  :deep(.el-card) {
+    background: #161b22;
+    border: 1px solid #30363d;
   }
 }
 

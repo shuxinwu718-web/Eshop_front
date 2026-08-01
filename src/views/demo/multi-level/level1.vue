@@ -4,7 +4,5 @@
 <script setup lang="ts">
 defineOptions({ name: "MultiLevel1" });
 
-onMounted(() => {
-  console.log("MultiLevel1 mounted");
-});
+onMounted(() => {});
 </script>

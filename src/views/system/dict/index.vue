@@ -160,7 +160,7 @@ const loading = ref(false);
 const ids = ref<string[]>([]);
 
 const { handleExport } = useExport(
-  () => tableData.value,
+  () => tableData.value ?? [],
   [
     { title: "字典名称", key: "name" },
     { title: "字典编码", key: "dictCode" },

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-container h-full flex flex-1 flex-col">
     <div class="flex-x-between mb-10">
       <el-link
@@ -145,7 +145,6 @@ const {
 
 // 其他工具
 function handleToolbarClick(name: string) {
-  console.log(name);
   if (name === "custom1") {
     ElMessage.success("点击了自定义1按钮");
   }
@@ -203,8 +202,7 @@ const addModalRef2 = ref();
 const openSecondModal = () => {
   handleAddClick(addModalRef2 as Ref<PageModalInstance>);
 };
-const secondSubmit = (formData: any) => {
-  console.log("secondSubmit", formData);
+const secondSubmit = () => {
   ElMessage.success("二级弹窗提交成功");
 };
 

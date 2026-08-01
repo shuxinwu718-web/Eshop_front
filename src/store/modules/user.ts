@@ -66,6 +66,7 @@ export const useUserStore = defineStore("user", () => {
           nickname: data.nickname,
           avatar: data.avatar,
           roles: data.role ? [data.role] : ["USER"],
+          perms: [],
           mobile: data.phone,
           email: data.email,
           createTime: data.createTime,

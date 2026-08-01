@@ -76,7 +76,7 @@
             <el-switch
               :model-value="row.status === 1"
               :loading="row._statusLoading"
-              @change="(val) => changeStatus(row, val)"
+              @change="(val) => changeStatus(row, !!val)"
             />
           </template>
         </el-table-column>

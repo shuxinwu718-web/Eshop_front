@@ -26,6 +26,18 @@ export interface AddressSaveParams {
   isDefault: boolean;
 }
 
+/** 提交地址时的通用参数（isDefault 兼容 number/boolean） */
+export interface AddressSubmitParams {
+  id?: number;
+  receiverName: string;
+  receiverPhone: string;
+  province?: string;
+  city?: string;
+  district?: string;
+  detailAddress: string;
+  isDefault?: number | boolean;
+}
+
 const AddressAPI = {
   list() {
     return request<any, AddressItem[]>({
@@ -48,27 +60,27 @@ const AddressAPI = {
     });
   },
 
-  create(data: AddressItem) {
+  create(data: AddressSubmitParams) {
     return request({
       url: BASE_URL,
       method: "post",
-      data,
+      data: { ...data, isDefault: data.isDefault ? 1 : 0 },
     });
   },
 
-  add(data: AddressItem) {
+  add(data: AddressSubmitParams) {
     return request({
       url: BASE_URL,
       method: "post",
-      data,
+      data: { ...data, isDefault: data.isDefault ? 1 : 0 },
     });
   },
 
-  update(data: AddressItem) {
+  update(data: AddressSubmitParams) {
     return request({
       url: BASE_URL,
       method: "put",
-      data,
+      data: { ...data, isDefault: data.isDefault ? 1 : 0 },
     });
   },
 

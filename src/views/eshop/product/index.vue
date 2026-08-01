@@ -4,6 +4,7 @@
       <template #header>
         <div class="flex-x-between">
           <span>商品管理</span>
+          <el-button type="primary" @click="handleExport">导出Excel</el-button>
           <el-button type="primary" @click="openDialog()">新增商品</el-button>
         </div>
       </template>
@@ -91,7 +92,8 @@
           <el-tree-select
             v-model="form.categoryId"
             :data="categoryTree"
-            :props="{ label: 'name', value: 'id', children: 'children' }"
+            :props="{ label: 'name', children: 'children' }"
+            value-key="id"
             placeholder="选择分类"
             clearable
             style="width: 100%"
@@ -133,6 +135,7 @@ import ProductAPI, {
   type ProductPageParams,
 } from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
+import { useExport } from "@/composables/useExport";
 import type { FormInstance } from "element-plus";
 import { onActivated } from "vue";
 
@@ -253,8 +256,26 @@ async function handleDelete(row: ProductItem) {
   fetchData();
 }
 
+const columns = [
+  { title: "商品名称", key: "name", width: 24 },
+  { title: "价格", key: "price", width: 14 },
+  { title: "库存", key: "stock", width: 12 },
+  { title: "状态", key: "statusLabel", width: 12 },
+  { title: "创建时间", key: "createTime", width: 20 },
+];
+
+const { handleExport } = useExport(
+  () =>
+    productList.value.map((item) => ({
+      ...item,
+      price: "¥" + item.price,
+      statusLabel: item.status === 1 ? "上架" : "下架",
+    })),
+  columns,
+  "商品管理"
+);
+
 onActivated(() => {
-  console.log("列表页被激活，刷新数据");
   fetchData();
   loadCategoryTree();
 });

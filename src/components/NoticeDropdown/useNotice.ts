@@ -35,7 +35,7 @@ export function useNotice() {
       ...params,
     };
     const page = await NoticeAPI.getMyNoticePage(query);
-    list.value = page.list || [];
+    list.value = page.records || [];
     unreadTotal.value = page.total ?? 0;
   }
 

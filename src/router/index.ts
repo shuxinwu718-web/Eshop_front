@@ -187,7 +187,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: "member/center",
         name: "MemberCenter",
         component: () => import("@/views/shop/center/index.vue"),
-        meta: { title: "个人中心", icon: "el-icon-user", roles: ["USER", "MERCHANT"] },
+        meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT"] },
       },
       {
         path: "shop/order",
@@ -224,6 +224,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: "Checkout",
         component: () => import("@/views/shop/checkout/index.vue"),
         meta: { title: "确认订单", roles: ["USER", "MERCHANT"], hidden: true },
+      },
+      {
+        path: "store/:merchantId",
+        name: "Store",
+        component: () => import("@/views/shop/store/index.vue"),
+        meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"] },
       },
       {
         path: "favorites",
@@ -266,7 +272,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "products",
             name: "MerchantProducts",
             component: () => import("@/views/merchant/Products.vue"),
-            meta: { title: "我的小店", icon: "shop" },
+            meta: { title: "我的小店", icon: "el-icon-house" },
           },
           {
             path: "product/create",
@@ -284,13 +290,13 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "statistics",
             name: "MerchantStatistics",
             component: () => import("@/views/merchant/Statistics.vue"),
-            meta: { title: "统计销售额", icon: "data-line" },
+            meta: { title: "统计销售额", icon: "el-icon-coin" },
           },
           {
             path: "orders",
             name: "MerchantOrders",
             component: () => import("@/views/merchant/Orders.vue"),
-            meta: { title: "订单管理", icon: "list" },
+            meta: { title: "订单管理", icon: "el-icon-sell" },
           },
           {
             path: "order/:orderId",
@@ -308,13 +314,25 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "messages",
             name: "MerchantMessages",
             component: () => import("@/views/merchant/Messages.vue"),
-            meta: { title: "用户留言", icon: "chat-dot-square" },
+            meta: { title: "用户留言", icon: "el-icon-message" },
           },
           {
             path: "my-apply",
             name: "MyApply",
             component: () => import("@/views/merchant/MyApply/index.vue"),
             meta: { title: "我的入驻信息", roles: ["MERCHANT"] },
+          },
+          {
+            path: "store-design",
+            name: "MerchantStoreDesign",
+            component: () => import("@/views/merchant/StoreDesign.vue"),
+            meta: { title: "小店设计", icon: "el-icon-brush" },
+          },
+          {
+            path: "refund",
+            name: "MerchantRefund",
+            component: () => import("@/views/merchant/Refund.vue"),
+            meta: { title: "退款审核", icon: "el-icon-warning" },
           },
         ],
       },

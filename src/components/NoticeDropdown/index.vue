@@ -56,7 +56,7 @@ let timer: NodeJS.Timeout | null = null;
 // 获取通知列表（前5条）和未读数量
 const fetchNotices = async () => {
   try {
-    noticeList.value = await NoticeAPI.getUnreadList(5) || [];
+    noticeList.value = (await NoticeAPI.getUnreadList(5)) || [];
     unreadCount.value = await NoticeAPI.getUnreadCount();
   } catch (error) {
     console.error("获取通知失败", error);
@@ -93,7 +93,7 @@ const goToNoticePage = () => {
 };
 
 // 格式化时间
-const formatTime = (time: string) => {
+const formatTime = (time?: string | Date) => {
   if (!time) return "";
   const date = new Date(time);
   const now = new Date();

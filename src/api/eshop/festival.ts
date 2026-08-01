@@ -14,16 +14,16 @@ export interface FestivalCouponPlan {
   description: string;
   /** 关联的优惠券信息 */
   couponName: string;
-  couponType: number;        // 0=满减 1=折扣
+  couponType: number; // 0=满减 1=折扣
   couponValue: number;
-  minAmount: number;         // 后端字段名 minAmount
+  minAmount: number; // 后端字段名 minAmount
   couponStock: number;
   /** 用户当前连续签到天数 */
   userConsecutiveDays: number;
   /** 是否可领取 */
   canClaim: boolean;
   /** 用户是否已领取该活动优惠券 */
-  alreadyClaimed: boolean;   // 后端字段名 alreadyClaimed
+  alreadyClaimed: boolean; //后端字段名 alreadyClaimed
 }
 
 // ==================== API 方法 ====================

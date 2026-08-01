@@ -2,7 +2,7 @@
   <el-config-provider :locale="locale" :size="size">
     <!-- 开启水印 -->
     <el-watermark
-      :font="{ font: fontColor }"
+      :font="{ color: fontColor }"
       :content="showWatermark ? watermarkContent : ''"
       :z-index="9999"
       class="wh-full"

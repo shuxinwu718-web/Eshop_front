@@ -13,8 +13,8 @@
 
 <script setup lang="ts">
 import { ref, shallowRef, watch } from "vue";
-import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
-import "@wangeditor/editor/dist/css/style.css"; // 引入 CSS
+import { Editor, Toolbar } from "@wangeditor-next/editor-for-vue";
+import "@wangeditor-next/editor/dist/css/style.css"; // 引入 CSS
 
 const props = defineProps<{
   modelValue: string;
