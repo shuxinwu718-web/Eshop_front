@@ -77,18 +77,19 @@ const addToCart = async (productId: number) => {
     await CartAPI.add(productId, 1);
     ElMessage.success("已加入购物车");
   } catch {
-    ElMessage.error("添加失败");
+    // 错误已由请求拦截器统一提示
   }
 };
 
 const removeFavorite = async (productId: number) => {
-  await ElMessageBox.confirm("确定取消收藏？", "提示");
   try {
+    await ElMessageBox.confirm("确定取消收藏？", "提示");
     await FavoriteAPI.remove(productId);
     ElMessage.success("已取消收藏");
     fetchList();
-  } catch {
-    ElMessage.error("操作失败");
+  } catch (error) {
+    if (error === "cancel") return; // 用户取消确认框
+    // 错误已由请求拦截器统一提示
   }
 };
 

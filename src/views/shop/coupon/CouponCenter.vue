@@ -125,7 +125,7 @@
           <div class="coupon-left">
             <div class="coupon-amount">
               <span class="amount-symbol">{{ item.type === 0 ? "¥" : "" }}</span>
-              <span class="amount-value">{{ item.type === 0 ? item.value : item.value }}</span>
+              <span class="amount-value">{{ item.value }}</span>
               <span class="amount-unit">{{ item.type === 0 ? "" : "折" }}</span>
             </div>
             <div v-if="item.minAmount && item.minAmount > 0" class="coupon-condition">

@@ -230,8 +230,8 @@ async function handleSendCode() {
     ElMessage.success("验证码已发送");
     startCountdown();
   } catch (error: any) {
-    const msg = error?.message || error?.msg || "发送失败";
-    ElMessage.warning(msg);
+    // 错误已由请求拦截器统一提示
+    console.error("发送邮箱验证码失败", error);
   } finally {
     codeSending.value = false;
   }
@@ -272,8 +272,8 @@ async function handleEmailLoginSubmit() {
     ElMessage.success("登录成功");
     redirectAfterLogin();
   } catch (error: any) {
-    const msg = error?.message || error?.msg || "登录失败";
-    ElMessage.error(msg);
+    // 错误已由请求拦截器统一提示
+    console.error("邮箱免密登录失败", error);
   } finally {
     emailLoading.value = false;
   }
@@ -309,8 +309,7 @@ async function handleLoginSubmit() {
     redirectAfterLogin();
   } catch (error: any) {
     console.error("登录或获取用户信息失败", error);
-    const msg = error?.message || error?.msg || "登录失败，请稍后重试";
-    ElMessage.error(msg);
+    // 错误已由请求拦截器统一提示
     fetchCaptcha();
   } finally {
     loading.value = false;

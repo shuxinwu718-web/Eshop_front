@@ -224,7 +224,7 @@ const handleSignIn = async () => {
     }
     await Promise.all([fetchStatus(), fetchSignRecords(), fetchMilestones(), fetchFestivalPlans()]);
   } catch {
-    ElMessage.error("签到失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     signing.value = false;
   }

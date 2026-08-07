@@ -60,13 +60,15 @@ export const useUserStore = defineStore("user", () => {
     _fetchProfilePromise = (async () => {
       try {
         const data = await AuthAPI.getUserInfo();
+        const role = data.role || "USER";
         const user: UserInfo = {
           userId: String(data.id),
           username: data.username,
           nickname: data.nickname,
           avatar: data.avatar,
-          roles: data.role ? [data.role] : ["USER"],
-          perms: [],
+          roles: [role],
+          // A3 整改：权限由角色推导（后端无权限表），ADMIN 拥有全部权限，其余角色默认无按钮级权限
+          perms: role === "ADMIN" ? ["*:*:*"] : [],
           mobile: data.phone,
           email: data.email,
           createTime: data.createTime,

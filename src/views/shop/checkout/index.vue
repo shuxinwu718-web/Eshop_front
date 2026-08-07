@@ -76,7 +76,7 @@
               </div>
               <div class="coupon-selected-info">
                 <div class="coupon-selected-name">{{ selectedCoupon.name }}</div>
-                <div class="coupon-selected-d etail">满¥{{ selectedCoupon.minAmount }}可用</div>
+                <div class="coupon-selected-detail">满¥{{ selectedCoupon.minAmount }}可用</div>
               </div>
             </div>
             <div class="coupon-selected-right">

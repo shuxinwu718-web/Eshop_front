@@ -22,7 +22,7 @@
               @error="handleImageError"
             >
               <template #error>
-                <div class="img-placeholder">{{ defaultImage }}</div>
+                <img :src="defaultImage" alt="图片加载失败" class="img-placeholder" />
               </template>
             </el-image>
           </el-carousel-item>
@@ -98,7 +98,7 @@
         </div>
 
         <div class="actions">
-          <el-input-number v-model="quantity" :min="1" :max="product.stock" size="large" />
+          <el-input-number v-model="quantity" :min="1" :max="maxStock" size="large" />
           <el-button type="primary" size="large" @click="addToCart">加入购物车</el-button>
           <el-button type="danger" size="large" :loading="favoriteLoading" @click="toggleFavorite">
             {{ isFavorited ? "已收藏" : "❤ 收藏" }}
@@ -328,6 +328,22 @@ const selectSpecValue = (specName: string, value: string) => {
   }
 };
 
+/** A4 整改：数量上限跟随所选 SKU 库存（有 SKU 时用 SKU 库存，否则用商品库存） */
+const maxStock = computed(() => {
+  const stock =
+    product.value.skus && product.value.skus.length > 0
+      ? (selectedSku.value?.stock ?? product.value.stock)
+      : product.value.stock;
+  return Math.max(1, stock || 0);
+});
+
+// 切换 SKU 或商品后，钳制已选数量不超过新上限
+watch(maxStock, (max) => {
+  if (quantity.value > max) {
+    quantity.value = max;
+  }
+});
+
 // 轮播图
 const carouselRef = ref();
 const currentSlide = ref(0);
@@ -385,7 +401,7 @@ const fetchDetail = async () => {
     comments.value = buildCommentTree(productComments);
     await checkFavorite(); // 检查收藏状态
   } catch {
-    ElMessage.error("加载商品详情失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     loading.value = false;
   }
@@ -405,7 +421,7 @@ const addToCart = async () => {
       await CartAPI.add(product.value.id, quantity.value, selectedSku.value.id);
       ElMessage.success("已加入购物车");
     } catch {
-      ElMessage.error("添加失败");
+      // 错误已由请求拦截器统一提示
     }
   } else {
     if (quantity.value > product.value.stock) {
@@ -416,7 +432,7 @@ const addToCart = async () => {
       await CartAPI.add(product.value.id, quantity.value);
       ElMessage.success("已加入购物车");
     } catch {
-      ElMessage.error("添加失败");
+      // 错误已由请求拦截器统一提示
     }
   }
 };
@@ -448,7 +464,7 @@ const toggleFavorite = async () => {
     }
     isFavorited.value = !isFavorited.value;
   } catch {
-    ElMessage.error(isFavorited.value ? "取消收藏失败" : "收藏失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     favoriteLoading.value = false;
   }
@@ -482,7 +498,7 @@ const doSendMessage = async () => {
     contactDialogVisible.value = false;
     contactMessage.value = "";
   } catch {
-    ElMessage.error("发送失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     contactSending.value = false;
   }
@@ -536,7 +552,7 @@ const submitComment = async () => {
     newComment.content = "";
     fetchDetail();
   } catch {
-    ElMessage.error("发表失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     commentSubmitting.value = false;
   }
@@ -564,7 +580,7 @@ const submitReply = async (comment: CommentVO) => {
     replyContent.value = "";
     fetchDetail();
   } catch {
-    ElMessage.error("回复失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     replySubmitting.value = false;
   }

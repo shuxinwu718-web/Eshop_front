@@ -34,10 +34,17 @@ export const AuthStorage = {
 };
 
 /**
- * 权限判断（E-Shop 简化版）
+ * 权限判断（A3 整改：从 user store 读取动态权限，与 v-hasPerm 指令逻辑保持一致）
+ * ADMIN 角色拥有 "*:*:*" 通配权限，其余角色按 perms 精确匹配。
  */
 export function hasPerm(value: string | string[]): boolean {
-  return true; // E-Shop 暂不实现细粒度的按钮级权限控制
+  const { perms = [] } = useUserStoreHook().userInfo || {};
+  // 超级管理员 / 通配权限直接放行
+  if (perms.includes("*:*:*")) {
+    return true;
+  }
+  const required = Array.isArray(value) ? value : [value];
+  return required.some((perm) => perms.includes(perm));
 }
 
 /**

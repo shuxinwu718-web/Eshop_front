@@ -195,9 +195,8 @@ async function toggleStatus(row: UserItem) {
     }
     fetchData(); // 刷新列表
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("操作失败");
-    }
+    if (error === "cancel") return; // 用户取消确认框
+    // 错误已由请求拦截器统一提示
   }
 }
 
@@ -227,9 +226,8 @@ async function handleKick(row: { userId: number; username: string }) {
     ElMessage.success("已强制下线");
     fetchOnlineUsers();
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("操作失败");
-    }
+    if (error === "cancel") return; // 用户取消确认框
+    // 错误已由请求拦截器统一提示
   }
 }
 

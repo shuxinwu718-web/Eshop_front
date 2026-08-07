@@ -17,10 +17,10 @@ export const hasPerm: Directive = {
       );
     }
 
-    const { roles, perms } = useUserStore().userInfo;
+    const { roles = [], perms = [] } = useUserStore().userInfo;
 
-    // 超级管理员拥有所有权限，如果是"*:*:*"权限标识，则不需要进行权限校验
-    if (roles.includes(ROLE_ROOT) || requiredPerms.includes("*:*:*")) {
+    // 超级管理员拥有所有权限；用户权限含 "*:*:*" 通配符时也直接放行
+    if (roles.includes(ROLE_ROOT) || perms.includes("*:*:*") || requiredPerms.includes("*:*:*")) {
       return;
     }
 

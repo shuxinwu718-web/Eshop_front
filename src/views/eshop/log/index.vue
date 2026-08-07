@@ -64,7 +64,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
 import request from "@/utils/request";
 import { useExport } from "@/composables/useExport";
 
@@ -102,7 +101,7 @@ const fetchData = async () => {
     total.value = res.total || 0;
   } catch (error) {
     console.error(error);
-    ElMessage.error("加载失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     loading.value = false;
   }
