@@ -280,13 +280,9 @@ const fetchUsableCoupons = async () => {
   if (totalAmount.value <= 0) return;
   couponLoading.value = true;
   try {
-    const res = await getUsableCoupons(totalAmount.value);
-    // 兼容两种返回格式：如果 res 是数组直接使用，否则取 res.data
-    const data = Array.isArray(res) ? res : (res as any).data || [];
-    usableCoupons.value = data;
-  } catch (error) {
-    console.error(error);
-    ElMessage.error("获取优惠券失败");
+    usableCoupons.value = await getUsableCoupons(totalAmount.value);
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     couponLoading.value = false;
   }
@@ -319,8 +315,8 @@ const submitOrder = async () => {
     ElMessage.success("订单创建成功，即将跳转到订单列表");
     await CartAPI.clear();
     router.push("/shop/order");
-  } catch (error: any) {
-    ElMessage.error(error.message || "提交订单失败");
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     submitting.value = false;
   }

@@ -48,8 +48,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/utils/request";
+import { getMyCoupons } from "@/api/eshop/user_coupons";
 
 interface MyCouponItem {
   userCouponId: number;
@@ -79,13 +78,9 @@ const statusClass = (status: number) => {
 const fetchData = async () => {
   loading.value = true;
   try {
-    const res = await request.get("/api/user/coupons/my", {
-      params: { status: status.value }, // 0未使用，1已使用，2已过期
-    });
-    const data = Array.isArray(res) ? res : (res as any).data || [];
-    list.value = data;
+    list.value = await getMyCoupons({ status: status.value }); // 0未使用，1已使用，2已过期
   } catch {
-    ElMessage.error("加载优惠券失败");
+    // 错误已由请求拦截器统一提示
   } finally {
     loading.value = false;
   }

@@ -25,6 +25,20 @@ export interface SeckillSessionSaveForm {
   limitPerUser?: number;
 }
 
+/** 用户端秒杀场次（含实时剩余库存） */
+export interface UserSeckillSessionItem {
+  id: number;
+  couponId: number;
+  sessionName: string;
+  startTime: string;
+  endTime: string;
+  seckillStock: number;
+  remainStock: number;
+  limitPerUser: number;
+  status: number;
+  couponName?: string;
+}
+
 const SeckillAPI = {
   getPage(params: {
     pageNum?: number;
@@ -65,6 +79,18 @@ const SeckillAPI = {
 
   preheat(id: number) {
     return request({ url: `${BASE_URL}/preheat/${id}`, method: "post" });
+  },
+
+  // ==================== 用户端 ====================
+
+  /** 用户端：获取秒杀场次列表 */
+  getUserSessions() {
+    return request.get<UserSeckillSessionItem[]>("/api/seckill/sessions");
+  },
+
+  /** 用户端：参与秒杀 */
+  seckill(sessionId: number) {
+    return request.post(`/api/seckill/${sessionId}`);
   },
 };
 

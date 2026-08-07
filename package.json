@@ -54,6 +54,7 @@
     "axios": "^1.13.6",
     "codemirror": "^5.65.21",
     "codemirror-editor-vue3": "^2.8.0",
+    "confbox": "^0.2.4",
     "echarts": "^6.0.0",
     "element-plus": "^2.13.5",
     "exceljs": "^4.4.0",

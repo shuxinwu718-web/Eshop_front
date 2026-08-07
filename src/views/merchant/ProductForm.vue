@@ -81,7 +81,7 @@
 
           <el-form-item label="启用尺寸表">
             <el-switch v-model="sizeChartEnabled" active-text="启用" inactive-text="不启用" />
-            <div class="upload-tip" style=" display: inline;margin-left: 12px">
+            <div class="upload-tip" style="display: inline; margin-left: 12px">
               可为商品添加尺码对照、规格参数等表格信息
             </div>
           </el-form-item>
@@ -185,7 +185,7 @@
 
           <el-form-item label="启用规格">
             <el-switch v-model="specEnabled" active-text="启用" inactive-text="不启用" />
-            <div class="upload-tip" style=" display: inline;margin-left: 12px">
+            <div class="upload-tip" style="display: inline; margin-left: 12px">
               启用后用户可在商品详情页选择不同规格（如颜色、尺码）
             </div>
           </el-form-item>
@@ -306,6 +306,7 @@ import { ElMessage } from "element-plus";
 import { Plus, Delete, List, CircleCheckFilled, InfoFilled } from "@element-plus/icons-vue";
 import MerchantAPI from "@/api/eshop/merchant";
 import CategoryAPI from "@/api/eshop/category";
+import type { CategoryItem } from "@/api/eshop/category";
 import FileAPI from "@/api/file";
 import { getFullImageUrl } from "@/utils/url";
 
@@ -313,7 +314,7 @@ const route = useRoute();
 const router = useRouter();
 const formRef = ref();
 const submitting = ref(false);
-const categoryList = ref<any[]>([]);
+const categoryList = ref<{ id: number; name: string }[]>([]);
 
 const isEdit = computed(() => !!route.params.id);
 
@@ -460,10 +461,9 @@ const rules = {
 // 加载分类（扁平化树形结构）
 const loadCategories = async () => {
   try {
-    const res = await CategoryAPI.getTree();
-    const categories = Array.isArray(res) ? res : (res as any)?.data || [];
-    const flatten = (list: any[]): any[] => {
-      const result: any[] = [];
+    const categories = await CategoryAPI.getTree();
+    const flatten = (list: CategoryItem[]): { id: number; name: string }[] => {
+      const result: { id: number; name: string }[] = [];
       for (const item of list) {
         result.push({ id: item.id, name: item.name });
         if (item.children?.length) result.push(...flatten(item.children));

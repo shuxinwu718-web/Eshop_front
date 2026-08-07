@@ -1,3 +1,5 @@
 allowBuilds:
   '@parcel/watcher': true
   es5-ext: true
+overrides:
+  confbox: 0.2.4

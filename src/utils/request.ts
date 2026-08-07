@@ -1,4 +1,9 @@
-import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from "axios";
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+} from "axios";
 import qs from "qs";
 import { AuthStorage, redirectToLogin } from "@/utils/auth";
 import { ElLoading } from "element-plus";
@@ -11,7 +16,7 @@ const http = axios.create({
 });
 
 // 加载状态
-let loadingInstance: any = null;
+let loadingInstance: ReturnType<typeof ElLoading.service> | null = null;
 let requestCount = 0;
 
 const showLoading = () => {
@@ -22,9 +27,13 @@ const showLoading = () => {
 };
 
 const hideLoading = () => {
-  requestCount--;
+  // 防止并发场景下被重复关闭导致计数为负
+  if (requestCount > 0) {
+    requestCount--;
+  }
   if (requestCount === 0 && loadingInstance) {
     loadingInstance.close();
+    loadingInstance = null;
   }
 };
 
@@ -47,8 +56,9 @@ http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const { responseType } = response.config;
 
-    // 二进制数据直接返回
+    // 二进制数据直接返回（已结束 loading，防止全屏 loading 泄漏）
     if (responseType === "blob" || responseType === "arraybuffer") {
+      hideLoading();
       return response;
     }
 
@@ -65,6 +75,9 @@ http.interceptors.response.use(
   },
 
   async (error) => {
+    // 请求已进入拦截器（showLoading 已执行），任何分支都必须 hideLoading，防止全屏 loading 永久卡死
+    hideLoading();
+
     const { response } = error;
 
     if (!response) {
@@ -76,14 +89,32 @@ http.interceptors.response.use(
     const { msg } = response.data as ApiResponse;
 
     if (status === 401) {
-      hideLoading();
       await redirectToLogin(msg || "登录已过期，请重新登录");
       return Promise.reject(new Error("Token Invalid"));
     }
-    hideLoading();
     ElMessage.error(msg || "请求失败");
     return Promise.reject(new Error(msg || "请求失败"));
   }
 );
 
-export default http;
+/**
+ * 响应拦截器已统一解包 response.data，
+ * 因此这里重新声明实例方法类型，让
+ *   request.get<T>(url)  直接返回 Promise<T>
+ * 而非 axios 默认声明的 Promise<AxiosResponse<T>>，
+ * 消除调用方被迫编写 `(res as any).data` 兼容代码的问题。
+ */
+export interface RequestApi {
+  /** 直接调用：request(config) */
+  <T = any, R = T, D = any>(config: AxiosRequestConfig<D>): Promise<R>;
+  request<T = any, R = T, D = any>(config: AxiosRequestConfig<D>): Promise<R>;
+  get<T = any, R = T>(url: string, config?: AxiosRequestConfig): Promise<R>;
+  post<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig): Promise<R>;
+  put<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig): Promise<R>;
+  delete<T = any, R = T>(url: string, config?: AxiosRequestConfig): Promise<R>;
+  patch<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig): Promise<R>;
+  defaults: AxiosInstance["defaults"];
+  interceptors: AxiosInstance["interceptors"];
+}
+
+export default http as unknown as RequestApi;

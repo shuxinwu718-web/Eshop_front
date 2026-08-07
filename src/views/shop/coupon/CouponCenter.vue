@@ -200,25 +200,13 @@
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
-import request from "@/utils/request";
 import { getFestivalCoupons, claimFestivalCoupon } from "@/api/eshop/festival";
 import type { FestivalCouponPlan } from "@/api/eshop/festival";
-
-interface CouponItem {
-  id: number;
-  name: string;
-  type: number;
-  value: number;
-  minAmount: number;
-  stock: number;
-  limitPerUser: number;
-  startTime: string;
-  endTime: string;
-  description?: string;
-}
+import { getAvailableCoupons, receiveCoupon } from "@/api/eshop/user_coupons";
+import type { AvailableCouponItem } from "@/api/eshop/user_coupons";
 
 const loading = ref(false);
-const list = ref<CouponItem[]>([]);
+const list = ref<AvailableCouponItem[]>([]);
 const keyword = ref("");
 const activeType = ref(-1);
 const timeStatus = ref("ongoing");
@@ -231,9 +219,7 @@ const claimingPlanId = ref<number | null>(null);
 
 async function fetchFestivalPlans() {
   try {
-    const res = await getFestivalCoupons();
-    const data = Array.isArray(res) ? res : (res as any).data || [];
-    festivalPlans.value = data;
+    festivalPlans.value = await getFestivalCoupons();
   } catch {
     festivalPlans.value = [];
   }
@@ -242,12 +228,11 @@ async function fetchFestivalPlans() {
 async function handleClaimFestival(item: FestivalCouponPlan) {
   claimingPlanId.value = item.id;
   try {
-    const res = await claimFestivalCoupon(item.id);
-    const msg = (res as any)?.data || (res as any)?.msg || "领取成功";
-    ElMessage.success(typeof msg === "string" ? msg : "领取成功！");
+    await claimFestivalCoupon(item.id);
+    ElMessage.success("领取成功！");
     await fetchFestivalPlans();
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || error?.msg || "领取失败");
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     claimingPlanId.value = null;
   }
@@ -262,7 +247,7 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const formatDateTime = (dateStr: string) => {
+const formatDateTime = (dateStr: string | undefined) => {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleString("zh-CN", {
     month: "2-digit",
@@ -272,7 +257,7 @@ const formatDateTime = (dateStr: string) => {
   });
 };
 
-const getTimeStatus = (item: CouponItem) => {
+const getTimeStatus = (item: AvailableCouponItem) => {
   const now = Date.now();
   if (item.startTime && new Date(item.startTime).getTime() > now) {
     return "upcoming";
@@ -286,17 +271,12 @@ const getTimeStatus = (item: CouponItem) => {
 const fetchData = async () => {
   loading.value = true;
   try {
-    const params: Record<string, any> = {};
+    const params: { type?: number; keyword?: string } = {};
     if (keyword.value) params.keyword = keyword.value;
     if (activeType.value !== -1) params.type = activeType.value;
-    // 注意：timeStatus 参数后端可能不支持，先不传
-    const res = await request.get("/api/user/coupons/available", { params });
-    // 兼容两种情况：如果 res 是数组，直接用；否则取 res.data
-    const data = Array.isArray(res) ? res : (res as any).data || [];
-    list.value = data;
-  } catch (error) {
-    console.error(error);
-    ElMessage.error("加载优惠券失败");
+    list.value = await getAvailableCoupons(params);
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     loading.value = false;
   }
@@ -310,15 +290,15 @@ const handleFilterChange = () => {
   fetchData();
 };
 
-const handleReceive = async (item: CouponItem) => {
+const handleReceive = async (item: AvailableCouponItem) => {
   if (item.stock <= 0) return;
   receivingId.value = item.id;
   try {
-    await request.post("/api/user/coupons/receive", { couponId: item.id });
+    await receiveCoupon(item.id);
     ElMessage.success("领取成功");
     fetchData();
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || error?.message || "领取失败");
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     receivingId.value = null;
   }

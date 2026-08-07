@@ -476,8 +476,7 @@ const openRefundDialog = async (order: OrderVO) => {
   // 加载退款原因分类
   if (reasonCategories.value.length === 0) {
     try {
-      const res = await RefundAPI.getReasonCategories();
-      reasonCategories.value = Array.isArray(res) ? res : (res as any).data || [];
+      reasonCategories.value = await RefundAPI.getReasonCategories();
     } catch {
       // 兜底分类
       reasonCategories.value = [
@@ -530,8 +529,7 @@ const viewRefundProgress = async (refundId?: number) => {
   loadingProgress.value = true;
   progressLogs.value = [];
   try {
-    const res = await RefundAPI.getProgress(refundId);
-    const logs = Array.isArray(res) ? res : (res as any).data || [];
+    const logs = await RefundAPI.getProgress(refundId);
     progressLogs.value = logs;
     // 计算当前步骤：已完成的最大节点索引
     const stepMap: Record<string, number> = {
@@ -542,7 +540,7 @@ const viewRefundProgress = async (refundId?: number) => {
       退款完成: 4,
     };
     let maxStep = 0;
-    logs.forEach((log: RefundProgressLog) => {
+    logs.forEach((log) => {
       const step = stepMap[log.nodeName];
       if (step !== undefined && step >= maxStep) maxStep = step;
     });

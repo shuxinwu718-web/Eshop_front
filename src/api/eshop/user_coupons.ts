@@ -14,7 +14,9 @@ export interface AvailableCouponItem {
   maxDiscount?: number; // 折扣券最高抵扣金额
   stock: number;
   limitPerUser: number;
+  startTime?: string; // 领取开始时间
   endTime: string;
+  description?: string; // 优惠券说明
 }
 
 /** 我的优惠券项（未使用） */
@@ -35,18 +37,15 @@ export type UsableCouponItem = MyCouponItem;
 // ==================== API 方法 ====================
 
 /**
- * 领券中心 - 获取可领取的优惠券列表
- * @param params 分页和搜索参数
+ * 领券中心 - 获取可领取的优惠券列表（后端返回数组）
+ * @param params type: 0=满减 1=折扣；keyword: 关键词；timeStatus: ongoing/upcoming/all
  */
 export const getAvailableCoupons = (params?: {
-  pageNum?: number;
-  pageSize?: number;
+  type?: number;
   keyword?: string;
+  timeStatus?: string;
 }) => {
-  return request.get<{ records: AvailableCouponItem[]; total: number }>(
-    "/api/user/coupons/available",
-    { params }
-  );
+  return request.get<AvailableCouponItem[]>("/api/user/coupons/available", { params });
 };
 
 /**

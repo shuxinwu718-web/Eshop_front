@@ -43,3 +43,6 @@ yarn.lock
 # Local history
 .history
 .vs/
+
+# Logs
+*.log

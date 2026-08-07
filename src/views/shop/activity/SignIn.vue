@@ -169,10 +169,9 @@ const isSigned = (dateStr: string) => !!signedMap.value[dateStr];
 
 const fetchSignRecords = async () => {
   try {
-    const res = await getSignInRecords();
-    const list = Array.isArray(res) ? res : (res as any).data || [];
+    const list = await getSignInRecords();
     const map: Record<string, boolean> = {};
-    (list as string[]).forEach((date) => {
+    list.forEach((date) => {
       map[date] = true;
     });
     signedMap.value = map;
@@ -183,8 +182,7 @@ const fetchSignRecords = async () => {
 
 const fetchStatus = async () => {
   try {
-    const res = await getSignInStatus();
-    status.value = Array.isArray(res) ? res[0] : (res as any).data || res || null;
+    status.value = await getSignInStatus();
   } catch {
     /* 忽略 */
   }
@@ -192,9 +190,7 @@ const fetchStatus = async () => {
 
 const fetchMilestones = async () => {
   try {
-    const res = await getSigninMilestones();
-    const list = Array.isArray(res) ? res : (res as any).data || [];
-    milestones.value = list;
+    milestones.value = await getSigninMilestones();
   } catch {
     milestones.value = [];
   }
@@ -202,9 +198,7 @@ const fetchMilestones = async () => {
 
 const fetchFestivalPlans = async () => {
   try {
-    const res = await getFestivalCoupons();
-    const list = Array.isArray(res) ? res : (res as any).data || [];
-    festivalPlans.value = list;
+    festivalPlans.value = await getFestivalCoupons();
   } catch {
     festivalPlans.value = [];
   }
@@ -218,8 +212,7 @@ const handleSignIn = async () => {
   signing.value = true;
   try {
     const res = await signIn();
-    const msg =
-      typeof res === "string" ? res : (res as any)?.data || (res as any)?.msg || "签到成功";
+    const msg = typeof res === "string" ? res : "签到成功";
     if (msg.includes("获得优惠券") || msg.includes("优惠券")) {
       await ElMessageBox.alert(msg, "🎉 签到奖励", {
         confirmButtonText: "收下啦",
@@ -242,12 +235,11 @@ const handleSignIn = async () => {
 const claimFestival = async (item: FestivalCouponPlan) => {
   claimingPlanId.value = item.id;
   try {
-    const res = await claimFestivalCoupon(item.id);
-    const msg = (res as any)?.data || (res as any)?.msg || "领取成功";
-    ElMessage.success(typeof msg === "string" ? msg : "领取成功！");
+    await claimFestivalCoupon(item.id);
+    ElMessage.success("领取成功！");
     await fetchFestivalPlans();
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || error?.msg || "领取失败");
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     claimingPlanId.value = null;
   }
@@ -306,8 +298,8 @@ onMounted(() => {
       .stat-value {
         font-size: 36px;
         font-weight: 700;
-        color: #f56c6c;
         line-height: 1.2;
+        color: #f56c6c;
       }
 
       .stat-label {
@@ -375,14 +367,14 @@ onMounted(() => {
     }
 
     &.milestone-achieved {
-      border-color: #faecd8;
       background: #fffbf0;
+      border-color: #faecd8;
       box-shadow: 0 2px 8px rgba(230, 162, 60, 0.1);
     }
 
     &.milestone-claimed {
-      border-color: #e1f3d8;
       background: #f0f9eb;
+      border-color: #e1f3d8;
     }
 
     .milestone-icon {
@@ -420,9 +412,9 @@ onMounted(() => {
 
   .festival-item {
     padding: 16px;
+    background: #fffaf5;
     border: 1px solid #fde2d0;
     border-radius: 10px;
-    background: #fffaf5;
 
     .festival-item-header {
       display: flex;
@@ -448,9 +440,9 @@ onMounted(() => {
 
     .festival-item-body {
       display: flex;
+      flex-wrap: wrap;
       gap: 16px;
       align-items: center;
-      flex-wrap: wrap;
 
       .festival-progress {
         display: flex;

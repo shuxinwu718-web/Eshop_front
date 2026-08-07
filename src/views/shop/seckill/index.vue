@@ -98,23 +98,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
-import request from "@/utils/request";
-
-interface SeckillSessionItem {
-  id: number;
-  couponId: number;
-  sessionName: string;
-  startTime: string;
-  endTime: string;
-  seckillStock: number;
-  remainStock: number;
-  limitPerUser: number;
-  status: number;
-  couponName?: string;
-}
+import SeckillAPI, { type UserSeckillSessionItem } from "@/api/eshop/seckill";
 
 const loading = ref(false);
-const list = ref<SeckillSessionItem[]>([]);
+const list = ref<UserSeckillSessionItem[]>([]);
 const seckillingId = ref<number | null>(null);
 const now = ref(Date.now());
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -122,7 +109,7 @@ let fetchTimer: ReturnType<typeof setInterval> | null = null;
 
 const padZero = (n: number) => String(n).padStart(2, "0");
 
-const remainTime = (item: SeckillSessionItem) => {
+const remainTime = (item: UserSeckillSessionItem) => {
   const target = item.status === 1 ? item.endTime : item.startTime;
   const diff = new Date(target).getTime() - now.value;
   if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
@@ -134,10 +121,10 @@ const remainTime = (item: SeckillSessionItem) => {
   };
 };
 
-const stockSold = (item: SeckillSessionItem) =>
+const stockSold = (item: UserSeckillSessionItem) =>
   Math.max(0, (item.seckillStock || 0) - (item.remainStock ?? item.seckillStock));
 
-const stockPercent = (item: SeckillSessionItem) => {
+const stockPercent = (item: UserSeckillSessionItem) => {
   const total = item.seckillStock || 1;
   const sold = stockSold(item);
   return Math.min(100, (sold / total) * 100);
@@ -146,25 +133,22 @@ const stockPercent = (item: SeckillSessionItem) => {
 const fetchData = async () => {
   loading.value = true;
   try {
-    const res = await request.get("/api/seckill/sessions");
-    // 兼容拦截器解包：如果 res 是数组，直接使用；否则取 res.data
-    const data = Array.isArray(res) ? res : (res as any).data || [];
-    list.value = data;
-  } catch (error) {
-    console.error(error);
+    list.value = await SeckillAPI.getUserSessions();
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     loading.value = false;
   }
 };
-const handleSeckill = async (item: SeckillSessionItem) => {
+const handleSeckill = async (item: UserSeckillSessionItem) => {
   if (!item.remainStock || item.remainStock <= 0) return;
   seckillingId.value = item.id;
   try {
-    await request.post(`/api/seckill/${item.id}`);
+    await SeckillAPI.seckill(item.id);
     ElMessage.success("抢购成功！");
     fetchData();
-  } catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || error?.message || "抢购失败");
+  } catch {
+    // 错误已由请求拦截器统一提示
   } finally {
     seckillingId.value = null;
   }

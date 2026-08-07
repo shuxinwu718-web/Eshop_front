@@ -1,3 +1,5 @@
+import { fileURLToPath, URL } from "node:url";
+
 import vue from "@vitejs/plugin-vue";
 import { type ConfigEnv, type UserConfig, loadEnv, defineConfig, PluginOption } from "vite";
 
@@ -25,6 +27,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     resolve: {
       // Vite 8 新特性：自动读取 tsconfig.json 中的 paths 别名
       tsconfigPaths: true,
+      alias: {
+        // 显式注册 @ 别名（sass 预处理器的 additionalData 依赖它解析 @use 路径）
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
+      },
     },
     css: {
       preprocessorOptions: {
