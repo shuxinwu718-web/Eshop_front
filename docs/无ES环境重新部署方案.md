@@ -359,8 +359,46 @@ server {
 
 ### 5.5 AI 客服（可选）
 
-- 部署：上传 `E:\Python-wordkspace\ai-customer-service`，`pip install -r requirements.txt`，配置 `DASHSCOPE_API_KEY` 后 `python main.py`（端口 5000）。
-- 不部署时前端客服入口请求失败，不影响主流程；可在前端隐藏客服悬浮球入口。
+服务：FastAPI（通义千问 Function Calling Agent），端口 5000。源码已托管 GitHub（`shuxinwu718-web/ai-customer-service`）。
+
+1. **服务器准备**（需 Python 3.9+）：
+   ```bash
+   git clone git@github.com:shuxinwu718-web/ai-customer-service.git
+   cd ai-customer-service
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **配置密钥**（源码不含密钥，` .env` 已 gitignore）：
+   ```bash
+   cp .env.example .env
+   vi .env     # 填入 DASHSCOPE_API_KEY（sk-ws- 开头，通义千问百炼控制台获取）
+   ```
+
+3. **启动**（端口 5000）：
+   ```bash
+   nohup python main.py > ai.log 2>&1 &
+   ```
+   或写 systemd 服务 `/etc/systemd/system/ai-cs.service`：
+   ```ini
+   [Unit]
+   Description=AI Customer Service
+   After=network.target
+
+   [Service]
+   WorkingDirectory=/opt/ai-customer-service
+   ExecStart=/opt/ai-customer-service/venv/bin/python main.py
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   `systemctl daemon-reload && systemctl enable --now ai-cs`
+
+4. **自检**：`curl http://localhost:5000/ai/health` 返回 `{"status":"healthy"}`。
+5. **Nginx 反代**：已在前端配置 `location /ai/ → 127.0.0.1:5000`（见 5.4）。
+6. **不部署时**：前端客服入口请求失败，不影响主流程；可在前端隐藏客服悬浮球入口。
 
 ## 6. 部署验证清单
 
