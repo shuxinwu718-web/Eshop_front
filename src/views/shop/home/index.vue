@@ -220,6 +220,10 @@ const fetchProducts = async () => {
     const res = await ProductAPI.esSearch(params);
     productList.value = res.list.map((item) => mapESSearchItem(item.product));
     total.value = res.total;
+  } catch {
+    // 网络/服务异常兜底：避免 loading 永久悬挂
+    productList.value = [];
+    total.value = 0;
   } finally {
     loading.value = false;
   }
