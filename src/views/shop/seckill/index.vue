@@ -13,9 +13,12 @@
           v-for="item in list"
           :key="item.id"
           class="seckill-card"
-          :class="item.status === 1 ? 'is-active' : 'is-upcoming'"
+          :class="[
+            item.status === 1 ? 'is-active' : 'is-upcoming',
+            item.seckillType === 1 ? 'is-product' : 'is-coupon',
+          ]"
         >
-          <!-- 左侧：券信息 -->
+          <!-- 左侧：券信息 / 商品信息 -->
           <div class="card-left">
             <div class="card-badge">
               <el-tag v-if="item.status === 1" type="danger" effect="dark" size="small">
@@ -23,7 +26,36 @@
               </el-tag>
               <el-tag v-else type="info" effect="dark" size="small">即将开始</el-tag>
             </div>
-            <div class="card-coupon-name">{{ item.couponName || "优惠券" }}</div>
+
+            <!-- 秒杀商品模式 -->
+            <template v-if="item.seckillType === 1">
+              <div class="card-product">
+                <el-image
+                  v-if="item.coverImage"
+                  :src="getFullImageUrl(item.coverImage)"
+                  fit="cover"
+                  class="card-product-img"
+                />
+                <div v-else class="card-product-img card-product-img--placeholder">
+                  <el-icon :size="24"><Picture /></el-icon>
+                </div>
+                <div class="card-product-info">
+                  <div class="card-product-name">{{ item.productName }}</div>
+                  <div class="card-price-row">
+                    <span class="card-seckill-price">¥{{ item.seckillPrice }}</span>
+                    <span v-if="item.originalPrice" class="card-origin-price">
+                      ¥{{ item.originalPrice }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- 秒杀优惠券模式 -->
+            <template v-else>
+              <div class="card-coupon-name">{{ item.couponName || "优惠券" }}</div>
+            </template>
+
             <div class="card-session-name">{{ item.sessionName }}</div>
           </div>
 
@@ -74,8 +106,19 @@
 
           <!-- 右侧：操作 -->
           <div class="card-action">
+            <!-- 已抢购/已领取 -->
             <el-button
-              v-if="item.status === 1"
+              v-if="item.status === 1 && item.isSeckilled"
+              type="success"
+              size="large"
+              round
+              disabled
+            >
+              {{ item.seckillType === 1 ? "秒杀成功" : "已领取" }}
+            </el-button>
+            <!-- 可抢购 -->
+            <el-button
+              v-else-if="item.status === 1"
               type="danger"
               size="large"
               round
@@ -97,9 +140,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+import { Picture } from "@element-plus/icons-vue";
 import SeckillAPI, { type UserSeckillSessionItem } from "@/api/eshop/seckill";
+import AddressAPI from "@/api/eshop/address";
+import { getFullImageUrl } from "@/utils/url";
+import { promptLogin } from "@/utils/requireLogin";
+import { useUserStore } from "@/store";
 
+const router = useRouter();
+const userStore = useUserStore();
 const loading = ref(false);
 const list = ref<UserSeckillSessionItem[]>([]);
 const seckillingId = ref<number | null>(null);
@@ -142,10 +193,38 @@ const fetchData = async () => {
 };
 const handleSeckill = async (item: UserSeckillSessionItem) => {
   if (!item.remainStock || item.remainStock <= 0) return;
+  // 游客抢购需先登录
+  if (!userStore.isLoggedIn()) {
+    promptLogin("抢购需要登录");
+    return;
+  }
   seckillingId.value = item.id;
   try {
-    await SeckillAPI.seckill(item.id);
-    ElMessage.success("抢购成功！");
+    if (item.seckillType === 1) {
+      // 秒杀商品：取默认收货地址后下单
+      let addresses: Awaited<ReturnType<typeof AddressAPI.list>> = [];
+      try {
+        addresses = await AddressAPI.list();
+      } catch {
+        addresses = [];
+      }
+      const addr = addresses.find((a) => a.isDefault === 1) || addresses[0];
+      if (!addr?.id) {
+        ElMessage.warning("请先在个人中心完善收货地址");
+        return;
+      }
+      const orderId = await SeckillAPI.seckill(item.id, addr.id);
+      ElMessage.success("抢购成功，请在 30 分钟内完成支付！");
+      if (typeof orderId === "number") {
+        // 跳转"我的订单"列表
+        router.push("/shop/order");
+        return;
+      }
+    } else {
+      // 秒杀优惠券：直接领取
+      await SeckillAPI.seckill(item.id);
+      ElMessage.success("抢购成功！");
+    }
     fetchData();
   } catch {
     // 错误已由请求拦截器统一提示
@@ -231,6 +310,57 @@ onUnmounted(() => {
       .card-session-name {
         font-size: 13px;
         color: #999;
+      }
+
+      /* 秒杀商品模式 */
+      .card-product {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 4px;
+
+        .card-product-img {
+          flex-shrink: 0;
+          width: 56px;
+          height: 56px;
+          overflow: hidden;
+          background: #f5f7fa;
+          border-radius: 8px;
+
+          &--placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c0c4cc;
+          }
+        }
+        .card-product-info {
+          min-width: 0;
+        }
+        .card-product-name {
+          margin-bottom: 6px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 15px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+        .card-price-row {
+          display: flex;
+          gap: 8px;
+          align-items: baseline;
+
+          .card-seckill-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f56c6c;
+          }
+          .card-origin-price {
+            font-size: 13px;
+            color: #bbb;
+            text-decoration: line-through;
+          }
+        }
       }
     }
 

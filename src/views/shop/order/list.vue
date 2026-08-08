@@ -14,6 +14,9 @@
             <el-radio-button label="6">已退款</el-radio-button>
             <el-radio-button label="4">已取消</el-radio-button>
           </el-radio-group>
+          <el-button type="primary" size="small" class="cs-btn" @click="goCustomerService">
+            联系客服
+          </el-button>
         </div>
       </template>
 
@@ -305,6 +308,11 @@ const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
 const statusFilter = ref("");
+
+// 进入 AI 客服页
+const goCustomerService = () => {
+  router.push("/shop/customer-service");
+};
 
 // ==================== 订单状态映射 ====================
 
@@ -617,6 +625,10 @@ onBeforeUnmount(() => {
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+
+  .cs-btn {
+    flex-shrink: 0;
+  }
 }
 
 .order-item {

@@ -52,6 +52,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           target: env.VITE_APP_API_URL,
           rewrite: (path: string) => path.replace(new RegExp("^" + env.VITE_APP_BASE_API), ""),
         },
+        // 代理 AI 客服服务（Python FastAPI）
+        "/ai": {
+          changeOrigin: true,
+          target: env.VITE_APP_AI_URL,
+        },
       },
     },
     plugins: [

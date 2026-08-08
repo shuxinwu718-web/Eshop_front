@@ -163,6 +163,7 @@ export const constantRoutes: RouteRecordRaw[] = [
           icon: "el-icon-home-filled",
           keepAlive: true,
           roles: ["USER", "MERCHANT"],
+          public: true,
         },
       },
       {
@@ -175,7 +176,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: "product/:id",
         name: "ProductDetail",
         component: () => import("@/views/shop/product/detail.vue"),
-        meta: { title: "商品详情", hidden: true, roles: ["USER", "MERCHANT"] },
+        meta: { title: "商品详情", hidden: true, roles: ["USER", "MERCHANT"], public: true },
       },
       {
         path: "order/detail/:id",
@@ -196,16 +197,32 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: "我的订单", icon: "list", roles: ["USER", "MERCHANT"], hidden: true },
       },
       {
+        path: "shop/customer-service",
+        name: "CustomerService",
+        component: () => import("@/views/shop/customerService/index.vue"),
+        meta: { title: "AI 客服", roles: ["USER", "MERCHANT"], hidden: true, public: true },
+      },
+      {
         path: "coupon-center",
         name: "CouponCenter",
         component: () => import("@/views/shop/coupon/CouponCenter.vue"),
-        meta: { title: "领券中心", icon: "el-icon-present", roles: ["USER", "MERCHANT"] },
+        meta: {
+          title: "领券中心",
+          icon: "el-icon-present",
+          roles: ["USER", "MERCHANT"],
+          public: true,
+        },
       },
       {
         path: "seckill",
         name: "Seckill",
         component: () => import("@/views/shop/seckill/index.vue"),
-        meta: { title: "限时秒杀", icon: "el-icon-lightning", roles: ["USER", "MERCHANT"] },
+        meta: {
+          title: "限时秒杀",
+          icon: "el-icon-lightning",
+          roles: ["USER", "MERCHANT"],
+          public: true,
+        },
       },
       {
         path: "my-coupon",
@@ -229,7 +246,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: "store/:merchantId",
         name: "Store",
         component: () => import("@/views/shop/store/index.vue"),
-        meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"] },
+        meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"], public: true },
       },
       {
         path: "favorites",

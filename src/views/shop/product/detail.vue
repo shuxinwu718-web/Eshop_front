@@ -264,6 +264,7 @@ import { getFullImageUrl } from "@/utils/url";
 import HistoryAPI from "@/api/eshop/history";
 import { List } from "@element-plus/icons-vue";
 import type { ProductSpec, ProductSku } from "@/api/eshop/product";
+import { promptLogin } from "@/utils/requireLogin";
 
 const route = useRoute();
 const router = useRouter();
@@ -408,6 +409,11 @@ const fetchDetail = async () => {
 };
 
 const addToCart = async () => {
+  // 游客加购需先登录
+  if (!userStore.isLoggedIn()) {
+    promptLogin("加入购物车需要登录");
+    return;
+  }
   if (product.value.skus && product.value.skus.length > 0) {
     if (!selectedSku.value) {
       ElMessage.warning("请先选择商品规格");
@@ -440,8 +446,12 @@ const addToCart = async () => {
 const isFavorited = ref(false);
 const favoriteLoading = ref(false);
 
-// 检查是否已收藏
+// 检查是否已收藏（游客跳过，避免 401）
 const checkFavorite = async () => {
+  if (!userStore.isLoggedIn()) {
+    isFavorited.value = false;
+    return;
+  }
   try {
     const res = await FavoriteAPI.check(product.value.id);
     isFavorited.value = res; // 假设接口返回 boolean
@@ -453,6 +463,11 @@ const checkFavorite = async () => {
 // 切换收藏
 const toggleFavorite = async () => {
   if (favoriteLoading.value) return;
+  // 游客收藏需先登录
+  if (!userStore.isLoggedIn()) {
+    promptLogin("收藏需要登录");
+    return;
+  }
   favoriteLoading.value = true;
   try {
     if (isFavorited.value) {
@@ -476,7 +491,7 @@ const contactSending = ref(false);
 
 const contactMerchant = () => {
   if (!userStore.isLoggedIn()) {
-    ElMessage.warning("请先登录");
+    promptLogin("联系商家需要登录");
     return;
   }
   contactMessage.value = "";

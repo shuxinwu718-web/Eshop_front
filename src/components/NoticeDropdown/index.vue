@@ -47,14 +47,18 @@ import { ElMessage } from "element-plus";
 import { Bell } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem } from "@/types/api";
+import { useUserStore } from "@/store";
 
 const router = useRouter();
+const userStore = useUserStore();
 const unreadCount = ref(0);
 const noticeList = ref<NoticeItem[]>([]);
 let timer: NodeJS.Timeout | null = null;
 
 // 获取通知列表（前5条）和未读数量
 const fetchNotices = async () => {
+  // 游客不请求通知接口（避免 401/403 提示）
+  if (!userStore.isLoggedIn()) return;
   try {
     noticeList.value = (await NoticeAPI.getUnreadList(5)) || [];
     unreadCount.value = await NoticeAPI.getUnreadCount();

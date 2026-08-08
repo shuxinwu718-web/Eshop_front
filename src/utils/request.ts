@@ -6,7 +6,8 @@ import axios, {
 } from "axios";
 import qs from "qs";
 import { AuthStorage, redirectToLogin } from "@/utils/auth";
-import { ElLoading } from "element-plus";
+import { ElLoading, ElMessage } from "element-plus";
+import router from "@/router";
 // HTTP 请求实例
 const http = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -89,6 +90,11 @@ http.interceptors.response.use(
     const { msg } = response.data as ApiResponse;
 
     if (status === 401) {
+      // 游客在公开页面访问需登录接口时（如未登录点收藏/领取），仅提示，不强制跳登录
+      if (router.currentRoute.value.meta?.public) {
+        ElMessage.warning(msg || "请先登录后操作");
+        return Promise.reject(new Error(msg || "请先登录后操作"));
+      }
       await redirectToLogin(msg || "登录已过期，请重新登录");
       return Promise.reject(new Error("Token Invalid"));
     }

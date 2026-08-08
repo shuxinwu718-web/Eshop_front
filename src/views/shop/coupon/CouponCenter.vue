@@ -204,6 +204,10 @@ import { getFestivalCoupons, claimFestivalCoupon } from "@/api/eshop/festival";
 import type { FestivalCouponPlan } from "@/api/eshop/festival";
 import { getAvailableCoupons, receiveCoupon } from "@/api/eshop/user_coupons";
 import type { AvailableCouponItem } from "@/api/eshop/user_coupons";
+import { promptLogin } from "@/utils/requireLogin";
+import { useUserStore } from "@/store";
+
+const userStore = useUserStore();
 
 const loading = ref(false);
 const list = ref<AvailableCouponItem[]>([]);
@@ -226,6 +230,11 @@ async function fetchFestivalPlans() {
 }
 
 async function handleClaimFestival(item: FestivalCouponPlan) {
+  // 游客领取需先登录
+  if (!userStore.isLoggedIn()) {
+    promptLogin("领取优惠券需要登录");
+    return;
+  }
   claimingPlanId.value = item.id;
   try {
     await claimFestivalCoupon(item.id);
@@ -292,6 +301,11 @@ const handleFilterChange = () => {
 
 const handleReceive = async (item: AvailableCouponItem) => {
   if (item.stock <= 0) return;
+  // 游客领取需先登录
+  if (!userStore.isLoggedIn()) {
+    promptLogin("领取优惠券需要登录");
+    return;
+  }
   receivingId.value = item.id;
   try {
     await receiveCoupon(item.id);

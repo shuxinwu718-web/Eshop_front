@@ -2,6 +2,7 @@
 import NProgress from "@/plugins/nprogress";
 import router from "@/router";
 import { useUserStore } from "@/store";
+import { ElMessageBox } from "element-plus";
 
 // 模块级变量：保证 profile 只请求一次
 let _profileLoaded = false;
@@ -30,10 +31,27 @@ export function setupPermissionGuard() {
         // 重置标志，以便下次登录后重新请求
         _profileLoaded = false;
         _profilePromise = null;
-        if (whiteList.includes(to.path)) {
+        // 根路径：游客直接进商城首页（Home 是公开页）
+        if (to.path === "/") {
+          next("/home");
+          return;
+        }
+        // 游客可访问公开页面（meta.public 路由或白名单）
+        if (to.meta?.public || whiteList.includes(to.path)) {
           next();
-        } else {
+          return;
+        }
+        // 需登录页面：先弹窗提示，确认后跳登录页（登录成功后回跳原页面）
+        const confirmed = await ElMessageBox.confirm("该页面需要登录后才能访问", "请先登录", {
+          confirmButtonText: "去登录",
+          cancelButtonText: "取消",
+          type: "warning",
+        }).catch(() => false);
+        if (confirmed) {
           next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+        } else {
+          // 用户取消：留在当前页面（游客模式下保持浏览）
+          next(false);
         }
         return;
       }

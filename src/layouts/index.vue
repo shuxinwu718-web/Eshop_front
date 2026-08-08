@@ -2,6 +2,7 @@
   <div class="layout-wrapper">
     <component :is="currentLayoutComponent" />
     <Settings v-if="showSettings" />
+    <CustomerServiceFab />
   </div>
 </template>
 
@@ -13,6 +14,7 @@ import LeftLayout from "./LeftLayout.vue";
 import TopLayout from "./TopLayout.vue";
 import MixLayout from "./MixLayout.vue";
 import Settings from "./components/LayoutSettings.vue";
+import CustomerServiceFab from "@/components/CustomerServiceFab/index.vue";
 
 const route = useRoute();
 const { currentLayout, showSettings } = useLayout();
