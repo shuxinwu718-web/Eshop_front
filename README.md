@@ -3,6 +3,9 @@
 > 基于 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 二次开发的电商前端，配套后端仓库 [Eshop](https://github.com/shuxinwu718-web/Eshop)。
 > 包含**用户商城（shop）**、**商家中心（merchant）**、**系统管理（system）** 三端，以及拼团、秒杀、优惠券、AI 客服等特色功能。
 
+> 后端项目（Java）：[Eshop](https://github.com/shuxinwu718-web/Eshop)
+> > Python 项目：[你的Python仓库名](https://github.com/你的用户名/你的仓库名)
+
 ## 技术栈
 
 | 类别 | 技术 |
