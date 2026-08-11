@@ -8,7 +8,7 @@
 |------|----------|
 | 🖥️ **前端（本项目）** | [Eshop_front](https://github.com/shuxinwu718-web/Eshop_front) |
 | ☕ **后端（Java）** | [Eshop](https://github.com/shuxinwu718-web/Eshop) |
-| 🐍 **AI 客服服务（Python）** | 待开源（项目尚未上传 GitHub） |
+| 🐍 **AI 客服服务（Python）** | [ai-customer-service](https://github.com/shuxinwu718-web/ai-customer-service) |
 
 > 包含**用户商城（shop）**、**商家中心（merchant）**、**系统管理（system）** 三端，以及拼团、秒杀、优惠券、AI 客服等特色功能。
 
