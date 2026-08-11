@@ -358,7 +358,7 @@ onMounted(() => {
     gap: 12px;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--el-fill-color-light);
 
     &:last-child {
       border-bottom: none;
@@ -387,7 +387,7 @@ onMounted(() => {
       .item-sku-specs {
         margin-top: 2px;
         font-size: 12px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
 
       .item-spec {

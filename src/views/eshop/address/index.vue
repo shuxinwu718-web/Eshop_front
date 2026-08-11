@@ -254,8 +254,8 @@ onBeforeUnmount(() => {
 
 .address-card {
   padding: 14px;
-  background: #fff;
-  border: 1px solid #eee;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-light);
   border-radius: 10px;
   transition: box-shadow 0.2s;
 
@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
 
       .phone {
         font-size: 14px;
-        color: #666;
+        color: var(--el-text-color-regular);
       }
 
       .default-tag {
@@ -286,7 +286,7 @@ onBeforeUnmount(() => {
     .full-address {
       font-size: 14px;
       line-height: 1.5;
-      color: #333;
+      color: var(--el-text-color-primary);
     }
   }
 
@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
     gap: 12px;
     justify-content: flex-end;
     padding-top: 10px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--el-border-color-light);
   }
 }
 

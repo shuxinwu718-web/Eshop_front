@@ -56,9 +56,9 @@
         </el-input>
       </el-form-item>
 
-      <!-- 邮箱 -->
+      <!-- 邮箱（必填，用于登录验证与接收活动通知） -->
       <el-form-item prop="email">
-        <el-input v-model.trim="model.email" placeholder="邮箱（可选）">
+        <el-input v-model.trim="model.email" placeholder="请输入邮箱">
           <template #prefix>
             <el-icon><Message /></el-icon>
           </template>
@@ -125,6 +125,10 @@ const rules = computed(() => {
         trigger: "blur",
         message: t("login.message.password.inconformity"),
       },
+    ],
+    email: [
+      { required: true, trigger: "blur", message: "请输入邮箱" },
+      { type: "email", trigger: "blur", message: "邮箱格式不正确" },
     ],
   };
 });

@@ -425,7 +425,7 @@ onMounted(() => {
       width: 10px;
       height: 10px;
       margin-top: 6px;
-      background: #409eff;
+      background: var(--el-color-primary);
       border-radius: 50%;
     }
 
@@ -450,7 +450,7 @@ onMounted(() => {
         margin-top: 4px;
         font-size: 12px;
         color: #f56c6c;
-        background: #fef0f0;
+        background: var(--el-color-danger-light-9);
         border-radius: 4px;
       }
     }
@@ -466,7 +466,7 @@ onMounted(() => {
   }
 
   .satisfaction-card {
-    background: #f8f9fa;
+    background: var(--el-fill-color-light);
     border-radius: 8px;
 
     .label {

@@ -298,14 +298,14 @@ html.sidebar-color-blue {
     }
   }
 
-  // 深蓝色侧边栏配色下的父菜单激活状态"
+  // 深灰色侧边栏配色下的父菜单激活状态（白字保证可见性）
   html.sidebar-color-blue & {
     &.has-active-child > .el-sub-menu__title {
-      color: var(--el-color-primary-light-3) !important;
+      color: #fff !important;
       background-color: rgba(64, 128, 255, 0.2) !important;
 
       .menu-icon {
-        color: var(--el-color-primary-light-3) !important;
+        color: #fff !important;
       }
     }
   }

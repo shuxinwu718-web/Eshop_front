@@ -112,7 +112,7 @@ onMounted(() => {
 .product-card {
   padding: 12px;
   cursor: pointer;
-  border: 1px solid #eee;
+  border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
   transition: all 0.2s;
 
@@ -135,7 +135,7 @@ onMounted(() => {
   .product-price {
     margin: 8px 0;
     font-size: 18px;
-    color: #f40;
+    color: var(--price-color);
   }
 
   .actions {

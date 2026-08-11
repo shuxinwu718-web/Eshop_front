@@ -174,7 +174,7 @@ const formComponents = {
   justify-content: center;
   width: 64px;
   height: 64px;
-  background: white;
+  background: var(--el-bg-color);
   border-radius: 24px;
   box-shadow:
     0 6px 14px rgba(0, 0, 0, 0.05),
@@ -197,7 +197,7 @@ const formComponents = {
 .auth-panel__title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--el-text-color-primary);
   letter-spacing: -0.3px;
 }
 

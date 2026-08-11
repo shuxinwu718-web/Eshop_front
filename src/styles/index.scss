@@ -35,11 +35,17 @@ body {
   margin: 0;
   font-family:
     "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
-    Arial, sans-serif;
+    "Segoe UI", Arial, sans-serif;
   line-height: 1.5;
+  color: var(--el-text-color-primary);
+  background-color: var(--page-bg);
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizelegibility;
+  // 主题切换（亮/暗）时颜色平滑过渡，视觉更自然
+  transition:
+    background-color var(--transition-duration) var(--transition-ease),
+    color var(--transition-duration) var(--transition-ease);
 }
 
 ul,
@@ -185,6 +191,26 @@ html.dark {
   --el-button-border-color: var(--el-color-primary);
   --el-button-hover-bg-color: var(--el-color-primary-light-3);
   --el-button-hover-border-color: var(--el-color-primary-light-3);
+}
+
+// ============================================
+// 7.1 主题切换过渡（背景/边框/阴影随主题平滑变化）
+// ============================================
+
+.el-card,
+.el-table,
+.el-dialog,
+.el-drawer,
+.el-dropdown-menu,
+.el-message-box,
+.el-notification,
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  transition:
+    background-color var(--transition-duration) var(--transition-ease),
+    border-color var(--transition-duration) var(--transition-ease),
+    box-shadow var(--transition-duration) var(--transition-ease);
 }
 
 // ============================================

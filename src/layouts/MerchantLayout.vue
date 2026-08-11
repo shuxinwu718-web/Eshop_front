@@ -131,7 +131,7 @@ onUnmounted(() => {
 .merchant-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: var(--el-bg-color-page);
 }
 
 .merchant-sidebar {
@@ -139,7 +139,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   flex-direction: column;
   width: 260px;
-  background-color: #fff;
+  background-color: var(--el-bg-color);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
 
   .merchant-info {
@@ -148,19 +148,19 @@ onUnmounted(() => {
     align-items: center;
     padding: 24px 16px;
     margin-bottom: 8px;
-    border-bottom: 1px solid #ebeef5;
+    border-bottom: 1px solid var(--el-border-color-lighter);
 
     .info-text {
       .name {
         font-size: 16px;
         font-weight: 600;
-        color: #303133;
+        color: var(--el-text-color-primary);
       }
 
       .role {
         margin-top: 4px;
         font-size: 12px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
     }
   }
@@ -176,12 +176,12 @@ onUnmounted(() => {
       border-radius: 8px;
 
       &.is-active {
-        color: #409eff;
-        background-color: #ecf5ff;
+        color: var(--el-color-primary);
+        background-color: var(--el-color-primary-light-9);
       }
 
       &:hover {
-        background-color: #f5f7fa;
+        background-color: var(--el-bg-color-page);
       }
     }
   }

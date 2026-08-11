@@ -133,7 +133,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .store-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--el-fill-color-light);
 }
 
 /* 店铺头部 */
@@ -184,7 +184,7 @@ onMounted(() => {
     .section-title {
       font-size: 18px;
       font-weight: 600;
-      color: #333;
+      color: var(--el-text-color-primary);
     }
   }
 
@@ -207,7 +207,7 @@ onMounted(() => {
   .product-card {
     overflow: hidden;
     cursor: pointer;
-    background: #fff;
+    background: var(--el-bg-color);
     border-radius: 8px;
     transition:
       transform 0.2s,
@@ -232,8 +232,8 @@ onMounted(() => {
       width: 100%;
       height: 200px;
       font-size: 14px;
-      color: #ccc;
-      background: #fafafa;
+      color: var(--el-text-color-placeholder);
+      background: var(--el-fill-color-light);
     }
 
     .product-body {
@@ -245,7 +245,7 @@ onMounted(() => {
         text-overflow: ellipsis;
         font-size: 14px;
         font-weight: 500;
-        color: #333;
+        color: var(--el-text-color-primary);
         white-space: nowrap;
       }
 
@@ -253,14 +253,14 @@ onMounted(() => {
         margin-bottom: 6px;
         font-size: 18px;
         font-weight: 700;
-        color: #f40;
+        color: var(--price-color);
       }
 
       .product-meta {
         display: flex;
         justify-content: space-between;
         font-size: 12px;
-        color: #999;
+        color: var(--el-text-color-secondary);
       }
     }
   }

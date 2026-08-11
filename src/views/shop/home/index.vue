@@ -291,7 +291,7 @@ onMounted(() => {
 .shop-home {
   min-height: 100vh;
   padding: 20px;
-  background: #f5f5f5;
+  background: var(--el-fill-color-light);
 }
 
 .search-bar {
@@ -311,7 +311,7 @@ onMounted(() => {
 .category-nav {
   padding: 12px 20px;
   margin-bottom: 16px;
-  background: white;
+  background: var(--el-bg-color);
   border-radius: 8px;
 }
 
@@ -330,15 +330,15 @@ onMounted(() => {
     align-items: center;
     padding: 6px 16px;
     font-size: 14px;
-    color: #333;
+    color: var(--el-text-color-primary);
     white-space: nowrap;
     cursor: pointer;
     border-radius: 20px;
     transition: all 0.2s;
 
     &:hover {
-      color: #409eff;
-      background: #f0f5ff;
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
     }
 
     .arrow {
@@ -349,11 +349,11 @@ onMounted(() => {
 
   &.active > .category-label {
     font-weight: 500;
-    color: white;
-    background: #409eff;
+    color: var(--el-color-white);
+    background: var(--el-color-primary);
 
     &:hover {
-      background: #337ecc;
+      background: var(--el-color-primary-dark-2);
     }
   }
 
@@ -371,7 +371,7 @@ onMounted(() => {
   min-width: 140px;
   padding: 8px 0;
   margin-top: 4px;
-  background: white;
+  background: var(--el-bg-color-overlay);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
@@ -379,20 +379,20 @@ onMounted(() => {
 .sub-category-item {
   padding: 8px 20px;
   font-size: 14px;
-  color: #333;
+  color: var(--el-text-color-primary);
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    color: #409eff;
-    background: #f0f5ff;
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
   }
 
   &.active {
     font-weight: 500;
-    color: #409eff;
-    background: #f0f5ff;
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
   }
 }
 
@@ -446,7 +446,7 @@ onMounted(() => {
   .product-price {
     margin: 8px 0;
     font-size: 18px;
-    color: #f40;
+    color: var(--price-color);
   }
 }
 
@@ -482,7 +482,7 @@ onMounted(() => {
     width: 320px;
     padding: 12px;
     cursor: pointer;
-    background: white;
+    background: var(--el-bg-color);
     border-radius: 10px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     transition: all 0.25s;
@@ -506,20 +506,20 @@ onMounted(() => {
       margin-top: 2px;
       font-size: 12px;
       font-weight: 700;
-      color: #999;
-      background: #f5f5f5;
+      color: var(--el-text-color-secondary);
+      background: var(--el-fill-color-light);
       border-radius: 4px;
 
       &.rank-1 {
-        color: #fff;
+        color: var(--el-color-white);
         background: #f56c6c;
       }
       &.rank-2 {
-        color: #fff;
+        color: var(--el-color-white);
         background: #f8983a;
       }
       &.rank-3 {
-        color: #fff;
+        color: var(--el-color-white);
         background: #f7b84d;
       }
     }
@@ -549,14 +549,14 @@ onMounted(() => {
       margin: 4px 0;
       font-size: 16px;
       font-weight: 700;
-      color: #f40;
+      color: var(--price-color);
     }
 
     .hot-meta {
       display: flex;
       gap: 12px;
       font-size: 12px;
-      color: #999;
+      color: var(--el-text-color-secondary);
     }
   }
 }

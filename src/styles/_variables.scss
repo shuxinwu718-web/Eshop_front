@@ -66,6 +66,16 @@ $tags-view-height: 34px;
   // 统计分组标题
   --stat-group-title-color: var(--el-text-color-secondary);
   --stat-group-title-size: 12px;
+
+  // 商品价格色（商城通用，亮色下为电商红）
+  --price-color: #f40;
+
+  // 页面背景（浅色模式下浅蓝灰，与 Element Plus 页面色保持一致）
+  --page-bg: var(--el-bg-color-page);
+
+  // 通用过渡时长
+  --transition-duration: 0.25s;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // SCSS 变量映射（供组件使用）
@@ -80,13 +90,13 @@ $sidebar-logo-text-color: var(--sidebar-logo-text-color);
 // 3. 主题模式
 // ============================================
 
-// 浅色主题 - 深蓝色侧边栏（渐变增强版）
+// 浅色主题 - 现代商务深灰侧边栏（渐变增强版，对比度更高，按钮/文字清晰可见）
 html.sidebar-color-blue {
-  --menu-background: linear-gradient(180deg, #1a2332 0%, #2d3748 100%);
-  --menu-text: #bfcbd9;
-  --menu-active-text: var(--el-color-primary);
-  --menu-hover: rgba(255, 255, 255, 0.08);
-  --sidebar-logo-background: rgba(0, 0, 0, 0.25);
+  --menu-background: linear-gradient(180deg, #1f2733 0%, #2a3441 100%);
+  --menu-text: #e2e8f0;
+  --menu-active-text: #ffffff;
+  --menu-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-logo-background: rgba(0, 0, 0, 0.28);
   --sidebar-logo-text-color: #fff;
 }
 
@@ -121,6 +131,12 @@ html.dark {
 
   // 弹窗阴影（暗黑模式下增强）
   --dialog-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+
+  // 商品价格色（暗黑模式下提亮，保证可读性）
+  --price-color: #ff6b5e;
+
+  // 页面背景
+  --page-bg: var(--el-bg-color-page);
 
   // Element Plus 表格选中行背景色
   .el-table {

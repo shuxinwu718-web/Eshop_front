@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import MultiImageUpload from "@/components/Upload/MultiImageUpload.vue";
+import MultiImageUpload from "@/components/Upload/MultiImageUpload/index.vue";
 
 // 单图
 const picUrl = ref("https://s2.loli.net/2023/05/24/yNsxFC8rLHMZQcK.jpg");

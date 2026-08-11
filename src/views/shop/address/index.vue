@@ -205,7 +205,7 @@ onMounted(() => {
   max-width: 100%;
   min-height: 100vh;
   padding: 16px;
-  background: #f5f7fa;
+  background: var(--el-bg-color-page);
 }
 
 .address-header {
@@ -230,8 +230,8 @@ onMounted(() => {
   padding: 12px;
   overflow: hidden;
   overflow-wrap: break-word;
-  background: white;
-  border: 1px solid #e4e7ed;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
 }
 
@@ -244,7 +244,7 @@ onMounted(() => {
     margin-left: 8px;
     font-size: 14px;
     font-weight: normal;
-    color: #666;
+    color: var(--el-text-color-regular);
   }
 }
 
@@ -252,7 +252,7 @@ onMounted(() => {
   margin-bottom: 6px;
   font-size: 14px;
   line-height: 1.4;
-  color: #333;
+  color: var(--el-text-color-primary);
 }
 
 .addr-tag {

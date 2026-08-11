@@ -15,9 +15,11 @@ export const usePermissionStore = defineStore("permission", () => {
     return [];
   }
 
-  /** 设置混合布局左侧菜单 */
-  const setMixLayoutSideMenus = (parentPath: string) => {
-    const parentMenu = routes.value.find((item: RouteRecordRaw) => item.path === parentPath);
+  /**
+   * 设置混合布局左侧菜单
+   * @param parentMenu 顶部菜单对应的父路由（已扁平化的路由对象，含 children）
+   */
+  const setMixLayoutSideMenus = (parentMenu?: RouteRecordRaw) => {
     mixLayoutSideMenus.value = parentMenu?.children || [];
   };
 

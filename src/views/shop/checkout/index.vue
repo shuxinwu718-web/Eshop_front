@@ -332,7 +332,7 @@ onMounted(() => {
 .checkout-page {
   min-height: 100vh;
   padding: 20px;
-  background: #f5f5f5;
+  background: var(--el-fill-color-light);
 }
 
 .section {
@@ -353,8 +353,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: #fafafa;
-  border: 1px solid #eee;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
 
   .address-info {
@@ -376,7 +376,7 @@ onMounted(() => {
     gap: 12px;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--el-border-color-light);
 
     .product-img {
       width: 60px;
@@ -395,12 +395,12 @@ onMounted(() => {
       .product-specs {
         margin-top: 2px;
         font-size: 12px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
 
       .product-price {
         font-size: 14px;
-        color: #f40;
+        color: var(--price-color);
       }
     }
 
@@ -412,7 +412,7 @@ onMounted(() => {
     .product-subtotal {
       width: 80px;
       font-weight: 500;
-      color: #f40;
+      color: var(--price-color);
       text-align: right;
     }
   }
@@ -441,13 +441,13 @@ onMounted(() => {
 
 .coupon-select-area {
   cursor: pointer;
-  background: #fafbfc;
-  border: 2px dashed #e0e0e0;
+  background: var(--el-fill-color-light);
+  border: 2px dashed var(--el-border-color);
   border-radius: 12px;
   transition: all 0.25s ease;
 
   &:hover {
-    background: #f0f7ff;
+    background: var(--el-color-primary-light-9);
     border-color: var(--el-color-primary);
     box-shadow: 0 2px 12px rgba(64, 158, 255, 0.12);
   }
@@ -486,13 +486,13 @@ onMounted(() => {
       .coupon-selected-name {
         font-size: 15px;
         font-weight: 600;
-        color: #303133;
+        color: var(--el-text-color-primary);
       }
 
       .coupon-selected-detail {
         margin-top: 4px;
         font-size: 13px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
     }
   }
@@ -509,7 +509,7 @@ onMounted(() => {
       font-weight: 600;
       color: #e6a23c;
       white-space: nowrap;
-      background: #fdf6ec;
+      background: var(--el-color-warning-light-9);
       border-radius: 20px;
     }
   }
@@ -540,19 +540,19 @@ onMounted(() => {
       .coupon-no-title {
         font-size: 15px;
         font-weight: 600;
-        color: #303133;
+        color: var(--el-text-color-primary);
       }
 
       .coupon-no-desc {
         font-size: 13px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
       }
     }
   }
 
   .coupon-arrow {
     font-size: 20px;
-    color: #c0c4cc;
+    color: var(--el-text-color-placeholder);
   }
 }
 
@@ -566,12 +566,12 @@ onMounted(() => {
     padding: 16px;
     margin: 0 12px 8px;
     cursor: pointer;
-    border: 1px solid #eee;
+    border: 1px solid var(--el-border-color-light);
     border-radius: 10px;
     transition: all 0.2s;
 
     &:hover {
-      background: #ecf5ff;
+      background: var(--el-color-primary-light-9);
       border-color: var(--el-color-primary);
     }
 
@@ -599,19 +599,19 @@ onMounted(() => {
       .coupon-item-info {
         .coupon-item-name {
           font-weight: 600;
-          color: #303133;
+          color: var(--el-text-color-primary);
         }
 
         .coupon-item-detail {
           margin-top: 4px;
           font-size: 13px;
-          color: #909399;
+          color: var(--el-text-color-secondary);
         }
 
         .coupon-item-end {
           margin-top: 2px;
           font-size: 12px;
-          color: #c0c4cc;
+          color: var(--el-text-color-placeholder);
         }
       }
     }
@@ -621,7 +621,7 @@ onMounted(() => {
 .order-summary {
   padding: 12px;
   margin: 20px 0;
-  background: #fafafa;
+  background: var(--el-fill-color-light);
   border-radius: 8px;
 
   .summary-item {
@@ -635,7 +635,7 @@ onMounted(() => {
       margin-bottom: 0;
       font-size: 18px;
       font-weight: bold;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--el-border-color-light);
     }
   }
 }

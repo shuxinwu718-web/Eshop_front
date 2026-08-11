@@ -100,7 +100,13 @@ export function setupPermissionGuard() {
       if (to.matched.some((record) => record.meta && record.meta.roles)) {
         const requiredRoles = to.meta.roles as string[];
         if (!requiredRoles.includes(currentRole)) {
-          next("/401");
+          // 普通用户/商家访问受限页面（如管理后台）时，引导回商城首页，
+          // 避免直接落入 401/404 错误页
+          if (currentRole === "USER" || currentRole === "MERCHANT") {
+            next("/home");
+          } else {
+            next("/401");
+          }
           return;
         }
       }

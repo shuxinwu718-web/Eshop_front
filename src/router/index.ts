@@ -261,6 +261,17 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT"] },
       },
       {
+        path: "shop/group-buy",
+        name: "GroupBuyRecords",
+        component: () => import("@/views/shop/groupBuy/index.vue"),
+        meta: {
+          title: "我的拼团",
+          icon: "el-icon-shopping-bag-2",
+          roles: ["USER", "MERCHANT"],
+          hidden: true,
+        },
+      },
+      {
         path: "shop/address",
         name: "EshopAddress",
         component: () => import("@/views/eshop/address/index.vue"),
@@ -350,6 +361,12 @@ export const constantRoutes: RouteRecordRaw[] = [
             name: "MerchantRefund",
             component: () => import("@/views/merchant/Refund.vue"),
             meta: { title: "退款审核", icon: "el-icon-warning" },
+          },
+          {
+            path: "group-buy",
+            name: "MerchantGroupBuy",
+            component: () => import("@/views/merchant/GroupBuy.vue"),
+            meta: { title: "拼团管理", icon: "el-icon-shopping-bag-2" },
           },
         ],
       },

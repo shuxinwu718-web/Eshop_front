@@ -311,7 +311,7 @@ onMounted(() => {
     .stat-divider {
       width: 1px;
       height: 48px;
-      background: #e8e8e8;
+      background: var(--el-border-color-light);
     }
   }
 }
@@ -332,8 +332,8 @@ onMounted(() => {
     border-radius: 4px;
 
     &.signed {
-      color: #409eff;
-      background: #ecf5ff;
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
     }
 
     .signed-badge {
@@ -358,7 +358,7 @@ onMounted(() => {
     gap: 14px;
     align-items: center;
     padding: 14px 16px;
-    border: 1px solid #eee;
+    border: 1px solid var(--el-border-color-light);
     border-radius: 10px;
     transition: all 0.2s;
 
@@ -367,14 +367,14 @@ onMounted(() => {
     }
 
     &.milestone-achieved {
-      background: #fffbf0;
-      border-color: #faecd8;
+      background: var(--el-fill-color-light);
+      border-color: var(--el-border-color-light);
       box-shadow: 0 2px 8px rgba(230, 162, 60, 0.1);
     }
 
     &.milestone-claimed {
-      background: #f0f9eb;
-      border-color: #e1f3d8;
+      background: var(--el-color-success-light-9);
+      border-color: var(--el-color-success-light-8);
     }
 
     .milestone-icon {
@@ -412,8 +412,8 @@ onMounted(() => {
 
   .festival-item {
     padding: 16px;
-    background: #fffaf5;
-    border: 1px solid #fde2d0;
+    background: var(--el-fill-color-light);
+    border: 1px solid var(--el-border-color-light);
     border-radius: 10px;
 
     .festival-item-header {

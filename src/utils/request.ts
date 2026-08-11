@@ -89,7 +89,8 @@ http.interceptors.response.use(
     const status = response.status;
     const { msg } = response.data as ApiResponse;
 
-    if (status === 401) {
+    if (status === 401 || status === 403) {
+      // 后端对未认证访问默认返回 403（与 401 同属「需登录」类）：
       // 游客在公开页面访问需登录接口时（如未登录点收藏/领取），仅提示，不强制跳登录
       if (router.currentRoute.value.meta?.public) {
         ElMessage.warning(msg || "请先登录后操作");

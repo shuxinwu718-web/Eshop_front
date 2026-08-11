@@ -266,7 +266,7 @@ onUnmounted(() => {
     }
     .subtitle {
       font-size: 14px;
-      color: #999;
+      color: var(--el-text-color-secondary);
     }
   }
 
@@ -309,7 +309,7 @@ onUnmounted(() => {
       }
       .card-session-name {
         font-size: 13px;
-        color: #999;
+        color: var(--el-text-color-secondary);
       }
 
       /* 秒杀商品模式 */
@@ -324,14 +324,14 @@ onUnmounted(() => {
           width: 56px;
           height: 56px;
           overflow: hidden;
-          background: #f5f7fa;
+          background: var(--el-fill-color-light);
           border-radius: 8px;
 
           &--placeholder {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #c0c4cc;
+            color: var(--el-text-color-placeholder);
           }
         }
         .card-product-info {
@@ -357,7 +357,7 @@ onUnmounted(() => {
           }
           .card-origin-price {
             font-size: 13px;
-            color: #bbb;
+            color: var(--el-text-color-placeholder);
             text-decoration: line-through;
           }
         }
@@ -375,7 +375,7 @@ onUnmounted(() => {
         .time-label {
           margin-bottom: 4px;
           font-size: 12px;
-          color: #999;
+          color: var(--el-text-color-secondary);
         }
         .time-display {
           display: flex;
@@ -390,20 +390,20 @@ onUnmounted(() => {
             padding: 0 4px;
             font-size: 20px;
             font-weight: bold;
-            color: #fff;
-            background: #333;
+            color: var(--el-bg-color);
+            background: var(--el-text-color-primary);
             border-radius: 6px;
           }
           .time-colon {
             margin: 0 4px;
             font-size: 20px;
             font-weight: bold;
-            color: #333;
+            color: var(--el-text-color-primary);
           }
           .time-unit {
             margin-right: 4px;
             font-size: 14px;
-            color: #999;
+            color: var(--el-text-color-secondary);
           }
         }
       }
@@ -413,7 +413,7 @@ onUnmounted(() => {
         gap: 12px;
         align-items: center;
         font-size: 13px;
-        color: #666;
+        color: var(--el-text-color-regular);
 
         .stock-sold {
           color: #f56c6c;
@@ -427,7 +427,7 @@ onUnmounted(() => {
           max-width: 120px;
           height: 8px;
           overflow: hidden;
-          background: #f0f0f0;
+          background: var(--el-fill-color);
           border-radius: 4px;
 
           .stock-bar-inner {
@@ -452,7 +452,7 @@ onUnmounted(() => {
     color: #f56c6c;
   }
   .is-upcoming .card-coupon-name {
-    color: #409eff;
+    color: var(--el-color-primary);
   }
 
   @media (max-width: 768px) {

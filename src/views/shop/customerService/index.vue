@@ -292,7 +292,7 @@ const send = async () => {
   height: 100%;
   margin: 0 auto;
   overflow: hidden;
-  background: #fff;
+  background: var(--el-bg-color);
   border: 1px solid rgb(79 110 247 / 10%);
   border-radius: 16px;
   box-shadow: 0 12px 40px rgb(79 110 247 / 14%);
@@ -305,7 +305,7 @@ const send = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  color: #fff;
+  color: var(--el-color-white);
   background: linear-gradient(120deg, #4f6ef7 0%, #7b5cff 100%);
 
   .header-left {
@@ -319,7 +319,7 @@ const send = async () => {
     color: rgb(255 255 255 / 90%);
 
     &:hover {
-      color: #fff;
+      color: var(--el-color-white);
       background: rgb(255 255 255 / 15%);
     }
   }
@@ -329,7 +329,7 @@ const send = async () => {
     color: rgb(255 255 255 / 85%);
 
     &:hover {
-      color: #fff;
+      color: var(--el-color-white);
       background: rgb(255 255 255 / 15%);
     }
   }
@@ -347,7 +347,7 @@ const send = async () => {
     width: 40px;
     height: 40px;
     color: #4f6ef7;
-    background: #fff;
+    background: var(--el-bg-color);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgb(0 0 0 / 18%);
   }
@@ -367,14 +367,14 @@ const send = async () => {
     padding: 1px 8px;
     font-size: 10px;
     font-weight: 600;
-    color: #fff;
+    color: var(--el-color-white);
     background: rgb(103 194 58 / 92%);
     border-radius: 10px;
 
     .online-dot {
       width: 5px;
       height: 5px;
-      background: #fff;
+      background: var(--el-color-white);
       border-radius: 50%;
       animation: pulse 1.6s infinite;
     }
@@ -429,7 +429,7 @@ const send = async () => {
       width: 34px;
       height: 34px;
       font-size: 16px;
-      color: #fff;
+      color: var(--el-color-white);
       border-radius: 50%;
 
       &.assistant {
@@ -448,10 +448,10 @@ const send = async () => {
       padding: 10px 14px;
       font-size: 13.5px;
       line-height: 1.7;
-      color: #303133;
+      color: var(--el-text-color-primary);
       word-break: break-all;
       white-space: pre-wrap;
-      background: #fff;
+      background: var(--el-bg-color);
       border-radius: 12px;
       border-bottom-left-radius: 4px;
       box-shadow: 0 2px 8px rgb(31 45 90 / 6%);
@@ -461,7 +461,7 @@ const send = async () => {
       flex-direction: row-reverse;
 
       .bubble {
-        color: #fff;
+        color: var(--el-color-white);
         background: linear-gradient(120deg, #4f6ef7, #7b5cff);
         border-radius: 12px;
         border-bottom-right-radius: 4px;
@@ -494,7 +494,7 @@ const send = async () => {
 .dot {
   width: 6px;
   height: 6px;
-  background: #909399;
+  background: var(--el-text-color-secondary);
   border-radius: 50%;
   animation: blink 1.2s infinite;
 
@@ -525,8 +525,8 @@ const send = async () => {
 .quick-panel {
   flex-shrink: 0;
   padding: 10px 16px;
-  background: #fff;
-  border-top: 1px solid #f0f2f8;
+  background: var(--el-bg-color);
+  border-top: 1px solid var(--el-border-color-extra-light);
 
   .quick-title {
     display: flex;
@@ -534,7 +534,7 @@ const send = async () => {
     align-items: center;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #8a90a5;
+    color: var(--el-text-color-secondary);
   }
 
   .quick-list {
@@ -546,10 +546,10 @@ const send = async () => {
   .quick-chip {
     padding: 6px 12px;
     font-size: 12px;
-    color: #4a5072;
+    color: var(--el-text-color-primary);
     cursor: pointer;
-    background: #f4f6ff;
-    border: 1px solid #e8ecff;
+    background: var(--el-color-primary-light-9);
+    border: 1px solid var(--el-border-color-lighter);
     border-radius: 16px;
     transition: all 0.2s;
 
@@ -569,22 +569,22 @@ const send = async () => {
   gap: 10px;
   align-items: center;
   padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #f0f2f8;
+  background: var(--el-bg-color);
+  border-top: 1px solid var(--el-border-color-extra-light);
 
   .input-wrap {
     flex: 1;
   }
 
   :deep(.el-input__wrapper) {
-    background: #f7f8ff;
+    background: var(--el-fill-color-light);
     border-radius: 20px;
-    box-shadow: 0 0 0 1px #e4e9fb inset;
+    box-shadow: 0 0 0 1px var(--el-border-color-light) inset;
     transition: all 0.2s;
 
     &.is-focus,
     &:focus-within {
-      background: #fff;
+      background: var(--el-bg-color);
       box-shadow: 0 0 0 2px rgb(79 110 247 / 40%) inset;
     }
   }
@@ -614,7 +614,7 @@ const send = async () => {
     height: 100vh;
     min-height: 0;
     padding: 0;
-    background: #fff;
+    background: var(--el-bg-color);
   }
 
   .chat-card {

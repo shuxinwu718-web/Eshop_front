@@ -77,21 +77,45 @@
   }
 }
 
-// 深蓝色侧边栏背景
-html.sidebar-color-blue .layout__sidebar {
-  --el-menu-bg-color: #1a2332;
-  background: linear-gradient(180deg, #1a2332 0%, #2d3748 100%);
+// 现代商务深灰侧边栏（左侧/混合/顶栏三种布局统一配色）
+html.sidebar-color-blue .layout__sidebar,
+html.sidebar-color-blue .layout__sidebar--left,
+html.sidebar-color-blue .layout__header {
+  --el-menu-bg-color: #1f2733;
+  --el-menu-text-color: var(--menu-text);
+  --el-menu-active-color: var(--menu-active-text);
+  --el-menu-hover-bg-color: var(--menu-hover);
+  background: linear-gradient(180deg, #1f2733 0%, #2a3441 100%);
 }
 
-// 深色侧边栏的 hover 和 active 适配
+// 深色侧边栏的 hover 和 active 适配（激活项白字 + 主色高亮条，保证可见性）
 html.sidebar-color-blue .layout__sidebar,
-html.dark .layout__sidebar {
+html.sidebar-color-blue .layout__sidebar--left,
+html.sidebar-color-blue .layout__header,
+html.dark .layout__sidebar,
+html.dark .layout__sidebar--left,
+html.dark .layout__header {
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: var(--menu-text) !important;
+
+    &:hover {
+      color: var(--menu-active-text) !important;
+      background-color: var(--menu-hover) !important;
+    }
+  }
+
   .el-menu-item.is-active {
-    background-color: rgba(64, 128, 255, 0.15) !important;
+    color: #fff !important;
+    background-color: rgba(64, 128, 255, 0.2) !important;
 
     &::before {
       background: var(--el-color-primary);
     }
+  }
+
+  .has-active-child > .el-sub-menu__title {
+    color: var(--menu-active-text) !important;
   }
 }
 

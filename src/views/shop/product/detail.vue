@@ -3,50 +3,7 @@
     <!-- 商品主信息 -->
     <div class="main">
       <!-- 左侧：轮播图 -->
-      <div class="image-section">
-        <el-carousel
-          v-if="images.length"
-          ref="carouselRef"
-          :interval="4000"
-          arrow="always"
-          height="400px"
-          indicator-position="outside"
-          class="product-carousel"
-          @change="(idx: number) => (currentSlide = idx)"
-        >
-          <el-carousel-item v-for="(img, idx) in images" :key="idx">
-            <el-image
-              :src="getFullImageUrl(img.imageUrl)"
-              fit="contain"
-              class="carousel-img"
-              @error="handleImageError"
-            >
-              <template #error>
-                <img :src="defaultImage" alt="图片加载失败" class="img-placeholder" />
-              </template>
-            </el-image>
-          </el-carousel-item>
-        </el-carousel>
-        <div v-else class="no-image">
-          <el-image
-            :src="getFullImageUrl(product.coverImage) || defaultImage"
-            fit="contain"
-            class="single-img"
-          />
-        </div>
-        <!-- 缩略图导航 -->
-        <div v-if="images.length > 1" class="thumbnail-list">
-          <div
-            v-for="(img, idx) in images"
-            :key="idx"
-            class="thumbnail-item"
-            :class="{ active: currentSlide === idx }"
-            @click="switchSlide(idx)"
-          >
-            <el-image :src="getFullImageUrl(img.imageUrl)" fit="cover" />
-          </div>
-        </div>
-      </div>
+      <ProductGallery :images="images" :cover-image="product.coverImage" />
 
       <!-- 右侧：商品信息 -->
       <div class="info">
@@ -69,42 +26,42 @@
         </div>
 
         <!-- SKU 多规格选择器 -->
-        <div v-if="parsedSpecs.length > 0" class="sku-selector">
-          <div v-for="spec in parsedSpecs" :key="spec.specName" class="spec-group">
-            <div class="spec-label">{{ spec.specName }}：</div>
-            <div class="spec-values">
-              <div
-                v-for="val in spec.values"
-                :key="val"
-                class="spec-tag"
-                :class="{ active: selectedSpecMap[spec.specName] === val }"
-                @click="selectSpecValue(spec.specName, val)"
-              >
-                {{ val }}
-              </div>
-            </div>
-          </div>
-        </div>
+        <SkuSelector
+          v-if="parsedSpecs.length > 0"
+          :specs="parsedSpecs"
+          :gb-spec-value-set="gbSpecValueSet"
+          @change="handleSkuChange"
+        />
 
         <!-- 商家小店入口 -->
-        <div v-if="product.merchantId" class="store-entry" @click="goStore(product.merchantId!)">
-          <el-avatar :size="36" :src="getFullImageUrl(product.merchantAvatar)" class="store-avatar">
-            {{ product.merchantName?.charAt(0) || "店" }}
-          </el-avatar>
-          <div class="store-info">
-            <div class="store-name">{{ product.merchantName || "商家小店" }}</div>
-            <div class="store-hint">进入店铺 ></div>
-          </div>
-        </div>
+        <StoreEntry
+          v-if="product.merchantId"
+          :merchant-id="product.merchantId"
+          :merchant-name="product.merchantName"
+          :merchant-avatar="product.merchantAvatar"
+        />
 
         <div class="actions">
           <el-input-number v-model="quantity" :min="1" :max="maxStock" size="large" />
           <el-button type="primary" size="large" @click="addToCart">加入购物车</el-button>
+          <el-button v-if="hasGroupBuy" type="warning" size="large" @click="handleStartGroup">
+            <el-icon class="gb-btn-icon"><UserFilled /></el-icon>
+            发起拼团
+          </el-button>
           <el-button type="danger" size="large" :loading="favoriteLoading" @click="toggleFavorite">
             {{ isFavorited ? "已收藏" : "❤ 收藏" }}
           </el-button>
-          <el-button size="large" @click="contactMerchant">联系商家</el-button>
+          <el-button size="large" @click="contactDialogRef?.open()">联系商家</el-button>
         </div>
+
+        <!-- 拼团面板（进行中团列表 + 倒计时 + 进度条） -->
+        <GroupBuyPanel
+          ref="groupBuyPanelRef"
+          :product-id="product.id"
+          :selected-sku-id="selectedSku?.id ?? null"
+          :has-sku="!!(product.skus && product.skus.length)"
+          :all-specs-selected="allSpecsSelected"
+        />
         <div v-if="product.description" class="description">
           <h3>商品描述</h3>
           <p>{{ product.description }}</p>
@@ -113,167 +70,61 @@
     </div>
 
     <!-- 尺寸表展示 -->
-    <div
+    <SizeChartTable
       v-if="product.sizeChartColumns && product.sizeChartColumns.length"
-      class="size-chart-section"
-    >
-      <h2 class="section-title">
-        <el-icon><List /></el-icon>
-        {{ product.sizeChartTitle || "尺寸表" }}
-      </h2>
-      <el-table :data="sizeChartDisplayData" border size="small" class="size-chart-table">
-        <el-table-column
-          v-for="(col, colIdx) in product.sizeChartColumns"
-          :key="colIdx"
-          :label="col"
-          min-width="100"
-          align="center"
-        >
-          <template #default="{ row }">
-            {{ row["col_" + colIdx] || "-" }}
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
+      :title="product.sizeChartTitle || '尺寸表'"
+      :columns="product.sizeChartColumns"
+      :data="sizeChartDisplayData"
+    />
 
     <!-- 评论区 -->
-    <div class="comment-section">
-      <div class="comment-header">
-        <h2>商品评价</h2>
-        <div v-if="comments.length" class="rating-summary">
-          <span class="avg-rating">{{ avgRating.toFixed(1) }}</span>
-          <span class="total">共 {{ comments.length }} 条评价</span>
-        </div>
-      </div>
-
-      <!-- 发布评论 -->
-      <div v-if="userStore.isLoggedIn()" class="add-comment">
-        <div class="comment-form">
-          <div class="rating-select">
-            <span class="label">评分：</span>
-            <el-rate v-model="newComment.rating" :colors="ratingColors" />
-          </div>
-          <el-input
-            v-model="newComment.content"
-            type="textarea"
-            :rows="3"
-            placeholder="说说你的使用感受..."
-            maxlength="1000"
-            show-word-limit
-          />
-          <div class="form-footer">
-            <el-button type="primary" :loading="commentSubmitting" @click="submitComment">
-              发表评价
-            </el-button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 评论列表 -->
-      <div v-loading="commentLoading" class="comment-list">
-        <div v-for="comment in comments" :key="comment.id" class="comment-item">
-          <div class="comment-avatar">
-            <el-avatar :size="40" :src="getFullImageUrl(comment.userAvatar)" />
-          </div>
-          <div class="comment-body">
-            <div class="comment-user">{{ comment.userName || "匿名用户" }}</div>
-            <div class="comment-rating">
-              <el-rate v-model="comment.rating" disabled size="small" />
-            </div>
-            <div class="comment-content">{{ comment.content }}</div>
-            <div class="comment-time">{{ comment.createTime }}</div>
-
-            <!-- 子评论（回复） -->
-            <div v-if="comment.children && comment.children.length" class="reply-list">
-              <div v-for="reply in comment.children" :key="reply.id" class="reply-item">
-                <span class="reply-user">{{ reply.userName || "匿名用户" }}</span>
-                ：
-                <span class="reply-content">{{ reply.replyContent }}</span>
-              </div>
-            </div>
-
-            <!-- 回复按钮/表单 -->
-            <div v-if="showReplyId === comment.id" class="reply-form">
-              <el-input
-                v-model="replyContent"
-                size="small"
-                placeholder="输入回复内容..."
-                maxlength="500"
-              />
-              <div class="reply-actions">
-                <el-button size="small" @click="showReplyId = null">取消</el-button>
-                <el-button
-                  size="small"
-                  type="primary"
-                  :loading="replySubmitting"
-                  @click="submitReply(comment)"
-                >
-                  回复
-                </el-button>
-              </div>
-            </div>
-            <el-button
-              v-else-if="userStore.isLoggedIn()"
-              link
-              type="primary"
-              size="small"
-              class="reply-btn"
-              @click="openReply(comment)"
-            >
-              回复
-            </el-button>
-          </div>
-        </div>
-
-        <el-empty
-          v-if="!commentLoading && comments.length === 0"
-          description="暂无评价，快来发表第一条评价吧"
-        />
-      </div>
-    </div>
+    <CommentSection :product-id="product.id" :is-logged-in="userStore.isLoggedIn()" />
 
     <!-- 联系商家对话框 -->
-    <el-dialog v-model="contactDialogVisible" title="联系商家" width="400px">
-      <el-input
-        v-model="contactMessage"
-        type="textarea"
-        :rows="4"
-        placeholder="请输入你想咨询的问题..."
-        maxlength="500"
-        show-word-limit
-      />
-      <template #footer>
-        <el-button @click="contactDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="contactSending" @click="doSendMessage">发送</el-button>
-      </template>
-    </el-dialog>
+    <ContactDialog
+      ref="contactDialogRef"
+      :product-id="product.id"
+      :merchant-id="product.merchantId"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, computed, watch, onMounted, type Ref } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/store/modules/user";
 import ProductAPI, { type ProductItem, type ProductImageItem } from "@/api/eshop/product";
-import CommentAPI, { type CommentVO } from "@/api/eshop/comment";
 import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
-import MessageAPI from "@/api/eshop/merchant-message";
-import { getFullImageUrl } from "@/utils/url";
 import HistoryAPI from "@/api/eshop/history";
-import { List } from "@element-plus/icons-vue";
+import { UserFilled } from "@element-plus/icons-vue";
 import type { ProductSpec, ProductSku } from "@/api/eshop/product";
 import { promptLogin } from "@/utils/requireLogin";
+import ProductGallery from "./components/ProductGallery/index.vue";
+import SkuSelector from "./components/SkuSelector/index.vue";
+import StoreEntry from "./components/StoreEntry/index.vue";
+import SizeChartTable from "./components/SizeChartTable/index.vue";
+import CommentSection from "./components/CommentSection/index.vue";
+import ContactDialog from "./components/ContactDialog/index.vue";
+import GroupBuyPanel from "./components/GroupBuyPanel/index.vue";
 
 const route = useRoute();
-const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
 const product = ref<ProductItem>({} as ProductItem);
 const images = ref<ProductImageItem[]>([]);
 const quantity = ref(1);
-const defaultImage = "https://via.placeholder.com/400";
+
+/** 拼团面板组件引用（「发起拼团」按钮委托其处理开团流程） */
+const groupBuyPanelRef = ref<{
+  startCurrent: () => Promise<void>;
+  hasGroupBuy: Ref<boolean>;
+  groupBuySkuIds: Ref<number[]>;
+} | null>(null);
+
+/** 联系商家弹窗组件引用 */
+const contactDialogRef = ref<{ open: () => void } | null>(null);
 
 // ============ SKU 多规格选择 ============
 /** 解析后的规格列表 */
@@ -294,12 +145,17 @@ const parsedSpecs = computed(() => {
     .filter((s) => s.values.length > 0);
 });
 
-/** 当前选中的规格值映射，如 { "颜色": "黑色", "尺码": "41" } */
-const selectedSpecMap = reactive<Record<string, string>>({});
+/** 当前选中的规格值映射（由 SkuSelector 选择后回传），如 { "颜色": "黑色", "尺码": "41" } */
+const skuMap = ref<Record<string, string>>({});
+
+/** 接收 SkuSelector 的选择快照 */
+const handleSkuChange = (map: Record<string, string>) => {
+  skuMap.value = map;
+};
 
 /** 是否所有规格都已选中 */
 const allSpecsSelected = computed(() => {
-  return parsedSpecs.value.every((s) => selectedSpecMap[s.specName]);
+  return parsedSpecs.value.every((s) => skuMap.value[s.specName]);
 });
 
 /** 根据已选规格找到匹配的 SKU */
@@ -311,7 +167,7 @@ const selectedSku = computed<ProductSku | null>(() => {
     skus.find((sku: ProductSku) => {
       try {
         const skuSpecs: Record<string, string> = JSON.parse(sku.specs);
-        return Object.entries(selectedSpecMap).every(([key, val]) => skuSpecs[key] === val);
+        return Object.entries(skuMap.value).every(([key, val]) => skuSpecs[key] === val);
       } catch {
         return false;
       }
@@ -319,15 +175,32 @@ const selectedSku = computed<ProductSku | null>(() => {
   );
 });
 
-/** 选择/切换规格值 */
-const selectSpecValue = (specName: string, value: string) => {
-  if (selectedSpecMap[specName] === value) {
-    // 点击已选中的取消选择
-    delete selectedSpecMap[specName];
-  } else {
-    selectedSpecMap[specName] = value;
+/** 当前选中规格是否存在拼团活动（控制「发起拼团」按钮显隐） */
+const hasGroupBuy = computed(() => groupBuyPanelRef.value?.hasGroupBuy?.value ?? false);
+
+/** 参与拼团活动的 SKU ID 集合 */
+const groupBuySkuIds = computed<number[]>(
+  () => groupBuyPanelRef.value?.groupBuySkuIds?.value ?? []
+);
+
+/** 参与拼团的规格值集合（用于规格标签上的「拼团」角标） */
+const gbSpecValueSet = computed<Set<string>>(() => {
+  const set = new Set<string>();
+  const ids = new Set(groupBuySkuIds.value);
+  for (const sku of product.value.skus ?? []) {
+    if (ids.has(sku.id)) {
+      try {
+        const specs: Record<string, string> = JSON.parse(sku.specs);
+        Object.values(specs).forEach((v) => {
+          set.add(v);
+        });
+      } catch {
+        // 忽略解析失败的 SKU
+      }
+    }
   }
-};
+  return set;
+});
 
 /** A4 整改：数量上限跟随所选 SKU 库存（有 SKU 时用 SKU 库存，否则用商品库存） */
 const maxStock = computed(() => {
@@ -343,35 +216,6 @@ watch(maxStock, (max) => {
   if (quantity.value > max) {
     quantity.value = max;
   }
-});
-
-// 轮播图
-const carouselRef = ref();
-const currentSlide = ref(0);
-const switchSlide = (idx: number) => {
-  currentSlide.value = idx;
-  carouselRef.value?.setActiveItem(idx);
-};
-
-// 评论
-const commentLoading = ref(false);
-const commentSubmitting = ref(false);
-const replySubmitting = ref(false);
-const comments = ref<CommentVO[]>([]);
-const showReplyId = ref<number | null>(null);
-const replyContent = ref("");
-const ratingColors = ref(["#f40", "#f40", "#f40"]);
-
-const newComment = reactive({
-  rating: 5,
-  content: "",
-});
-
-// 平均评分
-const avgRating = computed(() => {
-  if (!comments.value.length) return 0;
-  const total = comments.value.reduce((sum, c) => sum + c.rating, 0);
-  return total / comments.value.length;
 });
 
 // 尺寸表展示数据（将 rows 转为 el-table 可用格式）
@@ -392,14 +236,12 @@ const fetchDetail = async () => {
   const id = Number(route.params.id);
   loading.value = true;
   try {
-    const [productData, productImages, productComments] = await Promise.all([
+    const [productData, productImages] = await Promise.all([
       ProductAPI.getById(id),
       ProductAPI.getImages(id).catch(() => []),
-      CommentAPI.getProductComments(id).catch(() => []),
     ]);
     product.value = productData;
     images.value = productImages;
-    comments.value = buildCommentTree(productComments);
     await checkFavorite(); // 检查收藏状态
   } catch {
     // 错误已由请求拦截器统一提示
@@ -409,11 +251,11 @@ const fetchDetail = async () => {
 };
 
 const addToCart = async () => {
-  // 游客加购需先登录
   if (!userStore.isLoggedIn()) {
     promptLogin("加入购物车需要登录");
     return;
   }
+
   if (product.value.skus && product.value.skus.length > 0) {
     if (!selectedSku.value) {
       ElMessage.warning("请先选择商品规格");
@@ -441,6 +283,15 @@ const addToCart = async () => {
       // 错误已由请求拦截器统一提示
     }
   }
+};
+
+/** 发起拼团（委托拼团面板处理：校验规格 → 登录 → 默认地址下单） */
+const handleStartGroup = () => {
+  if (product.value.skus && product.value.skus.length > 0 && !selectedSku.value) {
+    ElMessage.warning("请先选择商品规格");
+    return;
+  }
+  groupBuyPanelRef.value?.startCurrent();
 };
 
 const isFavorited = ref(false);
@@ -485,122 +336,6 @@ const toggleFavorite = async () => {
   }
 };
 
-const contactDialogVisible = ref(false);
-const contactMessage = ref("");
-const contactSending = ref(false);
-
-const contactMerchant = () => {
-  if (!userStore.isLoggedIn()) {
-    promptLogin("联系商家需要登录");
-    return;
-  }
-  contactMessage.value = "";
-  contactDialogVisible.value = true;
-};
-
-const doSendMessage = async () => {
-  if (!contactMessage.value.trim()) {
-    ElMessage.warning("请输入留言内容");
-    return;
-  }
-  contactSending.value = true;
-  try {
-    await MessageAPI.send({
-      productId: product.value.id,
-      content: contactMessage.value,
-    });
-    ElMessage.success("留言发送成功，等待商家回复");
-    contactDialogVisible.value = false;
-    contactMessage.value = "";
-  } catch {
-    // 错误已由请求拦截器统一提示
-  } finally {
-    contactSending.value = false;
-  }
-};
-
-// 将后端扁平的评论列表组装成树形结构
-function buildCommentTree(flatList: CommentVO[]): CommentVO[] {
-  const map = new Map<number, CommentVO>();
-  const roots: CommentVO[] = [];
-
-  flatList.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-
-  flatList.forEach((item) => {
-    const node = map.get(item.id)!;
-    if (item.parentId && item.parentId !== 0 && map.has(item.parentId)) {
-      map.get(item.parentId)!.children!.push(node);
-    } else {
-      roots.push(node);
-    }
-  });
-
-  return roots;
-}
-
-const goStore = (merchantId: number) => {
-  router.push(`/store/${merchantId}`);
-};
-
-const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement;
-  target.src = defaultImage;
-};
-
-// 评论功能
-const submitComment = async () => {
-  if (!newComment.content.trim()) {
-    ElMessage.warning("请输入评论内容");
-    return;
-  }
-  commentSubmitting.value = true;
-  try {
-    await CommentAPI.add({
-      productId: product.value.id,
-      rating: newComment.rating,
-      content: newComment.content,
-    });
-    ElMessage.success("评价发表成功");
-    newComment.rating = 5;
-    newComment.content = "";
-    fetchDetail();
-  } catch {
-    // 错误已由请求拦截器统一提示
-  } finally {
-    commentSubmitting.value = false;
-  }
-};
-
-const openReply = (comment: CommentVO) => {
-  showReplyId.value = comment.id;
-  replyContent.value = "";
-};
-
-const submitReply = async (comment: CommentVO) => {
-  if (!replyContent.value.trim()) {
-    ElMessage.warning("请输入回复内容");
-    return;
-  }
-  replySubmitting.value = true;
-  try {
-    await CommentAPI.reply({
-      parentId: comment.id,
-      replyUserId: comment.userId,
-      replyContent: replyContent.value,
-    });
-    ElMessage.success("回复成功");
-    showReplyId.value = null;
-    replyContent.value = "";
-    fetchDetail();
-  } catch {
-    // 错误已由请求拦截器统一提示
-  } finally {
-    replySubmitting.value = false;
-  }
-};
-
 onMounted(() => {
   fetchDetail();
   // 记录浏览历史
@@ -614,90 +349,14 @@ onMounted(() => {
 .product-detail {
   min-height: 100vh;
   padding: 20px;
-  background: #f5f5f5;
+  background: var(--el-fill-color-light);
 
   .main {
     display: flex;
     gap: 40px;
     padding: 24px;
-    background: white;
+    background: var(--el-bg-color);
     border-radius: 8px;
-  }
-
-  .image-section {
-    flex: 1;
-    max-width: 500px;
-
-    .product-carousel {
-      overflow: hidden;
-      border-radius: 8px;
-
-      .carousel-img {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 400px;
-      }
-    }
-
-    .no-image {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 400px;
-      background: #fafafa;
-      border-radius: 8px;
-
-      .single-img {
-        max-width: 100%;
-        max-height: 400px;
-      }
-    }
-
-    .img-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      font-size: 14px;
-      color: #ccc;
-    }
-
-    .thumbnail-list {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      overflow-x: auto;
-
-      .thumbnail-item {
-        flex-shrink: 0;
-        width: 60px;
-        height: 60px;
-        overflow: hidden;
-        cursor: pointer;
-        border: 2px solid transparent;
-        border-radius: 4px;
-        transition: border-color 0.2s;
-
-        &.active {
-          border-color: #409eff;
-        }
-
-        .el-image {
-          width: 100%;
-          height: 100%;
-        }
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-    }
   }
 
   .info {
@@ -712,7 +371,7 @@ onMounted(() => {
       margin-bottom: 16px;
       font-size: 32px;
       font-weight: bold;
-      color: #f40;
+      color: var(--price-color);
     }
 
     .meta {
@@ -720,7 +379,7 @@ onMounted(() => {
       gap: 20px;
       margin-bottom: 20px;
       font-size: 14px;
-      color: #666;
+      color: var(--el-text-color-regular);
     }
 
     .actions {
@@ -729,105 +388,16 @@ onMounted(() => {
       gap: 12px;
       align-items: center;
       margin: 20px 0;
-    }
 
-    /* SKU 多规格选择器 */
-    .sku-selector {
-      margin: 16px 0;
-
-      .spec-group {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 12px;
-
-        .spec-label {
-          flex-shrink: 0;
-          width: 60px;
-          margin-top: 6px;
-          font-size: 14px;
-          color: var(--el-text-color-secondary);
-        }
-
-        .spec-values {
-          display: flex;
-          flex: 1;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .spec-tag {
-          padding: 6px 16px;
-          font-size: 13px;
-          color: var(--el-text-color-regular);
-          cursor: pointer;
-          user-select: none;
-          background: var(--el-fill-color-light);
-          border: 1px solid var(--el-border-color-light);
-          border-radius: 4px;
-          transition: all 0.2s;
-
-          &:hover {
-            color: var(--el-color-primary);
-            background: var(--el-color-primary-light-9);
-            border-color: var(--el-color-primary-light-5);
-          }
-
-          &.active {
-            color: #fff;
-            background: var(--el-color-primary);
-            border-color: var(--el-color-primary);
-          }
-        }
-      }
-    }
-
-    /* 商家小店入口 */
-    .store-entry {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding: 10px 14px;
-      margin: 16px 0;
-      cursor: pointer;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      transition: all 0.2s;
-
-      &:hover {
-        background: #f0f6ff;
-        border-color: #409eff;
-      }
-
-      .store-avatar {
-        flex-shrink: 0;
-      }
-
-      .store-info {
-        flex: 1;
-        min-width: 0;
-
-        .store-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-size: 14px;
-          font-weight: 600;
-          color: #333;
-          white-space: nowrap;
-        }
-
-        .store-hint {
-          margin-top: 2px;
-          font-size: 12px;
-          color: #409eff;
-        }
+      .gb-btn-icon {
+        margin-right: 4px;
       }
     }
 
     .description {
       padding-top: 20px;
       margin-top: 20px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--el-border-color-light);
 
       h3 {
         margin-bottom: 12px;
@@ -835,190 +405,7 @@ onMounted(() => {
 
       p {
         line-height: 1.6;
-        color: #666;
-      }
-    }
-  }
-
-  /* 尺寸表展示区域 */
-  .size-chart-section {
-    padding: 24px;
-    margin-top: 20px;
-    background: white;
-    border-radius: 8px;
-
-    .section-title {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 16px;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
-
-      .el-icon {
-        font-size: 20px;
-        color: var(--el-color-primary);
-      }
-    }
-
-    .size-chart-table {
-      width: 100%;
-
-      :deep(th.el-table__cell) {
-        font-weight: 600;
-        color: var(--el-text-color-primary);
-        background: var(--el-fill-color-light);
-      }
-
-      :deep(td.el-table__cell) {
         color: var(--el-text-color-regular);
-      }
-    }
-  }
-
-  /* 评论区 */
-  .comment-section {
-    padding: 24px;
-    margin-top: 20px;
-    background: white;
-    border-radius: 8px;
-
-    .comment-header {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      margin-bottom: 20px;
-
-      h2 {
-        font-size: 20px;
-      }
-
-      .rating-summary {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-
-        .avg-rating {
-          font-size: 24px;
-          font-weight: bold;
-          color: #f40;
-        }
-
-        .total {
-          font-size: 14px;
-          color: #999;
-        }
-      }
-    }
-
-    .add-comment {
-      padding: 16px;
-      margin-bottom: 20px;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 8px;
-
-      .comment-form {
-        .rating-select {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          margin-bottom: 12px;
-
-          .label {
-            font-size: 14px;
-            color: #666;
-          }
-        }
-
-        .form-footer {
-          display: flex;
-          justify-content: flex-end;
-          margin-top: 12px;
-        }
-      }
-    }
-
-    .comment-list {
-      .comment-item {
-        display: flex;
-        gap: 12px;
-        padding: 16px 0;
-        border-bottom: 1px solid #f0f0f0;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        .comment-avatar {
-          flex-shrink: 0;
-        }
-
-        .comment-body {
-          flex: 1;
-
-          .comment-user {
-            margin-bottom: 4px;
-            font-weight: 500;
-          }
-
-          .comment-rating {
-            margin-bottom: 6px;
-          }
-
-          .comment-content {
-            margin-bottom: 8px;
-            line-height: 1.5;
-            color: #333;
-          }
-
-          .comment-time {
-            margin-bottom: 8px;
-            font-size: 12px;
-            color: #999;
-          }
-
-          .reply-btn {
-            margin-top: 4px;
-          }
-
-          .reply-list {
-            padding: 10px 12px;
-            margin: 8px 0;
-            background: #f9f9f9;
-            border-radius: 6px;
-
-            .reply-item {
-              padding: 4px 0;
-              font-size: 14px;
-              line-height: 1.5;
-              color: #555;
-
-              .reply-user {
-                font-weight: 500;
-                color: #409eff;
-              }
-            }
-          }
-
-          .reply-form {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-            margin-top: 8px;
-
-            .el-input {
-              flex: 1;
-            }
-
-            .reply-actions {
-              display: flex;
-              flex-shrink: 0;
-              gap: 6px;
-            }
-          }
-        }
       }
     }
   }
@@ -1033,18 +420,6 @@ onMounted(() => {
       flex-direction: column;
       gap: 20px;
       padding: 16px;
-    }
-
-    .image-section {
-      max-width: 100%;
-
-      .product-carousel {
-        min-height: 300px;
-
-        .carousel-img {
-          height: 300px;
-        }
-      }
     }
 
     .info {
@@ -1064,15 +439,6 @@ onMounted(() => {
           width: 100%;
         }
       }
-    }
-
-    .comment-section {
-      padding: 16px;
-    }
-
-    .comment-list .comment-item {
-      flex-direction: column;
-      gap: 8px;
     }
   }
 }

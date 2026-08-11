@@ -106,7 +106,7 @@ onUnmounted(() => {
     justify-content: center;
     width: 52px;
     height: 52px;
-    color: #fff;
+    color: var(--el-color-white);
     cursor: pointer;
     background: linear-gradient(135deg, #4f6ef7, #7b5cff);
     border-radius: 50%;
@@ -129,7 +129,7 @@ onUnmounted(() => {
     bottom: 64px;
     width: 260px;
     padding: 12px;
-    background: #fff;
+    background: var(--el-bg-color-overlay);
     border: 1px solid rgb(79 110 247 / 10%);
     border-radius: 12px;
     box-shadow: 0 12px 32px rgb(31 45 90 / 16%);
@@ -141,7 +141,7 @@ onUnmounted(() => {
       margin-bottom: 8px;
       font-size: 13px;
       font-weight: 600;
-      color: #303133;
+      color: var(--el-text-color-primary);
 
       &::before {
         width: 6px;
@@ -155,13 +155,13 @@ onUnmounted(() => {
     &-q {
       padding: 6px 8px;
       font-size: 12px;
-      color: #606266;
+      color: var(--el-text-color-regular);
       cursor: pointer;
       border-radius: 6px;
 
       &:hover {
         color: #4f6ef7;
-        background: #f0f2ff;
+        background: var(--el-color-primary-light-9);
       }
     }
 
@@ -173,7 +173,7 @@ onUnmounted(() => {
       color: #4f6ef7;
       text-align: center;
       cursor: pointer;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid var(--el-border-color-light);
     }
   }
 }

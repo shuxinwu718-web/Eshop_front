@@ -15,6 +15,10 @@
             <el-icon><List /></el-icon>
             <span>我的订单</span>
           </el-menu-item>
+          <el-menu-item index="groupBuy">
+            <el-icon><ShoppingBag /></el-icon>
+            <span>我的拼团</span>
+          </el-menu-item>
           <el-menu-item index="favorite">
             <el-icon><Star /></el-icon>
             <span>商品收藏</span>
@@ -287,7 +291,15 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { List, Star, Location, User, ChatDotSquare, Clock } from "@element-plus/icons-vue";
+import {
+  List,
+  Star,
+  Location,
+  User,
+  ChatDotSquare,
+  Clock,
+  ShoppingBag,
+} from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useUserStore } from "@/store/modules/user";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
@@ -581,6 +593,9 @@ const handleMenuSelect = (index: string) => {
   if (index === "address") fetchAddresses();
   if (index === "messages") fetchMessages();
   if (index === "history") fetchHistory();
+  if (index === "groupBuy") {
+    router.push("/shop/group-buy");
+  }
 };
 
 // 加载用户信息
@@ -1077,7 +1092,7 @@ html.dark {
       display: block;
       margin-top: 4px;
       font-size: 12px;
-      color: #999;
+      color: var(--el-text-color-secondary);
     }
   }
 }

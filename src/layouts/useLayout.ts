@@ -103,8 +103,14 @@ export function useLayout() {
     return filterRoutes(permissionStore.routes);
   });
 
-  /** 混合布局侧边菜单 */
-  const sideMenuRoutes = computed(() => permissionStore.mixLayoutSideMenus);
+  /** 混合布局侧边菜单（无子菜单时显示顶级菜单自身，避免侧边栏空白） */
+  const sideMenuRoutes = computed(() => {
+    if (permissionStore.mixLayoutSideMenus.length) {
+      return permissionStore.mixLayoutSideMenus;
+    }
+    const top = routes.value.find((item) => item.path === appStore.activeTopMenuPath);
+    return top ? [top] : [];
+  });
 
   /** 顶部菜单激活路径 */
   const activeTopMenuPath = computed(() => appStore.activeTopMenuPath);

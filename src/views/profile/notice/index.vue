@@ -307,7 +307,7 @@ onMounted(() => {
   }
 
   &--unread {
-    background-color: #f0f7ff;
+    background-color: var(--el-color-primary-light-9);
     border-left: 4px solid var(--el-color-primary);
   }
 
@@ -315,7 +315,7 @@ onMounted(() => {
     border-left-color: #67c23a;
 
     &.notice-card--unread {
-      background-color: #f0fff5;
+      background-color: var(--el-color-success-light-9);
       border-left: 4px solid #67c23a;
     }
   }
