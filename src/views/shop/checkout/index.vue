@@ -258,25 +258,12 @@ const selectedUserCouponId = ref<number | undefined>();
 const couponLoading = ref(false); // 优惠券加载状态
 
 // ========== 计算实付金额 ==========
+// 金额由后端 CouponCalculator 统一计算（/usable 接口返回 payAmount），前端只展示，避免口径偏差
 const discountedAmount = computed(() => {
   if (!selectedUserCouponId.value) return totalAmount.value;
   const selected = usableCoupons.value.find((c) => c.userCouponId === selectedUserCouponId.value);
   if (!selected) return totalAmount.value;
-  if (selected.type === 0) {
-    // 满减券
-    return Math.max(0, totalAmount.value - selected.value);
-  } else {
-    // 折扣券：value 表示折扣（如 8.5 即 8.5 折），折算比例 = value/10
-    let amount = totalAmount.value * (selected.value / 10);
-    // maxDiscount 表示「最高优惠金额」上限：优惠额超过则封顶，实付 = 原价 - 封顶值
-    if (selected.maxDiscount && selected.maxDiscount > 0) {
-      const saved = totalAmount.value - amount;
-      if (saved > selected.maxDiscount) {
-        amount = totalAmount.value - selected.maxDiscount;
-      }
-    }
-    return Math.max(0, amount);
-  }
+  return selected.payAmount ?? totalAmount.value;
 });
 
 // ========== 获取可用优惠券（修正：使用 totalAmount） ==========

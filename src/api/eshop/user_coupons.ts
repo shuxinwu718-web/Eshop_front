@@ -33,8 +33,13 @@ export interface MyCouponItem {
   status: number;
 }
 
-/** 订单可用优惠券项（同 MyCouponItem） */
-export type UsableCouponItem = MyCouponItem;
+/** 订单可用优惠券项（含后端计算的优惠/实付金额，与下单口径一致） */
+export interface UsableCouponItem extends MyCouponItem {
+  /** 使用该券可优惠金额（后端计算） */
+  discountAmount?: number;
+  /** 使用该券后实付金额（后端计算） */
+  payAmount?: number;
+}
 
 // ==================== API 方法 ====================
 

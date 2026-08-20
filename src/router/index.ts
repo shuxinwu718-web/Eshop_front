@@ -125,6 +125,17 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
           },
           {
+            path: "eshop/marketing",
+            name: "EshopMarketing",
+            component: () => import("@/views/eshop/marketing/index.vue"),
+            meta: {
+              title: "营销活动",
+              icon: "el-icon-trophy",
+              keepAlive: true,
+              roles: ["ADMIN"],
+            },
+          },
+          {
             path: "eshop/introAudit",
             name: "EshopIntroAudit",
             component: () => import("@/views/eshop/introAudit/index.vue"),
@@ -254,6 +265,17 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: "SignIn",
         component: () => import("@/views/shop/activity/SignIn.vue"),
         meta: { title: "每日签到", icon: "el-icon-check", roles: ["USER", "MERCHANT"] },
+      },
+      {
+        path: "marketing",
+        name: "MarketingCenter",
+        component: () => import("@/views/shop/marketing/index.vue"),
+        meta: {
+          title: "活动中心",
+          icon: "el-icon-trophy",
+          roles: ["USER", "MERCHANT"],
+          public: true,
+        },
       },
       {
         path: "checkout",
