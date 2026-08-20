@@ -63,8 +63,8 @@
           :all-specs-selected="allSpecsSelected"
         />
         <div v-if="product.description" class="description">
-          <h3>商品描述</h3>
-          <p>{{ product.description }}</p>
+          <h3>商品介绍</h3>
+          <div class="description-content" v-html="resolveRichContent(product.description)"></div>
         </div>
       </div>
     </div>
@@ -100,6 +100,7 @@ import FavoriteAPI from "@/api/eshop/favorite";
 import HistoryAPI from "@/api/eshop/history";
 import { UserFilled } from "@element-plus/icons-vue";
 import type { ProductSpec, ProductSku } from "@/api/eshop/product";
+import { resolveRichContent } from "@/utils/url";
 import { promptLogin } from "@/utils/requireLogin";
 import ProductGallery from "./components/ProductGallery/index.vue";
 import SkuSelector from "./components/SkuSelector/index.vue";
@@ -406,6 +407,36 @@ onMounted(() => {
       p {
         line-height: 1.6;
         color: var(--el-text-color-regular);
+      }
+
+      /* 富文本介绍内容 */
+      .description-content {
+        line-height: 1.8;
+        word-break: normal;
+        overflow-wrap: anywhere;
+        /* 允许选中复制富文本内容 */
+        -webkit-user-select: text;
+        user-select: text;
+
+        :deep(img) {
+          max-width: 100%;
+          height: auto;
+        }
+
+        :deep(video),
+        :deep(audio) {
+          max-width: 100%;
+        }
+
+        :deep(table) {
+          border-collapse: collapse;
+        }
+
+        :deep(td),
+        :deep(th) {
+          padding: 4px 8px;
+          border: 1px solid var(--el-border-color);
+        }
       }
     }
   }

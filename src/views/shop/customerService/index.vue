@@ -81,8 +81,10 @@ import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ChatDotRound, MagicStick, Service, User } from "@element-plus/icons-vue";
 import AiAPI, { type AiHistoryItem } from "@/api/ai/chat";
+import { useUserStore } from "@/store/modules/user";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 // ==================== 消息 ====================
 
@@ -246,6 +248,12 @@ const send = async () => {
   }
   if (loading.value) return;
 
+  // 游客需登录后才能使用 AI 客服（回复明确提示，不再请求 AI 服务）
+  if (!userStore.isLoggedIn) {
+    pushMessage("assistant", "登录后才能使用 AI 智能客服哦～请先登录账号，再来咨询购物问题。");
+    return;
+  }
+
   const waitSec = checkRateLimit();
   if (waitSec > 0) {
     ElMessage.warning(`提问太频繁了，请 ${waitSec} 秒后再试`);
@@ -268,8 +276,10 @@ const send = async () => {
     } else {
       pushMessage("assistant", res.error || "抱歉，AI 服务开小差了，请稍后再试。");
     }
-  } catch {
-    pushMessage("assistant", "网络异常，暂时无法连接 AI 客服，请稍后再试。");
+  } catch (err) {
+    // 明确区分：服务不可用 / 网络异常，避免游客得到含糊反馈
+    const detail = err instanceof Error ? err.message : "";
+    pushMessage("assistant", detail || "网络异常，暂时无法连接 AI 客服，请稍后再试。");
   } finally {
     loading.value = false;
   }

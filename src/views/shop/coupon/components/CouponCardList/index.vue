@@ -65,14 +65,14 @@
           </el-button>
           <el-button
             v-else
-            :type="item.stock > 0 ? 'danger' : 'info'"
+            :type="isClaimed(item) ? 'info' : item.stock > 0 ? 'danger' : 'info'"
             size="small"
             round
-            :disabled="item.stock <= 0 || receivingId === item.id"
+            :disabled="isClaimed(item) || item.stock <= 0 || receivingId === item.id"
             :loading="receivingId === item.id"
             @click="handleReceive(item)"
           >
-            {{ item.stock > 0 ? "立即领取" : "已抢完" }}
+            {{ isClaimed(item) ? "已领取" : item.stock > 0 ? "立即领取" : "已抢完" }}
           </el-button>
         </div>
       </div>
@@ -137,8 +137,14 @@ const getTimeStatus = (item: AvailableCouponItem) => {
   return "ongoing";
 };
 
+// 用户已持有数量达到领取上限 → 显示"已领取"，无需再请求后端
+const isClaimed = (item: AvailableCouponItem) => {
+  return (item.claimedCount ?? 0) >= item.limitPerUser;
+};
+
 const handleReceive = async (item: AvailableCouponItem) => {
   if (item.stock <= 0) return;
+  if (isClaimed(item)) return;
   // 游客领取需先登录
   if (!userStore.isLoggedIn()) {
     promptLogin("领取优惠券需要登录");

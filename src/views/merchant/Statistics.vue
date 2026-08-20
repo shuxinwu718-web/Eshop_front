@@ -45,15 +45,49 @@
         <el-table-column label="销售额" width="140">
           <template #default="{ row }">¥{{ row.totalAmount }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="goEdit(row.productId)">
               编辑
+            </el-button>
+            <el-button type="primary" link size="small" @click="openSkuView(row)">
+              查看SKU
             </el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- SKU 售卖情况弹窗 -->
+    <el-dialog
+      v-model="skuViewVisible"
+      :title="`SKU 售卖情况 - ${skuViewProductName}`"
+      width="720px"
+    >
+      <el-table v-loading="skuViewLoading" :data="skuViewData" border size="small" max-height="420">
+        <el-table-column label="规格组合" min-width="200">
+          <template #default="{ row }">{{ row.specsText }}</template>
+        </el-table-column>
+        <el-table-column label="SKU编码" width="130">
+          <template #default="{ row }">{{ row.skuCode || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="价格" width="110" align="right">
+          <template #default="{ row }">¥{{ row.price }}</template>
+        </el-table-column>
+        <el-table-column label="库存" width="90" align="center">
+          <template #default="{ row }">{{ row.stock }}</template>
+        </el-table-column>
+        <el-table-column label="销量" width="90" align="center">
+          <template #default="{ row }">{{ row.sales }}</template>
+        </el-table-column>
+      </el-table>
+      <div v-if="!skuViewLoading && skuViewData.length === 0" class="sku-view-empty">
+        该商品暂无 SKU 数据
+      </div>
+      <div v-else-if="!skuViewLoading" class="sku-view-footer">
+        共 {{ skuViewData.length }} 个 SKU
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -72,6 +106,47 @@ let chart: echarts.ECharts | null = null;
 
 const productSales = ref<ProductSalesItem[]>([]);
 const salesLoading = ref(false);
+
+// SKU 售卖情况查看
+const skuViewVisible = ref(false);
+const skuViewLoading = ref(false);
+const skuViewProductName = ref("");
+const skuViewData = ref<
+  { specsText: string; skuCode?: string; price: number; stock: number; sales: number }[]
+>([]);
+
+const openSkuView = async (row: ProductSalesItem) => {
+  skuViewVisible.value = true;
+  skuViewLoading.value = true;
+  skuViewData.value = [];
+  skuViewProductName.value = row.productName;
+  try {
+    const detail = await MerchantAPI.getProductDetail(row.productId);
+    const skus = (detail as any).skus || [];
+    skuViewData.value = skus.map((sku: any) => {
+      let map: Record<string, string> = {};
+      try {
+        map = JSON.parse(sku.specs);
+      } catch {
+        /* 忽略 */
+      }
+      const specsText = Object.entries(map)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(" / ");
+      return {
+        specsText,
+        skuCode: sku.skuCode,
+        price: sku.price,
+        stock: sku.stock,
+        sales: sku.sales ?? 0,
+      };
+    });
+  } catch {
+    skuViewData.value = [];
+  } finally {
+    skuViewLoading.value = false;
+  }
+};
 
 const { handleExport } = useExport(
   () =>
@@ -161,6 +236,20 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.sku-view-empty {
+  padding: 20px 0;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
+}
+
+.sku-view-footer {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  text-align: right;
 }
 
 /* 暗黑模式适配 */

@@ -120,11 +120,12 @@ const newComment = reactive({
   content: "",
 });
 
-// 平均评分
+// 平均评分：仅统计顶层评论的有效评分（1-5），回复/无评分数据不计入
 const avgRating = computed(() => {
-  if (!comments.value.length) return 0;
-  const total = comments.value.reduce((sum, c) => sum + c.rating, 0);
-  return total / comments.value.length;
+  const rated = comments.value.filter((c) => c && typeof c.rating === "number" && c.rating > 0);
+  if (!rated.length) return 0;
+  const total = rated.reduce((sum, c) => sum + c.rating, 0);
+  return total / rated.length;
 });
 
 // 将后端扁平的评论列表组装成树形结构

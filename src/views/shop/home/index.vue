@@ -418,6 +418,11 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
+
+  /* PC 端固定每行 6 条（12 条/页恰好排满 2 行） */
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }
 
 .product-card {

@@ -17,6 +17,8 @@ export interface AvailableCouponItem {
   startTime?: string; // 领取开始时间
   endTime: string;
   description?: string; // 优惠券说明
+  /** 当前用户已持有（未使用且未过期）数量 */
+  claimedCount?: number;
 }
 
 /** 我的优惠券项（未使用） */

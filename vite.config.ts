@@ -57,6 +57,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           changeOrigin: true,
           target: env.VITE_APP_AI_URL,
         },
+        // 代理上传文件访问（/uploads 静态资源在后端）
+        "/uploads": {
+          changeOrigin: true,
+          target: env.VITE_APP_API_URL,
+        },
       },
     },
     plugins: [

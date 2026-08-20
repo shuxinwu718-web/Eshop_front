@@ -102,6 +102,8 @@ export interface ESSearchProductItem {
   status: number;
   sales: number;
   createTime: number;
+  /** 用户评分平均数（后端实时聚合，可能为空） */
+  avgRating?: number;
 }
 
 export interface SearchResultItem {

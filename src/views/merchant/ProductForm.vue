@@ -29,12 +29,34 @@
         <!-- 封面图片 + 商品相册上传 -->
         <ImageUploaders v-model:cover-image="form.coverImage" v-model:images="form.images" />
 
-        <el-form-item label="商品描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="5"
-            placeholder="请输入商品描述"
+        <!-- 商品介绍（富文本，独立提交审核后展示） -->
+        <el-form-item label="商品介绍">
+          <template v-if="isEdit">
+            <Editor
+              v-model="introContent"
+              placeholder="请输入商品介绍，支持图文混排、图片/视频上传（视频需 mp4 等常见格式）"
+            />
+            <div class="intro-actions">
+              <el-button size="small" :loading="introSaving" @click="saveIntroDraft">
+                保存草稿
+              </el-button>
+              <el-button
+                size="small"
+                type="primary"
+                :loading="introSubmitting"
+                @click="submitIntro"
+              >
+                提交审核
+              </el-button>
+              <el-button size="small" @click="openVersionDialog">版本历史</el-button>
+              <span class="intro-tip">审核通过后将展示在商品详情页</span>
+            </div>
+          </template>
+          <el-alert
+            v-else
+            type="info"
+            :closable="false"
+            title="保存商品后可编辑商品介绍（支持图文、视频等富媒体，需管理员审核后展示）"
           />
         </el-form-item>
 
@@ -53,18 +75,97 @@
         <el-divider />
 
         <el-form-item>
+          <div v-if="skuViewData.length > 0" class="sku-view-bar">
+            <el-button :icon="View" size="small" @click="skuViewVisible = true">
+              查看 SKU 售卖情况
+            </el-button>
+            <span class="sku-view-tip">查看该商品不同 SKU 规格的价格、库存与销量</span>
+          </div>
+        </el-form-item>
+
+        <el-form-item>
           <el-button type="primary" :loading="submitting" @click="submitForm">提交</el-button>
           <el-button @click="router.back()">返回</el-button>
         </el-form-item>
       </el-form>
     </el-card>
+
+    <!-- SKU 售卖情况弹窗 -->
+    <el-dialog v-model="skuViewVisible" title="SKU 售卖情况" width="720px">
+      <el-table :data="skuViewData" border size="small" max-height="420">
+        <el-table-column label="规格组合" min-width="200">
+          <template #default="{ row }">{{ row.specsText }}</template>
+        </el-table-column>
+        <el-table-column label="SKU编码" width="130">
+          <template #default="{ row }">{{ row.skuCode || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="价格" width="110" align="right">
+          <template #default="{ row }">¥{{ row.price }}</template>
+        </el-table-column>
+        <el-table-column label="库存" width="90" align="center">
+          <template #default="{ row }">{{ row.stock }}</template>
+        </el-table-column>
+        <el-table-column label="销量" width="90" align="center">
+          <template #default="{ row }">{{ row.sales }}</template>
+        </el-table-column>
+      </el-table>
+      <div class="sku-view-footer">共 {{ skuViewData.length }} 个 SKU</div>
+    </el-dialog>
+
+    <!-- 版本历史弹窗 -->
+    <el-dialog v-model="versionDialogVisible" title="商品介绍版本历史" width="760px">
+      <el-table v-loading="versionLoading" :data="versionList" size="small" border>
+        <el-table-column label="版本" width="80" align="center">
+          <template #default="{ row }">v{{ row.versionNo }}</template>
+        </el-table-column>
+        <el-table-column label="状态" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="versionStatusType(row.status)" size="small">
+              {{ versionStatusText(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="提交时间" width="160">
+          <template #default="{ row }">{{ row.createTime }}</template>
+        </el-table-column>
+        <el-table-column label="驳回原因" min-width="140">
+          <template #default="{ row }">{{ row.auditRemark || "-" }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="130" align="center">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click="previewVersion(row)">
+              预览
+            </el-button>
+            <el-button link type="warning" size="small" @click="restoreVersion(row)">
+              恢复
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="version-pagination">
+        <el-pagination
+          v-model:current-page="versionPage.pageNum"
+          v-model:page-size="versionPage.pageSize"
+          :total="versionTotal"
+          layout="total, prev, pager, next"
+          small
+          @current-change="loadVersions"
+        />
+      </div>
+    </el-dialog>
+
+    <!-- 版本预览弹窗 -->
+    <el-dialog v-model="previewVisible" title="版本内容预览" width="760px">
+      <div class="intro-preview" v-html="resolveRichContent(previewContent)"></div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { View } from "@element-plus/icons-vue";
 import MerchantAPI from "@/api/eshop/merchant";
 import CategoryAPI from "@/api/eshop/category";
 import type { CategoryItem } from "@/api/eshop/category";
@@ -72,6 +173,9 @@ import ImageUploaders from "./components/ImageUploaders/index.vue";
 import SizeChartEditor from "./components/SizeChartEditor/index.vue";
 import SpecSkuEditor from "./components/SpecSkuEditor/index.vue";
 import type { SpecDef, SkuRow } from "./components/SpecSkuEditor/index.vue";
+import Editor from "@/components/Editor/index.vue";
+import IntroAPI, { type IntroVersionItem } from "@/api/eshop/intro";
+import { resolveRichContent } from "@/utils/url";
 
 const route = useRoute();
 const router = useRouter();
@@ -90,7 +194,6 @@ const form = reactive({
   stock: 0,
   coverImage: "", // 封面图片URL（相对路径）
   images: [] as string[], // 商品相册图片URL列表（相对路径）
-  description: "",
 });
 
 // ========== 尺寸表状态 ==========
@@ -111,6 +214,12 @@ const specEnabled = ref(false);
 const specList = ref<SpecDef[]>([]);
 const skuList = ref<SkuRow[]>([]);
 const specSkuEditorRef = ref<InstanceType<typeof SpecSkuEditor>>();
+
+// ========== SKU 售卖情况查看 ==========
+const skuViewVisible = ref(false);
+const skuViewData = ref<
+  { specsText: string; skuCode?: string; price: number; stock: number; sales: number }[]
+>([]);
 
 // 校验规则
 const rules = {
@@ -155,7 +264,13 @@ const loadProduct = async () => {
     form.stock = product.stock ?? 0;
     form.coverImage = product.coverImage || product.cover_image || "";
     form.images = product.images || [];
-    form.description = product.description || "";
+
+    // 加载商品介绍（草稿/最近内容，富文本）
+    try {
+      introContent.value = await IntroAPI.getIntroEditContent(product.id);
+    } catch {
+      introContent.value = "";
+    }
 
     // 加载尺寸表数据（编辑模式下）
     if (product.sizeChartColumns && product.sizeChartColumns.length > 0) {
@@ -167,32 +282,82 @@ const loadProduct = async () => {
       };
     }
 
-    // 加载规格/SKU数据（编辑模式下）
-    if (product.specs && product.specs.length > 0) {
+    // 加载规格/SKU数据（编辑模式下）：只要有规格定义或SKU任一，SKU明细表一开始就显示
+    const specs = product.specs || [];
+    const skus = product.skus || [];
+    if (specs.length > 0 || skus.length > 0) {
       specEnabled.value = true;
-      specList.value = product.specs.map((s: any) => {
-        let values: string[] = [];
-        try {
-          values = JSON.parse(s.specValues);
-        } catch {
-          /* 忽略 */
-        }
-        return {
-          specName: s.specName,
-          specValues: values,
-        };
-      });
-      // 重新生成SKU
-      specSkuEditorRef.value?.regenerateSkus();
-      // 用已有SKU数据覆盖默认价格库存
-      if (product.skus && product.skus.length > 0) {
-        for (const sku of product.skus) {
-          const idx = skuList.value.findIndex((s) => s.specs === sku.specs);
-          if (idx !== -1) {
-            skuList.value[idx].price = sku.price;
-            skuList.value[idx].stock = sku.stock;
+      if (specs.length > 0) {
+        specList.value = specs.map((s: any) => {
+          let values: string[] = [];
+          try {
+            values = JSON.parse(s.specValues);
+          } catch {
+            /* 忽略 */
+          }
+          return {
+            specName: s.specName,
+            specValues: values,
+          };
+        });
+      } else {
+        // 规格定义缺失（历史数据/手工录入SKU），从 SKU 反推规格定义
+        specList.value = [];
+        for (const sku of skus) {
+          let map: Record<string, string> = {};
+          try {
+            map = JSON.parse(sku.specs);
+          } catch {
+            /* 忽略 */
+          }
+          for (const [name, value] of Object.entries(map)) {
+            const exist = specList.value.find((s) => s.specName === name);
+            if (exist) {
+              if (!exist.specValues.includes(value)) exist.specValues.push(value);
+            } else {
+              specList.value.push({ specName: name, specValues: [value] });
+            }
           }
         }
+      }
+      // 有SKU：直接用后端SKU数据生成明细表（保证编辑时立即显示，价格/库存真实）
+      if (skus.length > 0) {
+        skuList.value = skus.map((sku: any) => {
+          let map: Record<string, string> = {};
+          try {
+            map = JSON.parse(sku.specs);
+          } catch {
+            /* 忽略 */
+          }
+          return {
+            specMap: map,
+            specs: JSON.stringify(map),
+            price: sku.price,
+            stock: sku.stock,
+          };
+        });
+        // 填充"查看 SKU 售卖情况"数据（含销量）
+        skuViewData.value = skus.map((sku: any) => {
+          let map: Record<string, string> = {};
+          try {
+            map = JSON.parse(sku.specs);
+          } catch {
+            /* 忽略 */
+          }
+          const specsText = Object.entries(map)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(" / ");
+          return {
+            specsText,
+            skuCode: sku.skuCode,
+            price: sku.price,
+            stock: sku.stock,
+            sales: sku.sales ?? 0,
+          };
+        });
+      } else {
+        // 仅有规格定义（无SKU记录）：按规格组合生成默认明细
+        specSkuEditorRef.value?.regenerateSkus();
       }
     }
   } catch (error) {
@@ -216,7 +381,6 @@ const submitForm = async () => {
     stock: form.stock,
     coverImage: form.coverImage,
     images: form.images,
-    description: form.description,
   };
 
   // 添加尺寸表数据
@@ -265,6 +429,113 @@ const submitForm = async () => {
   }
 };
 
+// ========== 商品介绍（富文本，独立提交审核） ==========
+const introContent = ref("");
+const introSaving = ref(false);
+const introSubmitting = ref(false);
+
+const currentProductId = computed(() => (isEdit.value ? Number(route.params.id) : null));
+
+const saveIntroDraft = async () => {
+  if (!currentProductId.value) return;
+  introSaving.value = true;
+  try {
+    await IntroAPI.saveIntroDraft(currentProductId.value, introContent.value);
+    ElMessage.success("草稿已保存");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    introSaving.value = false;
+  }
+};
+
+const submitIntro = async () => {
+  if (!currentProductId.value) return;
+  if (!introContent.value || !introContent.value.replace(/<[^>]*>/g, "").trim()) {
+    ElMessage.warning("请输入商品介绍内容");
+    return;
+  }
+  introSubmitting.value = true;
+  try {
+    await IntroAPI.submitIntroForAudit(currentProductId.value, introContent.value);
+    ElMessage.success("已提交审核，请等待管理员审核");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    introSubmitting.value = false;
+  }
+};
+
+// ========== 版本历史 ==========
+const versionDialogVisible = ref(false);
+const versionLoading = ref(false);
+const versionList = ref<IntroVersionItem[]>([]);
+const versionTotal = ref(0);
+const versionPage = reactive({ pageNum: 1, pageSize: 10 });
+const previewVisible = ref(false);
+const previewContent = ref("");
+
+const versionStatusText = (status: number) => {
+  const map: Record<number, string> = { 0: "草稿", 1: "待审核", 2: "已通过", 3: "已驳回" };
+  return map[status] ?? "未知";
+};
+
+const versionStatusType = (status: number): "info" | "warning" | "success" | "danger" => {
+  const map: Record<number, "info" | "warning" | "success" | "danger"> = {
+    0: "info",
+    1: "warning",
+    2: "success",
+    3: "danger",
+  };
+  return map[status] ?? "info";
+};
+
+const loadVersions = async () => {
+  if (!currentProductId.value) return;
+  versionLoading.value = true;
+  try {
+    const res = await IntroAPI.getIntroVersions(currentProductId.value, versionPage);
+    versionList.value = res.records || [];
+    versionTotal.value = res.total || 0;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    versionLoading.value = false;
+  }
+};
+
+const openVersionDialog = () => {
+  versionDialogVisible.value = true;
+  versionPage.pageNum = 1;
+  loadVersions();
+};
+
+const previewVersion = async (row: IntroVersionItem) => {
+  try {
+    const detail = await IntroAPI.getIntroVersionDetail(row.id);
+    previewContent.value = detail.content || "";
+    previewVisible.value = true;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const restoreVersion = async (row: IntroVersionItem) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定将 v${row.versionNo} 的内容恢复到当前编辑区吗？恢复后需重新提交审核`,
+      "提示",
+      { type: "warning" }
+    );
+    await IntroAPI.restoreIntroVersion(row.id);
+    ElMessage.success("已恢复，内容已回填到编辑区");
+    introContent.value = await IntroAPI.getIntroEditContent(currentProductId.value!);
+    loadVersions();
+  } catch (error) {
+    if (error !== "cancel") console.error(error);
+  }
+};
+
 // 初始化
 onMounted(() => {
   loadCategories();
@@ -275,5 +546,73 @@ onMounted(() => {
 <style lang="scss" scoped>
 .product-form {
   padding: 20px;
+
+  .intro-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+
+    .intro-tip {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  .version-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .sku-view-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .sku-view-tip {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  .sku-view-footer {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    text-align: right;
+  }
+}
+
+/* 富文本预览（v-html 注入内容，需穿透样式） */
+.intro-preview {
+  max-height: 60vh;
+  overflow: auto;
+  line-height: 1.7;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  /* 允许选中复制富文本内容 */
+  -webkit-user-select: text;
+  user-select: text;
+
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  :deep(video),
+  :deep(audio) {
+    max-width: 100%;
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+  }
+
+  :deep(td),
+  :deep(th) {
+    padding: 4px 8px;
+    border: 1px solid var(--el-border-color);
+  }
 }
 </style>

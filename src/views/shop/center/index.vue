@@ -266,7 +266,22 @@
         <div v-show="activeMenu === 'history'" class="history-section">
           <div class="section-header">
             <span>浏览历史</span>
-            <el-button type="primary" link @click="clearHistory">清空历史</el-button>
+            <div class="header-actions">
+              <el-input
+                v-model="historyKeyword"
+                placeholder="搜索商品名称"
+                clearable
+                size="small"
+                style="width: 200px"
+                @keyup.enter="handleHistorySearch"
+                @clear="handleHistorySearch"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
+              <el-button type="primary" link @click="clearHistory">清空历史</el-button>
+            </div>
           </div>
           <div v-loading="historyLoading" class="history-grid">
             <div
@@ -281,6 +296,16 @@
             </div>
           </div>
           <el-empty v-if="!historyLoading && historyList.length === 0" description="暂无浏览记录" />
+          <div v-if="historyTotal > 0" class="history-pagination">
+            <el-pagination
+              v-model:current-page="historyPage"
+              :page-size="historySize"
+              :total="historyTotal"
+              layout="prev, pager, next, total"
+              background
+              @current-change="fetchHistory"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -299,6 +324,7 @@ import {
   ChatDotSquare,
   Clock,
   ShoppingBag,
+  Search,
 } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useUserStore } from "@/store/modules/user";
@@ -561,12 +587,21 @@ const goProfile = () => {
 
 const historyLoading = ref(false);
 const historyList = ref<ProductItem[]>([]);
+const historyPage = ref(1);
+const historySize = ref(10);
+const historyTotal = ref(0);
+const historyKeyword = ref("");
 
 const fetchHistory = async () => {
   historyLoading.value = true;
   try {
-    const res = await HistoryAPI.get(10);
-    historyList.value = res;
+    const res = await HistoryAPI.get({
+      page: historyPage.value,
+      size: historySize.value,
+      keyword: historyKeyword.value || undefined,
+    });
+    historyList.value = res.records;
+    historyTotal.value = res.total;
   } catch {
     // ignore
   } finally {
@@ -574,11 +609,18 @@ const fetchHistory = async () => {
   }
 };
 
+const handleHistorySearch = () => {
+  historyPage.value = 1;
+  fetchHistory();
+};
+
 const clearHistory = async () => {
   await ElMessageBox.confirm("确定清空所有浏览历史？", "提示", { type: "warning" });
   try {
     await HistoryAPI.clear();
     ElMessage.success("清空成功");
+    historyPage.value = 1;
+    historyKeyword.value = "";
     await fetchHistory();
   } catch {
     ElMessage.error("操作失败");
@@ -672,6 +714,18 @@ onMounted(async () => {
   margin-bottom: 16px;
   font-size: 18px;
   font-weight: bold;
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+.history-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
 
 /* 订单卡片 */

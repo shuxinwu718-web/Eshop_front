@@ -37,8 +37,19 @@ export const sendAiChat = async (
   message: string,
   history?: AiHistoryItem[]
 ): Promise<AiChatResponse> => {
-  const { data } = await aiHttp.post<AiChatResponse>("/chat", { message, history });
-  return data;
+  try {
+    const { data } = await aiHttp.post<AiChatResponse>("/chat", { message, history });
+    return data;
+  } catch (err) {
+    // 服务不可用（未启动/超时）或返回非 2xx 时，统一抛出差错信息，由页面展示明确提示
+    const msg =
+      (axios.isAxiosError(err) &&
+        ((err.response?.data as { error?: string } | undefined)?.error ||
+          err.response?.statusText ||
+          "AI 客服服务暂时不可用，请稍后再试。")) ||
+      "AI 客服服务暂时不可用，请稍后再试。";
+    throw new Error(msg, { cause: err });
+  }
 };
 
 export default {

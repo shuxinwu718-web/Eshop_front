@@ -266,12 +266,16 @@ const discountedAmount = computed(() => {
     // 满减券
     return Math.max(0, totalAmount.value - selected.value);
   } else {
-    // 折扣券
+    // 折扣券：value 表示折扣（如 8.5 即 8.5 折），折算比例 = value/10
     let amount = totalAmount.value * (selected.value / 10);
-    if (selected.maxDiscount && amount > selected.maxDiscount) {
-      amount = selected.maxDiscount;
+    // maxDiscount 表示「最高优惠金额」上限：优惠额超过则封顶，实付 = 原价 - 封顶值
+    if (selected.maxDiscount && selected.maxDiscount > 0) {
+      const saved = totalAmount.value - amount;
+      if (saved > selected.maxDiscount) {
+        amount = totalAmount.value - selected.maxDiscount;
+      }
     }
-    return amount;
+    return Math.max(0, amount);
   }
 });
 

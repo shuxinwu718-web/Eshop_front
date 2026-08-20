@@ -1,9 +1,6 @@
 // router/index.ts
 import type { App } from "vue";
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
-import { AuthStorage } from "@/utils/auth";
-import { useUserStoreHook } from "@/store";
-import { addRecentMenu } from "@/composables/useRecentMenus";
 export const Layout = () => import("@/layouts/index.vue");
 export const MerchantLayout = () => import("@/layouts/MerchantLayout.vue");
 
@@ -112,6 +109,28 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "优惠券管理",
               icon: "el-icon-present",
+              keepAlive: true,
+              roles: ["ADMIN"],
+            },
+          },
+          {
+            path: "eshop/festival",
+            name: "EshopFestival",
+            component: () => import("@/views/eshop/festival/index.vue"),
+            meta: {
+              title: "节日活动",
+              icon: "el-icon-calendar",
+              keepAlive: true,
+              roles: ["ADMIN"],
+            },
+          },
+          {
+            path: "eshop/introAudit",
+            name: "EshopIntroAudit",
+            component: () => import("@/views/eshop/introAudit/index.vue"),
+            meta: {
+              title: "商品介绍审核",
+              icon: "el-icon-document-checked",
               keepAlive: true,
               roles: ["ADMIN"],
             },
@@ -266,7 +285,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/shop/groupBuy/index.vue"),
         meta: {
           title: "我的拼团",
-          icon: "el-icon-shopping-bag-2",
+          icon: "el-icon-shopping-bag",
           roles: ["USER", "MERCHANT"],
           hidden: true,
         },
@@ -366,7 +385,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "group-buy",
             name: "MerchantGroupBuy",
             component: () => import("@/views/merchant/GroupBuy.vue"),
-            meta: { title: "拼团管理", icon: "el-icon-shopping-bag-2" },
+            meta: { title: "拼团管理", icon: "el-icon-shopping-bag" },
           },
         ],
       },

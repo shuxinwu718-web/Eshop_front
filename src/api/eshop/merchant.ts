@@ -41,6 +41,7 @@ export interface MerchantProduct {
     stock: number;
     skuCode?: string;
     image?: string;
+    sales?: number;
   }>;
 }
 
@@ -122,14 +123,6 @@ export interface SalesStatistics {
   totalSales: number;
   totalOrders: number;
   dailyStats: Array<{ date: string; sales: number; orders: number }>;
-}
-
-// 分页结果
-interface PageResult<T> {
-  records: T[];
-  total: number;
-  current: number;
-  size: number;
 }
 
 // 商品管理API
