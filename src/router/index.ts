@@ -4,6 +4,7 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-rou
 
 export const Layout = () => import("@/layouts/index.vue");
 export const MerchantLayout = () => import("@/layouts/MerchantLayout.vue");
+export const ShopLayout = () => import("@/layouts/ShopLayout.vue");
 
 const BlankLayout = () => import("@/layouts/BlankLayout.vue");
 
@@ -265,152 +266,160 @@ export const constantRoutes: RouteRecordRaw[] = [
         ],
       },
 
-      // ========== 普通用户和商家共享页面 ==========
+      // ========== 商城用户端（独立电商布局） ==========
       {
-        path: "home",
-        name: "Home",
-        component: () => import("@/views/shop/home/index.vue"),
-        meta: {
-          title: "商城首页",
-          icon: "el-icon-home-filled",
-          keepAlive: true,
-          roles: ["USER", "MERCHANT"],
-          public: true,
-        },
-      },
-      {
-        path: "shop/cart",
-        name: "EshopCart",
-        component: () => import("@/views/shop/cart/index.vue"),
-        meta: { title: "购物车", icon: "el-icon-shopping-cart", roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "product/:id",
-        name: "ProductDetail",
-        component: () => import("@/views/shop/product/detail.vue"),
-        meta: { title: "商品详情", hidden: true, roles: ["USER", "MERCHANT"], public: true },
-      },
-      {
-        path: "order/detail/:id",
-        name: "OrderDetail",
-        component: () => import("@/views/shop/order/detail.vue"),
-        meta: { title: "订单详情", hidden: true, roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "member/center",
-        name: "MemberCenter",
-        component: () => import("@/views/shop/center/index.vue"),
-        meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "shop/order",
-        name: "ShopOrder",
-        component: () => import("@/views/shop/order/list.vue"),
-        meta: { title: "我的订单", icon: "list", roles: ["USER", "MERCHANT"], hidden: true },
-      },
-      {
-        path: "shop/customer-service",
-        name: "CustomerService",
-        component: () => import("@/views/shop/customerService/index.vue"),
-        meta: { title: "AI 客服", roles: ["USER", "MERCHANT"], hidden: true, public: true },
-      },
-      {
-        path: "coupon-center",
-        name: "CouponCenter",
-        component: () => import("@/views/shop/coupon/CouponCenter.vue"),
-        meta: {
-          title: "领券中心",
-          icon: "el-icon-present",
-          roles: ["USER", "MERCHANT"],
-          public: true,
-        },
-      },
-      {
-        path: "seckill",
-        name: "Seckill",
-        component: () => import("@/views/shop/seckill/index.vue"),
-        meta: {
-          title: "限时秒杀",
-          icon: "el-icon-lightning",
-          roles: ["USER", "MERCHANT"],
-          public: true,
-        },
-      },
-      {
-        path: "my-coupon",
-        name: "MyCoupon",
-        component: () => import("@/views/shop/coupon/MyCoupon.vue"),
-        meta: { title: "我的优惠券", icon: "el-icon-tickets", roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "signin",
-        name: "SignIn",
-        component: () => import("@/views/shop/activity/SignIn.vue"),
-        meta: { title: "每日签到", icon: "el-icon-check", roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "marketing",
-        name: "MarketingCenter",
-        component: () => import("@/views/shop/marketing/index.vue"),
-        meta: {
-          title: "活动中心",
-          icon: "el-icon-trophy",
-          roles: ["USER", "MERCHANT"],
-          public: true,
-        },
-      },
-      {
-        path: "checkout",
-        name: "Checkout",
-        component: () => import("@/views/shop/checkout/index.vue"),
-        meta: { title: "确认订单", roles: ["USER", "MERCHANT"], hidden: true },
-      },
-      {
-        path: "store/:merchantId",
-        name: "Store",
-        component: () => import("@/views/shop/store/index.vue"),
-        meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"], public: true },
-      },
-      {
-        path: "favorites",
-        name: "Favorites",
-        component: () => import("@/views/shop/favorites/index.vue"),
-        meta: { title: "我的收藏", icon: "el-icon-star", roles: ["USER"], hidden: true },
-      },
-      {
-        path: "my-notice",
-        name: "MyNotice",
-        component: () => import("@/views/profile/notice/index.vue"),
-        meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT"] },
-      },
-      {
-        path: "shop/group-buy",
-        name: "GroupBuyRecords",
-        component: () => import("@/views/shop/groupBuy/index.vue"),
-        meta: {
-          title: "我的拼团",
-          icon: "el-icon-shopping-bag",
-          roles: ["USER", "MERCHANT"],
-          hidden: true,
-        },
-      },
-      {
-        path: "shop/address",
-        name: "EshopAddress",
-        component: () => import("@/views/eshop/address/index.vue"),
-        meta: { title: "收货地址", roles: ["USER", "MERCHANT"], hidden: true },
-      },
-      {
-        path: "profile",
-        name: "Profile",
-        component: () => import("@/views/profile/index.vue"),
-        meta: { title: "个人资料", icon: "user", roles: ["USER", "MERCHANT", "ADMIN"] },
-      },
-      {
-        path: "apply-merchant",
-        name: "ApplyMerchant",
-        component: () => import("@/views/shop/applyMerchant/index.vue"),
-        meta: { title: "商家入驻申请", roles: ["USER"] },
+        path: "",
+        name: "Shop",
+        component: ShopLayout,
+        meta: { hidden: true },
+        children: [
+          {
+            path: "home",
+            name: "Home",
+            component: () => import("@/views/shop/home/index.vue"),
+            meta: {
+              title: "商城首页",
+              icon: "el-icon-home-filled",
+              keepAlive: true,
+              roles: ["USER", "MERCHANT"],
+              public: true,
+            },
+          },
+          {
+            path: "shop/cart",
+            name: "EshopCart",
+            component: () => import("@/views/shop/cart/index.vue"),
+            meta: { title: "购物车", icon: "el-icon-shopping-cart", roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "product/:id",
+            name: "ProductDetail",
+            component: () => import("@/views/shop/product/detail.vue"),
+            meta: { title: "商品详情", hidden: true, roles: ["USER", "MERCHANT"], public: true },
+          },
+          {
+            path: "order/detail/:id",
+            name: "OrderDetail",
+            component: () => import("@/views/shop/order/detail.vue"),
+            meta: { title: "订单详情", hidden: true, roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "member/center",
+            name: "MemberCenter",
+            component: () => import("@/views/shop/center/index.vue"),
+            meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "shop/order",
+            name: "ShopOrder",
+            component: () => import("@/views/shop/order/list.vue"),
+            meta: { title: "我的订单", icon: "list", roles: ["USER", "MERCHANT"], hidden: true },
+          },
+          {
+            path: "shop/customer-service",
+            name: "CustomerService",
+            component: () => import("@/views/shop/customerService/index.vue"),
+            meta: { title: "AI 客服", roles: ["USER", "MERCHANT"], hidden: true, public: true },
+          },
+          {
+            path: "coupon-center",
+            name: "CouponCenter",
+            component: () => import("@/views/shop/coupon/CouponCenter.vue"),
+            meta: {
+              title: "领券中心",
+              icon: "el-icon-present",
+              roles: ["USER", "MERCHANT"],
+              public: true,
+            },
+          },
+          {
+            path: "seckill",
+            name: "Seckill",
+            component: () => import("@/views/shop/seckill/index.vue"),
+            meta: {
+              title: "限时秒杀",
+              icon: "el-icon-lightning",
+              roles: ["USER", "MERCHANT"],
+              public: true,
+            },
+          },
+          {
+            path: "my-coupon",
+            name: "MyCoupon",
+            component: () => import("@/views/shop/coupon/MyCoupon.vue"),
+            meta: { title: "我的优惠券", icon: "el-icon-tickets", roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "signin",
+            name: "SignIn",
+            component: () => import("@/views/shop/activity/SignIn.vue"),
+            meta: { title: "每日签到", icon: "el-icon-check", roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "marketing",
+            name: "MarketingCenter",
+            component: () => import("@/views/shop/marketing/index.vue"),
+            meta: {
+              title: "活动中心",
+              icon: "el-icon-trophy",
+              roles: ["USER", "MERCHANT"],
+              public: true,
+            },
+          },
+          {
+            path: "checkout",
+            name: "Checkout",
+            component: () => import("@/views/shop/checkout/index.vue"),
+            meta: { title: "确认订单", roles: ["USER", "MERCHANT"], hidden: true },
+          },
+          {
+            path: "store/:merchantId",
+            name: "Store",
+            component: () => import("@/views/shop/store/index.vue"),
+            meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"], public: true },
+          },
+          {
+            path: "favorites",
+            name: "Favorites",
+            component: () => import("@/views/shop/favorites/index.vue"),
+            meta: { title: "我的收藏", icon: "el-icon-star", roles: ["USER"], hidden: true },
+          },
+          {
+            path: "my-notice",
+            name: "MyNotice",
+            component: () => import("@/views/profile/notice/index.vue"),
+            meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT"] },
+          },
+          {
+            path: "shop/group-buy",
+            name: "GroupBuyRecords",
+            component: () => import("@/views/shop/groupBuy/index.vue"),
+            meta: {
+              title: "我的拼团",
+              icon: "el-icon-shopping-bag",
+              roles: ["USER", "MERCHANT"],
+              hidden: true,
+            },
+          },
+          {
+            path: "shop/address",
+            name: "EshopAddress",
+            component: () => import("@/views/eshop/address/index.vue"),
+            meta: { title: "收货地址", roles: ["USER", "MERCHANT"], hidden: true },
+          },
+          {
+            path: "profile",
+            name: "Profile",
+            component: () => import("@/views/profile/index.vue"),
+            meta: { title: "个人资料", icon: "user", roles: ["USER", "MERCHANT", "ADMIN"] },
+          },
+          {
+            path: "apply-merchant",
+            name: "ApplyMerchant",
+            component: () => import("@/views/shop/applyMerchant/index.vue"),
+            meta: { title: "商家入驻申请", roles: ["USER"] },
+          },
+        ],
       },
 
       // ========== 商家专属页面（使用商家布局） ==========
