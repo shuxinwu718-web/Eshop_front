@@ -3,6 +3,7 @@ import NProgress from "@/plugins/nprogress";
 import router from "@/router";
 import { useUserStore } from "@/store";
 import { ElMessageBox } from "element-plus";
+import { addRecentMenu } from "@/composables/useRecentMenus";
 
 // 模块级变量：保证 profile 只请求一次
 let _profileLoaded = false;
@@ -126,7 +127,15 @@ export function setupPermissionGuard() {
     }
   });
 
-  router.afterEach(() => {
+  router.afterEach((to) => {
     NProgress.done();
+
+    // 记录最近访问（供仪表盘"最近访问"展示）
+    // 仅记录管理端页面：排除商城（Shop 分组）、商家中心、登录等非后台路由
+    const isInShop = to.matched.some((record) => record.name === "Shop");
+    const isMerchant = to.path.startsWith("/merchant");
+    if (to.meta?.title && !isInShop && !isMerchant) {
+      addRecentMenu(to.path, to.meta.title as string, to.meta.icon as string | undefined);
+    }
   });
 }
