@@ -199,13 +199,14 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 极简样式，完全无表格/卡片复杂结构，保证移动端不溢出 */
+/* 极简样式，完全无表格/卡片复杂结构，保证移动端不溢出；
+   背景与内边距由 ShopLayout 统一提供，页面自身改为纵向间距 */
 .address-container {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   max-width: 100%;
-  min-height: 100vh;
-  padding: 16px;
-  background: var(--el-bg-color-page);
 }
 
 .address-header {

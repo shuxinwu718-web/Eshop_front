@@ -515,13 +515,6 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/error/404.vue"),
         meta: { hidden: true },
       },
-      // 保留原有示例详情页
-      {
-        path: "/detail/:id(\\d+)",
-        name: "DemoDetail",
-        component: () => import("@/views/demo/detail.vue"),
-        meta: { title: "详情页缓存", icon: "user", hidden: true, keepAlive: true },
-      },
     ],
   },
 ];

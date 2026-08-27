@@ -44,8 +44,6 @@
   "navbar": {
     "dashboard": "Dashboard",
     "logout": "Logout",
-    "document": "Document",
-    "gitee": "Gitee",
     "profile": "User Profile"
   },
   "sizeSelect": {

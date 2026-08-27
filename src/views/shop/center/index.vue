@@ -327,6 +327,7 @@ import {
   Search,
 } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
+import { useCartStore } from "@/store/modules/cart";
 import { useUserStore } from "@/store/modules/user";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
 import FavoriteAPI, { type FavoriteItem } from "@/api/eshop/favorite";
@@ -340,6 +341,7 @@ import type { UserInfo } from "@/types/api/user";
 
 const router = useRouter();
 const userStore = useUserStore();
+const cartStore = useCartStore();
 const userInfo = ref(userStore.userInfo);
 
 const activeMenu = ref("order");
@@ -561,6 +563,7 @@ const cancelOrder = async (orderId: number) => {
 const addToCart = async (productId: number) => {
   try {
     await CartAPI.add(productId, 1);
+    cartStore.fetchCount();
     ElMessage.success("已加入购物车");
   } catch {
     ElMessage.error("添加失败");
@@ -654,9 +657,9 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .personal-center {
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--el-bg-color-page);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .container {

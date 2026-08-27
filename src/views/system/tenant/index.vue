@@ -180,7 +180,7 @@
         </el-form-item>
 
         <el-form-item label="域名" prop="domain">
-          <el-input v-model="formData.domain" placeholder="demo.youlai.tech（可选）" />
+          <el-input v-model="formData.domain" placeholder="shop.example.com（可选）" />
         </el-form-item>
 
         <el-form-item

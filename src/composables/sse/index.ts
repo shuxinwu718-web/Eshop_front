@@ -5,8 +5,6 @@
  * 提供 SSE 服务的统一初始化和清理接口
  * - 字典同步服务
  * - 在线用户统计服务
- *
- * @author 有来技术团队
  */
 
 import { useDictSync } from "./useDictSync";

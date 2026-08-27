@@ -148,14 +148,12 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .marketing-center {
-  max-width: 960px;
-  min-height: 100vh;
-  padding: 16px 12px 32px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
   .page-banner {
     padding: 20px 20px;
-    margin-bottom: 16px;
     color: #fff;
     background: linear-gradient(120deg, #ff8a3d 0%, #ff5e7d 100%);
     border-radius: 12px;
@@ -315,8 +313,6 @@ onMounted(() => {
 /* 平板及桌面端适配 */
 @media (min-width: 640px) {
   .marketing-center {
-    padding: 24px 20px 40px;
-
     .activity-card {
       padding: 24px;
 

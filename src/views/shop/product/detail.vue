@@ -96,9 +96,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type Ref } from "vue";
-import { useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ref, computed, watch, onMounted, h, type Ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElNotification } from "element-plus";
+import { useCartStore } from "@/store/modules/cart";
 import { useUserStore } from "@/store/modules/user";
 import ProductAPI, { type ProductItem, type ProductImageItem } from "@/api/eshop/product";
 import CartAPI from "@/api/eshop/cart";
@@ -118,6 +119,8 @@ import GroupBuyPanel from "./components/GroupBuyPanel/index.vue";
 
 const route = useRoute();
 const userStore = useUserStore();
+const cartStore = useCartStore();
+const router = useRouter();
 const loading = ref(false);
 const product = ref<ProductItem>({} as ProductItem);
 const images = ref<ProductImageItem[]>([]);
@@ -257,6 +260,28 @@ const fetchDetail = async () => {
   }
 };
 
+/** 加购成功：刷新顶栏徽标，并弹出可直达购物车的通知 */
+const onCartAdded = () => {
+  cartStore.fetchCount();
+  ElNotification({
+    title: "已加入购物车",
+    message: h(
+      "span",
+      {
+        // 通知渲染在 body 下，scoped 样式无法命中，使用内联样式
+        style: {
+          color: "var(--el-color-primary)",
+          cursor: "pointer",
+        },
+        onClick: () => router.push("/shop/cart"),
+      },
+      "点击这里前往购物车结算 →"
+    ),
+    type: "success",
+    duration: 3000,
+  });
+};
+
 const addToCart = async () => {
   if (!userStore.isLoggedIn()) {
     promptLogin("加入购物车需要登录");
@@ -274,7 +299,7 @@ const addToCart = async () => {
     }
     try {
       await CartAPI.add(product.value.id, quantity.value, selectedSku.value.id);
-      ElMessage.success("已加入购物车");
+      onCartAdded();
     } catch {
       // 错误已由请求拦截器统一提示
     }
@@ -285,7 +310,7 @@ const addToCart = async () => {
     }
     try {
       await CartAPI.add(product.value.id, quantity.value);
-      ElMessage.success("已加入购物车");
+      onCartAdded();
     } catch {
       // 错误已由请求拦截器统一提示
     }
@@ -354,9 +379,9 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .product-detail {
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
   .main {
     display: flex;

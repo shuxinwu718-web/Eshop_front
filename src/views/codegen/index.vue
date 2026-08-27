@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-container">
     <!-- 搜索区域 -->
     <div class="search-container">
@@ -139,7 +139,7 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="作者">
-                <el-input v-model="genConfigFormData.author" placeholder="youlai" />
+                <el-input v-model="genConfigFormData.author" placeholder="admin" />
               </el-form-item>
             </el-col>
           </el-row>

@@ -52,6 +52,12 @@
 
         <!-- 右侧操作 -->
         <div class="header-actions">
+          <!-- 购物车：常驻入口 + 数量徽标，未登录点击由路由守卫引导登录 -->
+          <el-badge :value="cartStore.count" :hidden="cartStore.count === 0" :max="99">
+            <el-icon class="action-icon" title="购物车" @click="router.push('/shop/cart')">
+              <ShoppingCart />
+            </el-icon>
+          </el-badge>
           <template v-if="isLoggedIn">
             <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
               <el-icon class="action-icon" title="我的通知" @click="router.push('/my-notice')">
@@ -105,12 +111,12 @@
 </template>
 
 <script setup lang="ts">
-import { Bell, Search } from "@element-plus/icons-vue";
+import { Bell, Search, ShoppingCart } from "@element-plus/icons-vue";
 import { ElMessageBox } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import CustomerServiceFab from "@/components/CustomerServiceFab/index.vue";
 import NoticeAPI from "@/api/system/notice";
-import { useTagsViewStore, useUserStore } from "@/store";
+import { useCartStore, useTagsViewStore, useUserStore } from "@/store";
 import { getFullImageUrl } from "@/utils/url";
 
 defineOptions({ name: "ShopLayout" });
@@ -119,6 +125,7 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const tagsViewStore = useTagsViewStore();
+const cartStore = useCartStore();
 
 const keyword = ref("");
 const unreadCount = ref(0);
@@ -185,8 +192,26 @@ onMounted(() => {
     userStore.getUserInfo().catch(() => undefined);
   }
   fetchUnreadCount();
+  cartStore.fetchCount();
   pollingTimer = setInterval(fetchUnreadCount, 30000);
 });
+
+// 登录后拉取购物车数量，登出清零
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    cartStore.fetchCount();
+  } else {
+    cartStore.reset();
+  }
+});
+
+// 我的通知页阅读/全部已读后，通过 query 时间戳通知顶栏刷新铃铛徽标
+watch(
+  () => route.query.noticeRefresh,
+  (val) => {
+    if (val) fetchUnreadCount();
+  }
+);
 
 // 商城模式下 TagsView 不渲染，需自行注册 keepAlive 缓存（如首页）
 watch(

@@ -86,9 +86,11 @@ import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ArrowRight, Delete, ShoppingCart } from "@element-plus/icons-vue";
 import CartAPI, { type CartItem } from "@/api/eshop/cart";
+import { useCartStore } from "@/store/modules/cart";
 import { getFullImageUrl } from "@/utils/url";
 
 const router = useRouter();
+const cartStore = useCartStore();
 const loading = ref(false);
 const cartList = ref<CartItem[]>([]);
 const defaultImage =
@@ -102,6 +104,8 @@ const fetchCart = async () => {
   loading.value = true;
   try {
     cartList.value = await CartAPI.list();
+    // 列表即数据源，直接同步顶栏徽标数量，避免重复请求
+    cartStore.syncCount(cartList.value);
   } finally {
     loading.value = false;
   }

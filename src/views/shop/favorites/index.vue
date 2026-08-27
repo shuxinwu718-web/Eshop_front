@@ -46,9 +46,11 @@ import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import FavoriteAPI, { type FavoriteItem } from "@/api/eshop/favorite";
 import CartAPI from "@/api/eshop/cart";
+import { useCartStore } from "@/store/modules/cart";
 import { getFullImageUrl } from "@/utils/url";
 
 const router = useRouter();
+const cartStore = useCartStore();
 const loading = ref(false);
 const list = ref<FavoriteItem[]>([]);
 const total = ref(0);
@@ -75,6 +77,7 @@ const goDetail = (productId: number) => {
 const addToCart = async (productId: number) => {
   try {
     await CartAPI.add(productId, 1);
+    cartStore.fetchCount();
     ElMessage.success("已加入购物车");
   } catch {
     // 错误已由请求拦截器统一提示

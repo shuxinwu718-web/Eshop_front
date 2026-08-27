@@ -159,9 +159,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+/* 背景由 ShopLayout 统一提供（店铺头部需要通栏效果，页面不设 padding） */
 .store-page {
-  min-height: 100vh;
-  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* 店铺头部 */

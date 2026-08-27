@@ -16,6 +16,7 @@
         </template>
       </el-input>
       <el-button text @click="handleResetQuery">重置</el-button>
+      <el-button type="primary" plain @click="handleReadAll">全部已读</el-button>
     </div>
 
     <!-- 通知列表 -->
@@ -127,7 +128,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
@@ -136,6 +137,7 @@ import type { TagType } from "@/api/eshop/order";
 
 defineOptions({ name: "MyNotice" });
 
+const route = useRoute();
 const router = useRouter();
 
 // 查询参数
@@ -219,6 +221,20 @@ function handleResetQuery() {
   handleQuery();
 }
 
+// 全部已读
+async function handleReadAll() {
+  try {
+    await NoticeAPI.readAll();
+    ElMessage.success("已全部标记为已读");
+    handleQuery();
+    // 通知 ShopLayout 刷新顶栏铃铛徽标
+    router.replace({ query: { ...route.query, noticeRefresh: Date.now() } });
+  } catch (error) {
+    console.error(error);
+    ElMessage.error("操作失败");
+  }
+}
+
 // 点击通知
 async function handleReadNotice(item: NoticeItem) {
   if (item.bizType && item.bizId) {
@@ -239,6 +255,10 @@ async function handleReadNotice(item: NoticeItem) {
       noticeDetail.value = detail;
       noticeDialogVisible.value = true;
       await handleQuery();
+      // 已读状态变化，通知 ShopLayout 刷新顶栏铃铛徽标
+      if (item.isRead === 0) {
+        router.replace({ query: { ...route.query, noticeRefresh: Date.now() } });
+      }
     } catch (error) {
       console.error(error);
       ElMessage.error("获取详情失败");
@@ -271,17 +291,17 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+/* 背景与内边距由 ShopLayout 统一提供 */
 .my-notice-container {
-  min-height: 100vh;
-  padding: 16px;
-  background-color: var(--el-bg-color-page);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .search-bar {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 20px;
 
   .el-input {
     flex: 1;
@@ -427,8 +447,8 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .my-notice-container {
-    padding: 12px;
+  .search-bar {
+    flex-wrap: wrap;
   }
 
   .notice-card {

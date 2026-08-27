@@ -195,10 +195,12 @@ import { ArrowRight, Present } from "@element-plus/icons-vue";
 import CartAPI, { type CartItem } from "@/api/eshop/cart";
 import OrderAPI from "@/api/eshop/order";
 import AddressAPI, { type AddressItem } from "@/api/eshop/address";
+import { useCartStore } from "@/store/modules/cart";
 import { getFullImageUrl } from "@/utils/url";
 import { getUsableCoupons, type UsableCouponItem } from "@/api/eshop/user_coupons";
 
 const router = useRouter();
+const cartStore = useCartStore();
 const cartList = ref<CartItem[]>([]);
 const selectedAddress = ref<AddressItem | null>(null);
 const paymentType = ref(1);
@@ -309,6 +311,7 @@ const submitOrder = async () => {
     });
     ElMessage.success("订单创建成功，即将跳转到订单列表");
     await CartAPI.clear();
+    cartStore.reset(); // 下单后购物车已清空，同步顶栏徽标
     router.push("/shop/order");
   } catch {
     // 错误已由请求拦截器统一提示
@@ -324,10 +327,11 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+/* 背景与内边距由 ShopLayout 统一提供 */
 .checkout-page {
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .section {

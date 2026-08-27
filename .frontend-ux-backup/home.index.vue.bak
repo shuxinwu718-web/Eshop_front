@@ -332,11 +332,10 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 背景与内边距由 ShopLayout 统一提供，这里只做区块间距 */
 .shop-home {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--el-fill-color-light);
 }
 
 .search-bar {
@@ -344,6 +343,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 10px;
   max-width: 800px;
+  margin-bottom: 20px;
 
   .el-input {
     flex: 1;
@@ -354,6 +354,7 @@ onMounted(() => {
 /* 分类树导航 */
 .category-nav {
   padding: 12px 20px;
+  margin-bottom: 16px;
   background: var(--el-bg-color);
   border-radius: 8px;
 }
@@ -442,6 +443,7 @@ onMounted(() => {
 /* 分类面包屑 */
 .breadcrumb-path {
   padding: 0 4px;
+  margin-bottom: 16px;
 }
 
 /* 过渡动画 */
@@ -502,33 +504,24 @@ onMounted(() => {
   text-align: center;
 }
 
-/* 区块标题统一风格 */
-.section-title {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 16px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-/* 横向滚动列表：隐藏滚动条，保留滑动 */
-.hot-list,
-.store-list {
-  padding-bottom: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
 /* 热销商品排行 */
 .hot-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
   .hot-list {
     display: flex;
     gap: 16px;
+    padding-bottom: 8px;
+    overflow-x: auto;
   }
 
   .hot-card {
@@ -619,9 +612,22 @@ onMounted(() => {
 
 /* 推荐店铺 */
 .store-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
   .store-list {
     display: flex;
     gap: 16px;
+    padding-bottom: 8px;
+    overflow-x: auto;
   }
 
   .store-card {
@@ -676,7 +682,7 @@ onMounted(() => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .shop-home {
-    gap: 12px;
+    padding: 12px;
   }
 
   .search-bar {
@@ -685,6 +691,7 @@ onMounted(() => {
 
   .category-nav {
     padding: 10px 12px;
+    overflow-x: auto;
   }
 
   .category-list {
@@ -692,11 +699,6 @@ onMounted(() => {
     padding-bottom: 4px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
   }
 
   .category-item .category-label {

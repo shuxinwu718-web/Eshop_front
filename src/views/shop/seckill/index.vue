@@ -249,10 +249,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+/* 背景与内边距由 ShopLayout 统一提供 */
 .seckill-page {
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--el-bg-color-page);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
   .page-header {
     display: flex;
@@ -456,8 +457,6 @@ onUnmounted(() => {
   }
 
   @media (max-width: 768px) {
-    padding: 12px;
-
     .seckill-card {
       flex-direction: column;
       gap: 16px;

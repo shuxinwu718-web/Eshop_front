@@ -1,0 +1,357 @@
+/**
+ * 样式入口文件
+ *
+ * 编译说明：
+ * - index.scss：✅ 编译成 index.css
+ * - _*.scss：❌ 不单独编译，仅被引入使用
+ */
+
+// ============================================
+// 1. 变量和第三方库（@use 必须在所有规则之前）
+// ============================================
+
+@use "./variables" as *;
+@use "./vendors";
+@use "./layouts";
+
+// ============================================
+// 2. 基础重置
+// ============================================
+
+#app,
+html {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  font-family:
+    "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
+    "Segoe UI", Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--el-text-color-primary);
+  background-color: var(--page-bg);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+  // 主题切换（亮/暗）时颜色平滑过渡，视觉更自然
+  transition:
+    background-color var(--transition-duration) var(--transition-ease),
+    color var(--transition-duration) var(--transition-ease);
+}
+
+ul,
+li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+a,
+a:focus,
+a:hover {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:focus,
+a:active,
+div:focus {
+  outline: none;
+}
+
+img,
+svg {
+  display: inline-block;
+}
+
+svg {
+  vertical-align: -0.15em;
+}
+
+// ============================================
+// 3. 全局滚动条
+// ============================================
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+html.dark {
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.12);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+// ============================================
+// 4. 全局卡片样式
+// ============================================
+
+.el-card:not(.is-never-shadow) {
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+}
+
+.el-card.is-never-shadow {
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+}
+
+// ============================================
+// 5. 卡片内容区域
+// ============================================
+
+.el-card__header {
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--card-border-color);
+}
+
+.el-card__body {
+  padding: 18px 20px;
+}
+
+// ============================================
+// 6. 全局表格样式
+// ============================================
+
+.el-table {
+  overflow: hidden;
+  border-radius: 8px;
+
+  th.el-table__cell {
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    background-color: var(--el-fill-color-lighter) !important;
+  }
+
+  .el-table__row {
+    transition: background-color 0.2s;
+  }
+}
+
+// ============================================
+// 7. 全局表单样式
+// ============================================
+
+.el-input,
+.el-select,
+.el-date-editor {
+  --el-input-border-radius: 6px;
+}
+
+.el-button {
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--button-hover-shadow);
+    transform: translateY(-1px);
+  }
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--el-color-primary);
+  --el-button-border-color: var(--el-color-primary);
+  --el-button-hover-bg-color: var(--el-color-primary-light-3);
+  --el-button-hover-border-color: var(--el-color-primary-light-3);
+}
+
+// ============================================
+// 7.1 主题切换过渡（背景/边框/阴影随主题平滑变化）
+// ============================================
+
+.el-card,
+.el-table,
+.el-dialog,
+.el-drawer,
+.el-dropdown-menu,
+.el-message-box,
+.el-notification,
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  transition:
+    background-color var(--transition-duration) var(--transition-ease),
+    border-color var(--transition-duration) var(--transition-ease),
+    box-shadow var(--transition-duration) var(--transition-ease);
+}
+
+// ============================================
+// 8. 全局统计卡片项
+// ============================================
+
+.stat-card-item {
+  position: relative;
+  padding: 16px 14px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+  border: 1px solid var(--card-border-color);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    content: "";
+    border-radius: 3px 0 0 3px;
+    transition: height 0.3s;
+  }
+
+  &:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .stat-label {
+    position: relative;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .stat-value {
+    position: relative;
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .stat-sub {
+    position: relative;
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--el-color-success);
+  }
+}
+
+// ============================================
+// 9. 全局标签页样式
+// ============================================
+
+.el-tag {
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+// ============================================
+// 10. 空状态样式
+// ============================================
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--el-text-color-placeholder);
+
+  .empty-icon {
+    margin-bottom: 16px;
+    font-size: 48px;
+  }
+
+  .empty-text {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .empty-hint {
+    font-size: 12px;
+  }
+}
+
+// ============================================
+// 11. 最近访问菜单项
+// ============================================
+
+.recent-menu-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: var(--recent-menu-bg);
+  border: 1px solid var(--card-border-color);
+  border-radius: var(--recent-menu-radius);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background: var(--recent-menu-hover-bg);
+    border-color: var(--recent-menu-hover-border-color);
+    transform: translateX(3px);
+  }
+}
+
+// ============================================
+// 12. 统计卡片左侧色条变体
+// ============================================
+
+.stat-color-sales::before {
+  background: var(--stat-sales-color) !important;
+}
+.stat-color-order::before {
+  background: var(--stat-order-color) !important;
+}
+.stat-color-merchant::before {
+  background: var(--stat-merchant-color) !important;
+}
+.stat-color-user::before {
+  background: var(--stat-user-color) !important;
+}
+.stat-color-pending::before {
+  background: var(--stat-pending-color) !important;
+}
+
+// ============================================
+// 13. 统计分组标题
+// ============================================
+
+.stat-group-title {
+  padding-left: 2px;
+  margin-bottom: 8px;
+  font-size: var(--stat-group-title-size);
+  font-weight: 500;
+  color: var(--stat-group-title-color);
+}

@@ -93,9 +93,9 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .coupon-center {
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--el-bg-color-page);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
   // ==================== 常规领券中心 ====================
 
