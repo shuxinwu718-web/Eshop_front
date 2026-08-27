@@ -25,6 +25,7 @@
             :src="getFullImageUrl(item.productImage) || defaultImage"
             class="card-img"
             :alt="item.productName"
+            loading="lazy"
             @error="handleImageError"
             @click="goDetail(item.productId)"
           />

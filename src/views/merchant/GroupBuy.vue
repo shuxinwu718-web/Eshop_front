@@ -71,6 +71,8 @@
               <div class="product-name">
                 <div class="name-text">{{ row.productName }}</div>
                 <div v-if="row.skuSpecs" class="sku-specs">{{ row.skuSpecs }}</div>
+                <!-- 👇 新增：显示 SKU 价格 -->
+                <div v-if="row.skuPrice" class="sku-price">规格价：¥{{ row.skuPrice }}</div>
               </div>
             </div>
           </template>
@@ -168,12 +170,28 @@
               :label="`${p.name}（¥${p.price}）`"
             />
           </el-select>
+          <!-- 商品库存提醒 -->
+          <div v-if="form.productId && currentStock !== null" class="stock-tip">
+            <span>📦 商品库存：{{ currentStock }} 件</span>
+            <span v-if="currentStock < form.targetCount" class="stock-warning">
+              ⚠️ 库存不足（成团需 {{ form.targetCount }} 件），建议补充库存或调低成团人数
+            </span>
+            <span v-else class="stock-ok">✅ 库存充足</span>
+          </div>
         </el-form-item>
 
         <el-form-item v-if="skuOptions.length" label="绑定规格" prop="skuId">
           <el-select v-model="form.skuId" placeholder="选择该商品的具体规格" style="width: 100%">
             <el-option v-for="s in skuOptions" :key="s.id" :value="s.id" :label="skuLabel(s)" />
           </el-select>
+          <!-- 规格库存提醒 -->
+          <div v-if="form.skuId && currentSkuStock !== null" class="stock-tip">
+            <span>📦 规格库存：{{ currentSkuStock }} 件</span>
+            <span v-if="currentSkuStock < form.targetCount" class="stock-warning">
+              ⚠️ 库存不足（成团需 {{ form.targetCount }} 件），建议补充库存或调低成团人数
+            </span>
+            <span v-else class="stock-ok">✅ 库存充足</span>
+          </div>
           <div class="form-tip">方案A：拼团绑定单规格，参团用户购买相同规格、数量1件</div>
         </el-form-item>
 
@@ -189,8 +207,23 @@
         </el-form-item>
 
         <el-form-item label="成团人数" prop="targetCount">
-          <el-input-number v-model="form.targetCount" :min="2" :max="10" />
+          <el-input-number
+            v-model="form.targetCount"
+            :min="2"
+            :max="10"
+            @change="onTargetCountChange"
+          />
+
           <span class="form-tip">人（开团后需凑满该人数才成团）</span>
+          <!-- 成团人数实时联动提醒 -->
+          <div
+            v-if="form.productId && currentStock !== null && currentStock < form.targetCount"
+            class="stock-tip stock-warning"
+            style="margin-top: 4px"
+          >
+            ⚠️ 当前商品库存仅 {{ currentStock }} 件，成团需
+            {{ form.targetCount }} 件，可能导致成团失败
+          </div>
         </el-form-item>
 
         <el-form-item label="拼团有效期" prop="durationHours">
@@ -281,6 +314,8 @@ const productOptions = ref<MerchantProductSimple[]>([]);
 const productLoading = ref(false);
 const skuOptions = ref<ProductSku[]>([]);
 const currentOriginalPrice = ref(0);
+const currentStock = ref<number | null>(null);
+const currentSkuStock = ref<number | null>(null);
 
 interface MerchantProductSimple {
   id: number;
@@ -310,32 +345,51 @@ const searchProducts = async (keyword: string) => {
   }
 };
 
-/** 选中商品后加载 SKU 与原价 */
+/** 选中商品后加载 SKU、原价与库存 */
 const onProductChange = async (productId: number) => {
   form.skuId = undefined;
   skuOptions.value = [];
   currentOriginalPrice.value = 0;
+  currentStock.value = null;
+  currentSkuStock.value = null;
+
   try {
     const detail = await ProductAPI.getById(productId);
     currentOriginalPrice.value = detail.price;
+    currentStock.value = detail.stock ?? 0;
+
     if (detail.skus && detail.skus.length) {
       skuOptions.value = detail.skus;
       form.skuId = detail.skus[0].id;
+      onSkuChange(form.skuId);
     }
   } catch {
-    // 忽略，原价展示失败不影响
+    // 忽略
   }
 };
 
 const skuLabel = (sku: ProductSku) => {
   try {
     const map: Record<string, string> = JSON.parse(sku.specs);
-    return Object.entries(map)
+    const specsText = Object.entries(map)
       .map(([k, v]) => `${k}:${v}`)
       .join(" / ");
+    // 👇 在规格名称后面显示价格
+    return `${specsText}（¥${sku.price}）`;
   } catch {
-    return `SKU #${sku.id}`;
+    return `SKU #${sku.id}（¥${sku.price}）`;
   }
+};
+
+/** 切换规格时更新规格库存 */
+const onSkuChange = (skuId: number) => {
+  const sku = skuOptions.value.find((s) => s.id === skuId);
+  currentSkuStock.value = sku?.stock ?? null;
+};
+
+/** 成团人数变化时触发 */
+const onTargetCountChange = () => {
+  // 模板中的 v-if 会自动响应
 };
 
 // ==================== 打开弹窗 ====================
@@ -355,6 +409,8 @@ const openCreate = () => {
   skuOptions.value = [];
   currentOriginalPrice.value = 0;
   productOptions.value = [];
+  currentStock.value = null;
+  currentSkuStock.value = null;
   dialogVisible.value = true;
 };
 
@@ -369,9 +425,23 @@ const openEdit = (row: GroupBuyActivityItem) => {
     totalStock: row.totalStock,
     dateRange: row.startTime && row.endTime ? [row.startTime, row.endTime] : null,
   });
+
   currentOriginalPrice.value = row.originalPrice ?? 0;
+  currentStock.value = null;
+  currentSkuStock.value = null;
   skuOptions.value = [];
-  onProductChange(row.productId);
+
+  ProductAPI.getById(row.productId)
+    .then((detail) => {
+      currentStock.value = detail.stock ?? 0;
+      if (detail.skus && detail.skus.length) {
+        skuOptions.value = detail.skus;
+        const sku = detail.skus.find((s) => s.id === row.skuId);
+        currentSkuStock.value = sku?.stock ?? null;
+      }
+    })
+    .catch(() => {});
+
   dialogVisible.value = true;
 };
 
@@ -391,6 +461,25 @@ const submit = async () => {
     ElMessage.warning("开始时间必须早于结束时间");
     return;
   }
+
+  // 提交前温和提醒（不阻止）
+  const stockForCheck = form.skuId ? currentSkuStock.value : currentStock.value;
+  if (stockForCheck !== null && stockForCheck < form.targetCount) {
+    try {
+      await ElMessageBox.confirm(
+        `当前${form.skuId ? "规格" : "商品"}库存仅 ${stockForCheck} 件，成团需 ${form.targetCount} 件，库存不足可能导致成团失败。确定继续保存吗？`,
+        "库存提醒",
+        {
+          type: "warning",
+          confirmButtonText: "继续保存",
+          cancelButtonText: "返回修改",
+        }
+      );
+    } catch {
+      return;
+    }
+  }
+
   saving.value = true;
   const payload: GroupBuyActivitySaveForm = {
     id: form.id,
@@ -449,7 +538,6 @@ const changeStatus = async (row: GroupBuyActivityItem, status: number) => {
 
 const formatTime = (t?: string) => (t ? t.replace("T", " ").slice(0, 16) : "-");
 
-/** 秒数 → 天/时/分/秒 */
 const formatCountdown = (seconds: number) => {
   const s = Math.max(0, seconds);
   const d = Math.floor(s / 86400);
@@ -586,6 +674,52 @@ fetchData();
     padding: 8px 24px;
     font-size: 13px;
     color: var(--el-text-color-secondary);
+  }
+}
+
+.stock-tip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.stock-warning {
+  padding: 2px 10px;
+  color: #e6a23c;
+  background: #fdf6ec;
+  border: 1px solid #faecd8;
+  border-radius: 4px;
+}
+
+.stock-ok {
+  color: #67c23a;
+}
+
+.product-name {
+  min-width: 0;
+
+  .name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sku-specs {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  // 👇 新增
+  .sku-price {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--el-color-danger);
   }
 }
 </style>

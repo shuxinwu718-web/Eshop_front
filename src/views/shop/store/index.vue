@@ -17,9 +17,21 @@
           <div class="store-stats">
             <span>共 {{ total }} 件商品</span>
           </div>
+          <div v-if="storeInfo?.announcement" class="store-announcement">
+            <el-icon><Bell /></el-icon>
+            <span>{{ storeInfo.announcement }}</span>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- 装修楼层区 -->
+    <StoreLayout
+      v-if="layoutBlocks.length"
+      :merchant-id="merchantId"
+      :blocks="layoutBlocks"
+      class="layout-wrap"
+    />
 
     <!-- 商品列表 -->
     <div class="product-section">
@@ -73,7 +85,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ProductAPI, { type ProductItem, type StoreInfo } from "@/api/eshop/product";
+import ProductAPI, {
+  type ProductItem,
+  type StoreInfo,
+  type StoreLayoutBlock,
+} from "@/api/eshop/product";
+import StoreLayout from "./components/StoreLayout.vue";
 import { getFullImageUrl } from "@/utils/url";
 import { ElMessage } from "element-plus";
 
@@ -90,6 +107,17 @@ const defaultImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect fill='%23f0f0f0' width='300' height='300'/%3E%3Ctext fill='%23ccc' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20'%3E暂无图片%3C/text%3E%3C/svg%3E";
 
 const merchantId = computed(() => Number(route.params.merchantId));
+
+/** 解析已发布装修楼层配置 */
+const layoutBlocks = computed<StoreLayoutBlock[]>(() => {
+  if (!storeInfo.value?.layout) return [];
+  try {
+    const parsed = JSON.parse(storeInfo.value.layout);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+});
 
 const fetchStoreInfo = async () => {
   try {
@@ -167,7 +195,32 @@ onMounted(() => {
       font-size: 14px;
       opacity: 0.85;
     }
+
+    .store-announcement {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      max-width: 600px;
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: 0.9;
+
+      .el-icon {
+        flex-shrink: 0;
+      }
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
   }
+}
+
+/* 装修楼层区 */
+.layout-wrap {
+  padding-top: 16px;
 }
 
 /* 商品区域 */

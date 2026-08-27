@@ -114,6 +114,35 @@
       </div>
     </div>
 
+    <!-- 推荐店铺 -->
+    <div v-if="recommendStores.length" class="store-section">
+      <div class="section-title">
+        <el-icon color="#409eff"><Shop /></el-icon>
+        <span>推荐店铺</span>
+      </div>
+      <div class="store-list">
+        <div
+          v-for="store in recommendStores"
+          :key="store.merchantId"
+          class="store-card"
+          @click="goStore(store.merchantId)"
+        >
+          <div class="store-banner" :style="{ background: store.backgroundColor || '#667eea' }">
+            <el-avatar :size="52" :src="getFullImageUrl(store.avatar)" class="store-logo">
+              {{ store.shopName?.charAt(0) || "店" }}
+            </el-avatar>
+          </div>
+          <div class="store-info">
+            <div class="store-name">{{ store.shopName }}</div>
+            <div class="store-meta">
+              <span>{{ store.productCount }} 件商品</span>
+              <span>累计销量 {{ store.totalSales }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 商品列表网格 -->
     <div v-loading="loading" class="product-grid">
       <el-card
@@ -151,11 +180,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { Search, ArrowDown, TrendCharts } from "@element-plus/icons-vue";
+import { Search, ArrowDown, TrendCharts, Shop } from "@element-plus/icons-vue";
 import ProductAPI, {
   type ProductItem,
   type HotProductItem,
   type ESSearchProductItem,
+  type RecommendStoreItem,
 } from "@/api/eshop/product";
 import CategoryAPI, { type CategoryItem } from "@/api/eshop/category";
 import { getFullImageUrl } from "@/utils/url";
@@ -174,6 +204,7 @@ const sortBy = ref("relevant");
 const activeCategoryId = ref<number | undefined>(undefined);
 const activeDropdown = ref<number | null>(null);
 const hotProducts = ref<HotProductItem[]>([]);
+const recommendStores = ref<RecommendStoreItem[]>([]);
 const defaultImage =
   "https://fastly.picsum.photos/id/20/300/300.jpg?hmac=jE4J8fivrZv_MA5Xu9iSoEgNxfc_ucYlC_m6BgcSNNo";
 
@@ -280,10 +311,23 @@ const fetchHotProducts = async () => {
   }
 };
 
+const fetchRecommendStores = async () => {
+  try {
+    recommendStores.value = await ProductAPI.getRecommendStores(8);
+  } catch {
+    // ignore
+  }
+};
+
+const goStore = (merchantId: number) => {
+  router.push(`/store/${merchantId}`);
+};
+
 onMounted(() => {
   fetchProducts();
   loadCategories();
   fetchHotProducts();
+  fetchRecommendStores();
 });
 </script>
 
@@ -562,6 +606,75 @@ onMounted(() => {
       gap: 12px;
       font-size: 12px;
       color: var(--el-text-color-secondary);
+    }
+  }
+}
+
+/* 推荐店铺 */
+.store-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .store-list {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 8px;
+    overflow-x: auto;
+  }
+
+  .store-card {
+    flex-shrink: 0;
+    width: 200px;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--el-bg-color);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s;
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .store-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 84px;
+
+      .store-logo {
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    .store-info {
+      padding: 10px 12px;
+
+      .store-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .store-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+      }
     }
   }
 }

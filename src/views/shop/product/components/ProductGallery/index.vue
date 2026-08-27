@@ -13,6 +13,9 @@
       <el-carousel-item v-for="(img, idx) in images" :key="idx">
         <el-image
           :src="getFullImageUrl(img.imageUrl)"
+          :preview-src-list="previewSrcList"
+          preview-teleported
+          hide-on-click-modal
           fit="contain"
           class="carousel-img"
           @error="handleImageError"
@@ -26,6 +29,9 @@
     <div v-else class="no-image">
       <el-image
         :src="getFullImageUrl(coverImage) || defaultImage"
+        :preview-src-list="previewSrcList"
+        preview-teleported
+        hide-on-click-modal
         fit="contain"
         class="single-img"
       />
@@ -39,23 +45,30 @@
         :class="{ active: currentSlide === idx }"
         @click="switchSlide(idx)"
       >
-        <el-image :src="getFullImageUrl(img.imageUrl)" fit="cover" />
+        <el-image :src="getFullImageUrl(img.imageUrl)" fit="cover" lazy />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { getFullImageUrl } from "@/utils/url";
 import type { ProductImageItem } from "@/api/eshop/product";
 
-defineProps<{
+const props = defineProps<{
   images: ProductImageItem[];
   coverImage?: string;
 }>();
 
 const defaultImage = "https://via.placeholder.com/400";
+
+const previewSrcList = computed(() => {
+  if (props.images.length) {
+    return props.images.map((img) => getFullImageUrl(img.imageUrl));
+  }
+  return [getFullImageUrl(props.coverImage) || defaultImage];
+});
 
 // 轮播图
 const carouselRef = ref();

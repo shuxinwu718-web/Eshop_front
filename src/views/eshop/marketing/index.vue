@@ -118,7 +118,7 @@
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
             style="width: 100%"
           />
           <div class="form-tip">仅活动进行期间，用户端活动中心才会展示</div>

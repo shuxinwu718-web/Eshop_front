@@ -37,7 +37,11 @@
         </div>
         <div class="product-list">
           <div v-for="item in cartList" :key="item.id || item.productId" class="product-item">
-            <img :src="getFullImageUrl(item.productImage) || defaultImage" class="product-img" />
+            <img
+              :src="getFullImageUrl(item.productImage) || defaultImage"
+              class="product-img"
+              loading="lazy"
+            />
             <div class="product-info">
               <div class="product-name">{{ item.productName }}</div>
               <div v-if="item.skuSpecs" class="product-specs">{{ item.skuSpecs }}</div>

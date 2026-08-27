@@ -150,24 +150,24 @@ onMounted(() => {
 .marketing-center {
   max-width: 960px;
   min-height: 100vh;
-  padding: 20px 16px 40px;
+  padding: 16px 12px 32px;
   margin: 0 auto;
 
   .page-banner {
-    padding: 28px 32px;
-    margin-bottom: 20px;
+    padding: 20px 20px;
+    margin-bottom: 16px;
     color: #fff;
     background: linear-gradient(120deg, #ff8a3d 0%, #ff5e7d 100%);
-    border-radius: 14px;
+    border-radius: 12px;
 
     h2 {
       margin: 0;
-      font-size: 24px;
+      font-size: 20px;
     }
 
     p {
-      margin: 6px 0 0;
-      font-size: 14px;
+      margin: 4px 0 0;
+      font-size: 13px;
       opacity: 0.9;
     }
   }
@@ -175,30 +175,33 @@ onMounted(() => {
   .activity-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .activity-card {
-    padding: 20px;
+    padding: 16px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 12px rgb(0 0 0 / 6%);
 
     .activity-head {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
 
       .activity-icon {
-        font-size: 32px;
+        flex-shrink: 0;
+        font-size: 28px;
       }
 
       .activity-title {
         flex: 1;
+        min-width: 0;
 
         .name {
-          font-size: 17px;
+          font-size: 16px;
           font-weight: 600;
+          overflow-wrap: break-word;
         }
 
         .time {
@@ -207,11 +210,16 @@ onMounted(() => {
           color: var(--el-text-color-secondary);
         }
       }
+
+      .el-tag {
+        flex-shrink: 0;
+      }
     }
 
     .activity-desc {
-      padding: 10px 0 4px;
+      padding: 8px 0 2px 0;
       font-size: 13px;
+      line-height: 1.5;
       color: var(--el-text-color-regular);
     }
 
@@ -223,22 +231,22 @@ onMounted(() => {
 
       .task-row {
         display: flex;
-        gap: 16px;
-        align-items: center;
-        padding: 14px 16px;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 14px;
         background: #f7f8fa;
         border-radius: 10px;
       }
 
       .task-info {
         display: flex;
-        flex: 1;
         gap: 10px;
-        align-items: center;
-        min-width: 0;
+        align-items: flex-start;
 
         .task-icon {
-          font-size: 22px;
+          flex-shrink: 0;
+          margin-top: 2px;
+          font-size: 20px;
         }
 
         .task-main {
@@ -248,30 +256,34 @@ onMounted(() => {
           .task-name {
             font-size: 14px;
             font-weight: 500;
+            overflow-wrap: break-word;
           }
 
           .task-progress {
             display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 4px;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 6px;
 
             .progress-text {
               font-size: 12px;
               color: var(--el-text-color-secondary);
-              white-space: nowrap;
             }
 
             .progress-bar {
-              flex: 1;
+              width: 100%;
             }
           }
         }
       }
 
       .task-reward {
-        min-width: 130px;
-        text-align: right;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        align-items: baseline;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
 
         .reward-name {
           font-size: 13px;
@@ -279,7 +291,6 @@ onMounted(() => {
         }
 
         .reward-value {
-          margin-top: 2px;
           font-size: 13px;
           color: var(--el-color-danger);
 
@@ -288,10 +299,60 @@ onMounted(() => {
           }
         }
       }
+
+      .task-action {
+        width: 100%;
+
+        .el-button {
+          justify-content: center;
+          width: 100%;
+        }
+      }
     }
   }
 }
 
+/* 平板及桌面端适配 */
+@media (min-width: 640px) {
+  .marketing-center {
+    padding: 24px 20px 40px;
+
+    .activity-card {
+      padding: 24px;
+
+      .task-list {
+        .task-row {
+          flex-direction: row;
+          align-items: center;
+          padding: 14px 16px;
+
+          .task-info {
+            align-items: center;
+          }
+
+          .task-reward {
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 120px;
+            padding-top: 0;
+            border-top: none;
+          }
+
+          .task-action {
+            flex-shrink: 0;
+            width: auto;
+
+            .el-button {
+              width: auto;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* 深色模式 */
 html.dark {
   .marketing-center {
     .activity-card {
@@ -300,6 +361,10 @@ html.dark {
 
       .task-row {
         background: #1c2333;
+      }
+
+      .task-reward {
+        border-top-color: rgba(255, 255, 255, 0.06);
       }
     }
   }

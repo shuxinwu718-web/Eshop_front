@@ -56,6 +56,7 @@
 
         <!-- 拼团面板（进行中团列表 + 倒计时 + 进度条） -->
         <GroupBuyPanel
+          v-if="product.id"
           ref="groupBuyPanelRef"
           :product-id="product.id"
           :selected-sku-id="selectedSku?.id ?? null"
@@ -78,10 +79,15 @@
     />
 
     <!-- 评论区 -->
-    <CommentSection :product-id="product.id" :is-logged-in="userStore.isLoggedIn()" />
+    <CommentSection
+      v-if="product.id"
+      :product-id="product.id"
+      :is-logged-in="userStore.isLoggedIn()"
+    />
 
     <!-- 联系商家对话框 -->
     <ContactDialog
+      v-if="product.id"
       ref="contactDialogRef"
       :product-id="product.id"
       :merchant-id="product.merchantId"

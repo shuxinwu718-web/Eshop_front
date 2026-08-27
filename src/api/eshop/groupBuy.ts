@@ -43,6 +43,7 @@ export interface GroupBuyActivityItem {
   skuId?: number;
   groupPrice: number;
   originalPrice?: number;
+  skuPrice?: number;
   targetCount: number;
   durationHours: number;
   startTime?: string;

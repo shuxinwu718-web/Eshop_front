@@ -286,19 +286,31 @@ html.dark {
   justify-content: center;
   padding: 48px 24px;
   color: var(--el-text-color-placeholder);
+  background: var(--el-bg-color, #fff);
+  border: 1px dashed var(--el-border-color-lighter, #e4e7ed);
+  border-radius: 12px;
+  transition: all 0.25s;
 
   .empty-icon {
     margin-bottom: 16px;
     font-size: 48px;
+    opacity: 0.8;
   }
 
   .empty-text {
     margin-bottom: 8px;
     font-size: 14px;
+    font-weight: 500;
+    color: var(--el-text-color-secondary);
   }
 
   .empty-hint {
+    margin-bottom: 12px;
     font-size: 12px;
+  }
+
+  .el-button {
+    margin-top: 4px;
   }
 }
 

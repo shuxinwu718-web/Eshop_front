@@ -135,6 +135,38 @@ export interface StoreInfo {
   productCount?: number;
   /** 背景色（小店设计） */
   backgroundColor?: string;
+  /** 店铺公告 */
+  announcement?: string;
+  /** 已发布装修楼层配置 JSON（字符串，需 parse） */
+  layout?: string;
+}
+
+/** 店铺装修楼层块（对应后端 layout JSON 结构） */
+export interface StoreLayoutBlock {
+  type: "banner" | "notice" | "goods" | "coupon";
+  title?: string;
+  /** banner：轮播图 */
+  items?: { image: string; link?: string }[];
+  /** notice：公告文本 */
+  text?: string;
+  /** goods：橱窗模式 default-店铺商品 / category-按分类 / selected-指定商品 */
+  mode?: "default" | "category" | "selected";
+  categoryId?: number;
+  productIds?: number[];
+  count?: number;
+  columns?: number;
+  /** coupon：指定展示的优惠券ID（空则展示默认可领券） */
+  couponIds?: number[];
+}
+
+/** 首页推荐店铺项 */
+export interface RecommendStoreItem {
+  merchantId: number;
+  shopName: string;
+  avatar?: string;
+  backgroundColor?: string;
+  productCount: number;
+  totalSales: number;
 }
 
 const ProductAPI = {
@@ -232,6 +264,15 @@ const ProductAPI = {
       url: `${BASE_URL}/merchant/${merchantId}`,
       method: "get",
       params,
+    });
+  },
+
+  /** 首页推荐店铺列表（按在售商品销量排序） */
+  getRecommendStores(limit = 8) {
+    return request<any, RecommendStoreItem[]>({
+      url: "/api/merchant/recommend",
+      method: "get",
+      params: { limit },
     });
   },
 };

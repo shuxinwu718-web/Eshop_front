@@ -1,6 +1,7 @@
 // router/index.ts
 import type { App } from "vue";
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
+
 export const Layout = () => import("@/layouts/index.vue");
 export const MerchantLayout = () => import("@/layouts/MerchantLayout.vue");
 
@@ -45,140 +46,221 @@ export const constantRoutes: RouteRecordRaw[] = [
         path: "operation-log",
         name: "OperationLog",
         component: () => import("@/views/eshop/log/index.vue"),
-        meta: { title: "操作日志", roles: ["ADMIN"] },
+        meta: { title: "操作日志", icon: "document", roles: ["ADMIN"] },
       },
 
-      // ========== 管理中心（折叠菜单） ==========
+      // ============================================================
+      // 管理中心
+      // ============================================================
       {
         path: "management",
         name: "Management",
-        component: BlankLayout, // 使用空白布局，避免重复渲染 Layout
+        component: BlankLayout,
         redirect: "/management/eshop/product",
         meta: { title: "管理中心", icon: "el-icon-setting", roles: ["ADMIN"] },
         children: [
+          // ============================================================
+          // 📦 商品管理
+          // ============================================================
           {
-            path: "eshop/category",
-            name: "EshopCategory",
-            component: () => import("@/views/eshop/category/index.vue"),
-            meta: { title: "分类管理", icon: "menu", keepAlive: true, roles: ["ADMIN"] },
+            path: "product-mgmt",
+            name: "ProductMgmtGroup",
+            component: BlankLayout,
+            redirect: "/management/eshop/product",
+            meta: { title: "商品管理", icon: "el-icon-goods", roles: ["ADMIN"] },
+            children: [
+              {
+                path: "/management/eshop/product",
+                name: "EshopProduct",
+                component: () => import("@/views/eshop/product/index.vue"),
+                meta: {
+                  title: "商品管理",
+                  icon: "el-icon-goods",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/eshop/category",
+                name: "EshopCategory",
+                component: () => import("@/views/eshop/category/index.vue"),
+                meta: { title: "分类管理", icon: "menu", keepAlive: true, roles: ["ADMIN"] },
+              },
+              {
+                path: "/management/eshop/comment",
+                name: "EshopComment",
+                component: () => import("@/views/eshop/comment/index.vue"),
+                meta: {
+                  title: "评论管理",
+                  icon: "el-icon-chat-line-round",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/eshop/introAudit",
+                name: "EshopIntroAudit",
+                component: () => import("@/views/eshop/introAudit/index.vue"),
+                meta: {
+                  title: "商品介绍审核",
+                  icon: "el-icon-document-checked",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+            ],
           },
+
+          // ============================================================
+          // 📋 订单管理
+          // ============================================================
           {
-            path: "eshop/product",
-            name: "EshopProduct",
-            component: () => import("@/views/eshop/product/index.vue"),
+            path: "order-mgmt",
+            name: "OrderMgmtGroup",
+            component: BlankLayout,
+            redirect: "/management/eshop/order",
+            meta: { title: "订单管理", icon: "el-icon-document", roles: ["ADMIN"] },
+            children: [
+              {
+                path: "/management/eshop/order",
+                name: "EshopOrder",
+                component: () => import("@/views/eshop/order/index.vue"),
+                meta: {
+                  title: "订单管理",
+                  icon: "el-icon-document",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/refund-audit",
+                name: "RefundAudit",
+                component: () => import("@/views/eshop/refund/index.vue"),
+                meta: { title: "退款审核", icon: "el-icon-warning", roles: ["ADMIN"] },
+              },
+            ],
+          },
+
+          // ============================================================
+          // 🎯 营销管理
+          // ============================================================
+          {
+            path: "marketing-mgmt",
+            name: "MarketingMgmtGroup",
+            component: BlankLayout,
+            redirect: "/management/eshop/coupon",
+            meta: { title: "营销管理", icon: "el-icon-trophy", roles: ["ADMIN"] },
+            children: [
+              {
+                path: "/management/eshop/coupon",
+                name: "EshopCoupon",
+                component: () => import("@/views/eshop/coupon/index.vue"),
+                meta: {
+                  title: "优惠券管理",
+                  icon: "el-icon-present",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/eshop/seckill",
+                name: "SeckillManage",
+                component: () => import("@/views/eshop/seckill/index.vue"),
+                meta: {
+                  title: "秒杀场次",
+                  icon: "el-icon-lightning",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/eshop/marketing",
+                name: "EshopMarketing",
+                component: () => import("@/views/eshop/marketing/index.vue"),
+                meta: {
+                  title: "营销活动",
+                  icon: "el-icon-trophy",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/eshop/festival",
+                name: "EshopFestival",
+                component: () => import("@/views/eshop/festival/index.vue"),
+                meta: {
+                  title: "节日活动",
+                  icon: "el-icon-calendar",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+            ],
+          },
+
+          // ============================================================
+          // 👤 用户管理
+          // ============================================================
+          {
+            path: "user-mgmt",
+            name: "UserMgmtGroup",
+            component: BlankLayout,
+            redirect: "/management/eshop/user",
+            meta: { title: "用户管理", icon: "el-icon-user", roles: ["ADMIN"] },
+            children: [
+              {
+                path: "/management/eshop/user",
+                name: "EshopUser",
+                component: () => import("@/views/eshop/user/index.vue"),
+                meta: {
+                  title: "用户管理",
+                  icon: "el-icon-user",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/merchant-apply",
+                name: "MerchantApply",
+                component: () => import("@/views/eshop/merchantApply/index.vue"),
+                meta: {
+                  title: "商家入驻审核",
+                  icon: "el-icon-check",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
+                path: "/management/online-user",
+                name: "OnlineUser",
+                component: () => import("@/views/system/online/index.vue"),
+                meta: { title: "在线用户", icon: "el-icon-monitor", roles: ["ADMIN"] },
+              },
+            ],
+          },
+
+          // ============================================================
+          // ⚙️ 系统管理
+          // ============================================================
+          {
+            path: "system-mgmt",
+            name: "SystemMgmtGroup",
+            component: BlankLayout,
+            redirect: "/management/notice",
             meta: {
-              title: "商品管理",
-              icon: "el-icon-goods",
-              keepAlive: true,
+              title: "系统管理",
+              icon: "el-icon-setting",
+              alwaysShow: true,
               roles: ["ADMIN"],
             },
-          },
-          {
-            path: "eshop/comment",
-            name: "EshopComment",
-            component: () => import("@/views/eshop/comment/index.vue"),
-            meta: {
-              title: "评论管理",
-              icon: "el-icon-chat-line-round",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "eshop/order",
-            name: "EshopOrder",
-            component: () => import("@/views/eshop/order/index.vue"),
-            meta: { title: "订单管理", icon: "document", roles: ["ADMIN"], keepAlive: true },
-          },
-          {
-            path: "eshop/user",
-            name: "EshopUser",
-            component: () => import("@/views/eshop/user/index.vue"),
-            meta: { title: "用户管理", icon: "el-icon-user", keepAlive: true, roles: ["ADMIN"] },
-          },
-          {
-            path: "notice",
-            name: "NoticeManage",
-            component: () => import("@/views/system/notice/index.vue"),
-            meta: { title: "通知管理", icon: "bell", keepAlive: true, roles: ["ADMIN"] },
-          },
-          {
-            path: "eshop/coupon",
-            name: "EshopCoupon",
-            component: () => import("@/views/eshop/coupon/index.vue"),
-            meta: {
-              title: "优惠券管理",
-              icon: "el-icon-present",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "eshop/festival",
-            name: "EshopFestival",
-            component: () => import("@/views/eshop/festival/index.vue"),
-            meta: {
-              title: "节日活动",
-              icon: "el-icon-calendar",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "eshop/marketing",
-            name: "EshopMarketing",
-            component: () => import("@/views/eshop/marketing/index.vue"),
-            meta: {
-              title: "营销活动",
-              icon: "el-icon-trophy",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "eshop/introAudit",
-            name: "EshopIntroAudit",
-            component: () => import("@/views/eshop/introAudit/index.vue"),
-            meta: {
-              title: "商品介绍审核",
-              icon: "el-icon-document-checked",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "eshop/seckill",
-            name: "SeckillManage",
-            component: () => import("@/views/eshop/seckill/index.vue"),
-            meta: {
-              title: "秒杀场次",
-              icon: "el-icon-lightning",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "merchant-apply",
-            name: "MerchantApply",
-            component: () => import("@/views/eshop/merchantApply/index.vue"),
-            meta: {
-              title: "商家入驻审核",
-              icon: "el-icon-check",
-              keepAlive: true,
-              roles: ["ADMIN"],
-            },
-          },
-          {
-            path: "refund-audit",
-            name: "RefundAudit",
-            component: () => import("@/views/eshop/refund/index.vue"),
-            meta: { title: "退款审核", roles: ["ADMIN"] },
-          },
-          {
-            path: "online-user",
-            name: "OnlineUser",
-            component: () => import("@/views/system/online/index.vue"),
-            meta: { title: "在线用户", icon: "el-icon-monitor", roles: ["ADMIN"] },
+            children: [
+              {
+                path: "/management/notice",
+                name: "NoticeManage",
+                component: () => import("@/views/system/notice/index.vue"),
+                meta: { title: "通知管理", icon: "bell", keepAlive: true, roles: ["ADMIN"] },
+              },
+            ],
           },
         ],
       },
@@ -330,6 +412,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/shop/applyMerchant/index.vue"),
         meta: { title: "商家入驻申请", roles: ["USER"] },
       },
+
       // ========== 商家专属页面（使用商家布局） ==========
       {
         path: "merchant",
@@ -411,6 +494,7 @@ export const constantRoutes: RouteRecordRaw[] = [
           },
         ],
       },
+
       // ========== 公共错误页面 ==========
       {
         path: "401",

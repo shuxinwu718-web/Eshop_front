@@ -100,12 +100,18 @@ export interface MerchantShipment {
 export interface StoreDesign {
   bannerUrl: string;
   backgroundColor: string;
+  /** 店铺公告（保存即生效） */
+  announcement?: string;
+  /** 装修楼层草稿配置 JSON */
+  draftLayout?: string;
+  /** 已发布楼层配置 JSON */
+  layout?: string;
 }
 
-/** 小店设计 API 响应 */
-export interface StoreDesignResult {
-  bannerUrl: string;
-  backgroundColor: string;
+/** 小店设计 API 响应（后端实体字段） */
+export interface StoreDesignResult extends StoreDesign {
+  id?: number;
+  merchantId?: number;
 }
 
 export interface ProductSalesItem {
@@ -208,9 +214,13 @@ export default {
   getStoreDesign() {
     return request.get<any, StoreDesignResult>("/merchant/store-design");
   },
-  /** 更新小店设计配置 */
+  /** 更新小店设计配置（基本信息 + 楼层草稿） */
   updateStoreDesign(data: StoreDesign) {
     return request.put("/merchant/store-design", data);
+  },
+  /** 发布装修草稿：楼层配置生效为用户端可见 */
+  publishStoreDesign() {
+    return request.put("/merchant/store-design/publish");
   },
   /** 删除店铺头像 */
   deleteAvatar() {
