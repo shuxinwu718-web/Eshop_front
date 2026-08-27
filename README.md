@@ -11,6 +11,8 @@
 | 🐍 **AI 客服服务（Python）** | [ai-customer-service](https://github.com/shuxinwu718-web/ai-customer-service) |
 
 > 包含**用户商城（shop）**、**商家中心（merchant）**、**系统管理（system）** 三端，以及拼团、秒杀、优惠券、AI 客服等特色功能。
+>
+> 三端布局各自独立：商城使用专属电商布局 `ShopLayout`（顶部导航 + 购物车/消息徽标），商家中心与管理后台沿用管理端布局；管理员可自由切换商城与管理后台视角。
 
 ## 技术栈
 
@@ -35,9 +37,9 @@ Eshop
 │   ├── components/           # 全局通用组件（统一「文件夹 + index.vue」规范）
 │   │   └── Upload/           # FileUpload / MultiImageUpload / SingleImageUpload
 │   ├── composables/          # 组合式函数（SSE、导出、表格多选等）
-│   ├── layouts/              # 布局（BaseLayout / MerchantLayout 等）
+│   ├── layouts/              # 布局（BaseLayout / ShopLayout / MerchantLayout）
 │   ├── router/               # 路由配置 + 权限守卫
-│   ├── store/modules/        # Pinia 状态（user/permission/settings/tags-view…）
+│   ├── store/modules/        # Pinia 状态（user/permission/settings/tags-view/cart…）
 │   ├── utils/                # 请求、认证、下载、格式化等工具
 │   └── views/
 │       ├── shop/             # 用户商城：首页/商品详情/购物车/下单/订单/拼团/秒杀/优惠券/个人中心…
@@ -46,8 +48,7 @@ Eshop
 │       ├── merchant/         # 商家中心：商品管理/订单/退款/拼团管理/统计/店铺装修
 │       ├── eshop/            # 管理后台业务：商品/订单/用户/优惠券/秒杀/退款审核…
 │       ├── system/           # RBAC 管理：用户/角色/菜单/部门/字典/日志…
-│       ├── login/            # 登录/注册/找回密码
-│       └── demo/             # 模板示例（curd/上传/富文本等）
+│       └── login/            # 登录/注册/找回密码
 ├── .env.development          # 开发环境变量
 ├── .env.production           # 生产环境变量
 ├── vite.config.ts            # Vite 配置（代理、自动导入、构建）

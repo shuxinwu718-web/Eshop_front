@@ -266,7 +266,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         ],
       },
 
-      // ========== 商城用户端（独立电商布局） ==========
+      // ========== 商城用户端（独立电商布局，ADMIN 可浏览） ==========
       {
         path: "",
         name: "Shop",
@@ -281,7 +281,7 @@ export const constantRoutes: RouteRecordRaw[] = [
               title: "商城首页",
               icon: "el-icon-home-filled",
               keepAlive: true,
-              roles: ["USER", "MERCHANT"],
+              roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
           },
@@ -289,37 +289,56 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "shop/cart",
             name: "EshopCart",
             component: () => import("@/views/shop/cart/index.vue"),
-            meta: { title: "购物车", icon: "el-icon-shopping-cart", roles: ["USER", "MERCHANT"] },
+            meta: {
+              title: "购物车",
+              icon: "el-icon-shopping-cart",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+            },
           },
           {
             path: "product/:id",
             name: "ProductDetail",
             component: () => import("@/views/shop/product/detail.vue"),
-            meta: { title: "商品详情", hidden: true, roles: ["USER", "MERCHANT"], public: true },
+            meta: {
+              title: "商品详情",
+              hidden: true,
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              public: true,
+            },
           },
           {
             path: "order/detail/:id",
             name: "OrderDetail",
             component: () => import("@/views/shop/order/detail.vue"),
-            meta: { title: "订单详情", hidden: true, roles: ["USER", "MERCHANT"] },
+            meta: { title: "订单详情", hidden: true, roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
             path: "member/center",
             name: "MemberCenter",
             component: () => import("@/views/shop/center/index.vue"),
-            meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT"] },
+            meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
             path: "shop/order",
             name: "ShopOrder",
             component: () => import("@/views/shop/order/list.vue"),
-            meta: { title: "我的订单", icon: "list", roles: ["USER", "MERCHANT"], hidden: true },
+            meta: {
+              title: "我的订单",
+              icon: "list",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              hidden: true,
+            },
           },
           {
             path: "shop/customer-service",
             name: "CustomerService",
             component: () => import("@/views/shop/customerService/index.vue"),
-            meta: { title: "AI 客服", roles: ["USER", "MERCHANT"], hidden: true, public: true },
+            meta: {
+              title: "AI 客服",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              hidden: true,
+              public: true,
+            },
           },
           {
             path: "coupon-center",
@@ -328,7 +347,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "领券中心",
               icon: "el-icon-present",
-              roles: ["USER", "MERCHANT"],
+              roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
           },
@@ -339,7 +358,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "限时秒杀",
               icon: "el-icon-lightning",
-              roles: ["USER", "MERCHANT"],
+              roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
           },
@@ -347,13 +366,21 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "my-coupon",
             name: "MyCoupon",
             component: () => import("@/views/shop/coupon/MyCoupon.vue"),
-            meta: { title: "我的优惠券", icon: "el-icon-tickets", roles: ["USER", "MERCHANT"] },
+            meta: {
+              title: "我的优惠券",
+              icon: "el-icon-tickets",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+            },
           },
           {
             path: "signin",
             name: "SignIn",
             component: () => import("@/views/shop/activity/SignIn.vue"),
-            meta: { title: "每日签到", icon: "el-icon-check", roles: ["USER", "MERCHANT"] },
+            meta: {
+              title: "每日签到",
+              icon: "el-icon-check",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+            },
           },
           {
             path: "marketing",
@@ -362,7 +389,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "活动中心",
               icon: "el-icon-trophy",
-              roles: ["USER", "MERCHANT"],
+              roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
           },
@@ -370,13 +397,18 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "checkout",
             name: "Checkout",
             component: () => import("@/views/shop/checkout/index.vue"),
-            meta: { title: "确认订单", roles: ["USER", "MERCHANT"], hidden: true },
+            meta: { title: "确认订单", roles: ["USER", "MERCHANT", "ADMIN"], hidden: true },
           },
           {
             path: "store/:merchantId",
             name: "Store",
             component: () => import("@/views/shop/store/index.vue"),
-            meta: { title: "商家小店", hidden: true, roles: ["USER", "MERCHANT"], public: true },
+            meta: {
+              title: "商家小店",
+              hidden: true,
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              public: true,
+            },
           },
           {
             path: "favorites",
@@ -388,7 +420,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "my-notice",
             name: "MyNotice",
             component: () => import("@/views/profile/notice/index.vue"),
-            meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT"] },
+            meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
             path: "shop/group-buy",
@@ -397,7 +429,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "我的拼团",
               icon: "el-icon-shopping-bag",
-              roles: ["USER", "MERCHANT"],
+              roles: ["USER", "MERCHANT", "ADMIN"],
               hidden: true,
             },
           },
@@ -405,7 +437,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "shop/address",
             name: "EshopAddress",
             component: () => import("@/views/eshop/address/index.vue"),
-            meta: { title: "收货地址", roles: ["USER", "MERCHANT"], hidden: true },
+            meta: { title: "收货地址", roles: ["USER", "MERCHANT", "ADMIN"], hidden: true },
           },
           {
             path: "profile",
