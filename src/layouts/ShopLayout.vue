@@ -76,6 +76,7 @@
                   <el-dropdown-item command="center">个人中心（收藏/浏览记录）</el-dropdown-item>
                   <el-dropdown-item command="orders">我的订单</el-dropdown-item>
                   <el-dropdown-item command="coupons">我的优惠券</el-dropdown-item>
+                  <el-dropdown-item command="signin">每日签到</el-dropdown-item>
                   <el-dropdown-item divided command="profile">个人资料</el-dropdown-item>
                   <el-dropdown-item command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
@@ -100,7 +101,7 @@
     </main>
 
     <!-- 底部 -->
-    <footer class="shop-footer">E-Shop 电商平台 · 毕业设计项目</footer>
+    <footer class="shop-footer">E-Shop 电商平台</footer>
 
     <!-- AI 客服悬浮球 -->
     <CustomerServiceFab />
@@ -157,6 +158,9 @@ function handleCommand(command: string) {
       break;
     case "coupons":
       router.push("/my-coupon");
+      break;
+    case "signin":
+      router.push("/signin");
       break;
     case "profile":
       router.push("/profile");

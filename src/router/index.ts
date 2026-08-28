@@ -347,6 +347,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "领券中心",
               icon: "el-icon-present",
+              keepAlive: true,
               roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
@@ -358,6 +359,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "限时秒杀",
               icon: "el-icon-lightning",
+              keepAlive: true,
               roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },
@@ -389,6 +391,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "活动中心",
               icon: "el-icon-trophy",
+              keepAlive: true,
               roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
             },

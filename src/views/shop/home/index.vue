@@ -22,6 +22,10 @@
         <el-option label="最新上架" value="newest" />
       </el-select>
       <el-button type="primary" @click="handleSearch">搜索</el-button>
+      <el-button plain class="signin-entry" @click="router.push('/signin')">
+        <el-icon class="signin-icon"><Calendar /></el-icon>
+        每日签到
+      </el-button>
     </div>
 
     <!-- 分类树导航 -->
@@ -180,7 +184,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { Search, ArrowDown, TrendCharts, Shop } from "@element-plus/icons-vue";
+import { Search, ArrowDown, TrendCharts, Shop, Calendar } from "@element-plus/icons-vue";
+
+// 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
+defineOptions({ name: "Home" });
 import ProductAPI, {
   type ProductItem,
   type HotProductItem,
@@ -343,11 +350,20 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
   max-width: 800px;
 
   .el-input {
     flex: 1;
     min-width: 160px;
+  }
+
+  .signin-entry {
+    flex-shrink: 0;
+
+    .signin-icon {
+      margin-right: 4px;
+    }
   }
 }
 

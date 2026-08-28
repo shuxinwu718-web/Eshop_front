@@ -53,6 +53,9 @@
 import { ref, onMounted } from "vue";
 import { Search } from "@element-plus/icons-vue";
 import { getAvailableCoupons } from "@/api/eshop/user_coupons";
+
+// 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
+defineOptions({ name: "CouponCenter" });
 import type { AvailableCouponItem } from "@/api/eshop/user_coupons";
 import FestivalSection from "./components/FestivalSection/index.vue";
 import CouponCardList from "./components/CouponCardList/index.vue";

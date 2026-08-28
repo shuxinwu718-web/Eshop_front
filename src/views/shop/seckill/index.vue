@@ -142,6 +142,9 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+
+// 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
+defineOptions({ name: "Seckill" });
 import { Picture } from "@element-plus/icons-vue";
 import SeckillAPI, { type UserSeckillSessionItem } from "@/api/eshop/seckill";
 import AddressAPI from "@/api/eshop/address";

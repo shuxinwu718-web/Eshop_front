@@ -46,3 +46,7 @@ yarn.lock
 
 # Logs
 *.log
+
+# Backup files
+*.bak
+.frontend-ux-backup/

@@ -88,7 +88,8 @@ import {
   type MarketingTaskItem,
 } from "@/api/eshop/marketing";
 
-defineOptions({ name: "ShopMarketingCenter" });
+// 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
+defineOptions({ name: "MarketingCenter" });
 
 const router = useRouter();
 const userStore = useUserStore();
