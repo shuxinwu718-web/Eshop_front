@@ -50,3 +50,21 @@ yarn.lock
 # Backup files
 *.bak
 .frontend-ux-backup/
+
+# ---- 本地临时/调试产物（勿提交） ----
+_ocr*.ps1
+_ocr_*.txt
+_photo_*.jpg
+_probe.cjs
+_resize.ps1
+_resume_*.html
+_resume_*.png
+_upscale.cjs
+_upscale.js
+_chrome_profile/
+# UI 设计草图与本地截图
+design/
+md/*.png
+md/*.jpg
+public/current-home.png
+public/ui-mockup*.html
