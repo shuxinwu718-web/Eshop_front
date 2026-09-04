@@ -114,4 +114,4 @@ pnpm preview    # 本地预览构建结果
 
 ## License
 
-MIT
+肇庆学院
