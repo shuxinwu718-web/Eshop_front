@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
 import OrderItemCard from "./components/OrderItemCard/index.vue";
@@ -81,13 +81,17 @@ import RefundApplyDialog from "./components/RefundApplyDialog/index.vue";
 import RefundProgressDialog from "./components/RefundProgressDialog/index.vue";
 import SatisfactionDialog from "./components/SatisfactionDialog/index.vue";
 
+const route = useRoute();
 const router = useRouter();
 const loading = ref(false);
 const orderList = ref<OrderVO[]>([]);
 const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const statusFilter = ref("");
+// 支持链接带状态进入（如「我的」页待付款快捷入口 /shop/order?status=0）
+const statusFilter = ref(
+  typeof route.query.status === "string" && route.query.status !== "" ? route.query.status : ""
+);
 
 // 进入 AI 客服页
 const goCustomerService = () => {

@@ -319,6 +319,13 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: { title: "我的", icon: "el-icon-user", roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
+            // 移动端「我的」聚合页（底部 Tab 入口，游客可访问）
+            path: "member/my",
+            name: "MemberMy",
+            component: () => import("@/views/shop/member/MyCenter.vue"),
+            meta: { title: "我的", public: true },
+          },
+          {
             path: "shop/order",
             name: "ShopOrder",
             component: () => import("@/views/shop/order/list.vue"),

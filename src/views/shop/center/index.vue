@@ -314,7 +314,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
   List,
@@ -340,6 +340,7 @@ import type { ProductItem } from "@/api/eshop/product";
 import type { UserInfo } from "@/types/api/user";
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 const cartStore = useCartStore();
 const userInfo = ref(userStore.userInfo);
@@ -651,7 +652,13 @@ const loadUserInfo = async () => {
 
 onMounted(async () => {
   await loadUserInfo();
-  fetchOrders();
+  // 支持链接指定初始分区（如「我的」页浏览历史入口 /member/center?tab=history）
+  const tab = typeof route.query.tab === "string" ? route.query.tab : "";
+  if (tab && tab !== "order") {
+    handleMenuSelect(tab);
+  } else {
+    fetchOrders();
+  }
 });
 </script>
 

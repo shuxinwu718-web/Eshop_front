@@ -452,7 +452,7 @@ onMounted(fetchCart);
 
   // ============ 移动端适配 ============
   @media (max-width: 768px) {
-    padding: 16px 12px 100px;
+    padding: 16px 12px 140px;
 
     // 网格布局：左列图片占两行，右上信息区独占一行，第二行 数量|小计|删除 清晰分布，杜绝元素重叠
     .cart-card {
@@ -512,6 +512,8 @@ onMounted(fetchCart);
     }
 
     .cart-footer {
+      /* 移动端底部有 Tab 栏，结算栏上移到 Tab 栏上方（电商 App 常规形态） */
+      bottom: calc(56px + env(safe-area-inset-bottom, 0px));
       padding: 12px 16px;
 
       .footer-total {

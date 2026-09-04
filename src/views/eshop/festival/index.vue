@@ -226,6 +226,7 @@ const couponLabel = (c: CouponItem) => {
 };
 
 const fetchData = async () => {
+  console.log("fetchData 被执行了，参数：", queryParams); // 加这行
   loading.value = true;
   try {
     const res = await getFestivalPlanPage(queryParams);

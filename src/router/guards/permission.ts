@@ -15,7 +15,7 @@ let _profilePromise: Promise<any> | null = null;
 export function setupPermissionGuard() {
   const whiteList = ["/login"];
 
-  router.beforeEach(async (to, _from, next) => {
+  router.beforeEach(async (to, _from) => {
     NProgress.start();
 
     // 设置页面标题
@@ -34,13 +34,11 @@ export function setupPermissionGuard() {
         _profilePromise = null;
         // 根路径：游客直接进商城首页（Home 是公开页）
         if (to.path === "/") {
-          next("/home");
-          return;
+          return "/home";
         }
         // 游客可访问公开页面（meta.public 路由或白名单）
         if (to.meta?.public || whiteList.includes(to.path)) {
-          next();
-          return;
+          return true;
         }
         // 需登录页面：先弹窗提示，确认后跳登录页（登录成功后回跳原页面）
         const confirmed = await ElMessageBox.confirm("该页面需要登录后才能访问", "请先登录", {
@@ -49,18 +47,16 @@ export function setupPermissionGuard() {
           type: "warning",
         }).catch(() => false);
         if (confirmed) {
-          next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
-        } else {
-          // 用户取消：留在当前页面（游客模式下保持浏览）
-          next(false);
+          return `/login?redirect=${encodeURIComponent(to.fullPath)}`;
         }
-        return;
+        // 用户取消：留在当前页面（游客模式下保持浏览）；取消不触发 afterEach，需手动结束进度条
+        NProgress.done();
+        return false;
       }
 
       // 已登录访问登录页，重定向到首页
       if (to.path === "/login") {
-        next({ path: "/" });
-        return;
+        return { path: "/" };
       }
 
       // ========== 核心：确保用户信息只请求一次 ==========
@@ -75,8 +71,7 @@ export function setupPermissionGuard() {
           _profilePromise = null;
           _profileLoaded = false;
           await userStore.resetAllState();
-          next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
-          return;
+          return `/login?redirect=${encodeURIComponent(to.fullPath)}`;
         } finally {
           _profilePromise = null;
         }
@@ -88,13 +83,11 @@ export function setupPermissionGuard() {
       // 根路径动态重定向
       if (to.path === "/") {
         if (currentRole === "ADMIN") {
-          next("/dashboard");
+          return "/dashboard";
         } else if (currentRole === "MERCHANT") {
-          next("/merchant/products");
-        } else {
-          next("/home");
+          return "/merchant/products";
         }
-        return;
+        return "/home";
       }
 
       // 权限检查（根据路由 meta.roles）
@@ -103,27 +96,21 @@ export function setupPermissionGuard() {
         if (!requiredRoles.includes(currentRole)) {
           // 普通用户/商家访问受限页面（如管理后台）时，引导回商城首页，
           // 避免直接落入 401/404 错误页
-          if (currentRole === "USER" || currentRole === "MERCHANT") {
-            next("/home");
-          } else {
-            next("/401");
-          }
-          return;
+          return currentRole === "USER" || currentRole === "MERCHANT" ? "/home" : "/401";
         }
       }
 
       // 路由 404 检查
       if (to.matched.length === 0) {
-        next("/404");
-        return;
+        return "/404";
       }
 
       // 全部检查通过
-      next();
+      return true;
     } catch (error) {
       console.error("路由守卫异常:", error);
       await useUserStore().resetAllState();
-      next("/login");
+      return "/login";
     }
   });
 

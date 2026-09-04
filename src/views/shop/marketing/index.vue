@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/modules/user";
@@ -142,7 +142,19 @@ const claimTask = async (act: MarketingActivityItem, task: MarketingTaskItem) =>
   }
 };
 
+// 路由配置了 keepAlive，组件被缓存后再次进入不会重新挂载（onMounted 不触发），
+// 需在 onActivated 中刷新任务进度；首次激活已由 onMounted 触发，跳过避免重复请求
+let isFirstActivation = true;
+
 onMounted(() => {
+  fetchData();
+});
+
+onActivated(() => {
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
   fetchData();
 });
 </script>

@@ -192,7 +192,8 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .cs-fab {
     right: 14px;
-    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    /* 上移到移动端底部 Tab 栏（56px+safe）之上，避免遮挡"我的"入口 */
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 
     &__ball {
       width: 54px;

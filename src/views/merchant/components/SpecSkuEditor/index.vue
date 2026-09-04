@@ -169,14 +169,16 @@ const regenerateSkus = () => {
   };
 
   const combinations = combine(validSpecs, 0, {});
+  // 以「规格值序列」为键保留旧数据（而非含规格名的完整 specs JSON），
+  // 避免商家修改规格名（输入框 @input 逐字触发重生成）时已设置的价格/库存被重置为主价格
   const prevMap = new Map<string, SkuRow>();
   for (const sku of skuList.value) {
-    prevMap.set(sku.specs, sku);
+    prevMap.set(Object.values(sku.specMap).join("\u0001"), sku);
   }
 
   skuList.value = combinations.map((specMap) => {
     const specsJson = JSON.stringify(specMap);
-    const prev = prevMap.get(specsJson);
+    const prev = prevMap.get(Object.values(specMap).join("\u0001"));
     return {
       specMap,
       specs: specsJson,
