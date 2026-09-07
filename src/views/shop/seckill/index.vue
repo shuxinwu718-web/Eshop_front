@@ -139,8 +139,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from "vue";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 
 // 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
@@ -152,6 +152,7 @@ import { getFullImageUrl } from "@/utils/url";
 import { promptLogin } from "@/utils/requireLogin";
 import { useUserStore } from "@/store";
 
+const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
@@ -236,18 +237,53 @@ const handleSeckill = async (item: UserSeckillSessionItem) => {
   }
 };
 
-onMounted(() => {
-  fetchData();
-  // 每秒更新倒计时 + 每10秒刷新库存
+function startTimers() {
+  if (timer) return;
+  now.value = Date.now();
   timer = setInterval(() => {
     now.value = Date.now();
   }, 1000);
   fetchTimer = setInterval(fetchData, 10000);
+}
+
+function stopTimers() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  if (fetchTimer) {
+    clearInterval(fetchTimer);
+    fetchTimer = null;
+  }
+}
+
+onMounted(() => {
+  fetchData();
+  startTimers();
 });
 
-onUnmounted(() => {
-  if (timer) clearInterval(timer);
-  if (fetchTimer) clearInterval(fetchTimer);
+// keep-alive：重新激活时刷新数据并恢复倒计时（首次激活已由 onMounted 处理）
+let firstActivation = true;
+onActivated(() => {
+  if (firstActivation) {
+    firstActivation = false;
+    return;
+  }
+  fetchData();
+  startTimers();
+});
+
+// keep-alive 失活不触发 onUnmounted，需显式暂停倒计时/轮询，避免后台空转
+onDeactivated(() => stopTimers());
+onUnmounted(() => stopTimers());
+
+// 离开时记录滚动位置，供路由 scrollBehavior 恢复（onDeactivated 时 route 已指向目标页）
+onBeforeRouteLeave(() => {
+  try {
+    sessionStorage.setItem(`shop_scroll:${String(route.name)}`, String(window.scrollY));
+  } catch {
+    /* ignore */
+  }
 });
 </script>
 
@@ -460,20 +496,75 @@ onUnmounted(() => {
   }
 
   @media (max-width: 768px) {
+    /* 压缩外层卡片留白，给内容更多空间 */
+    :deep(.el-card__header) {
+      padding: 10px 14px;
+    }
+
+    :deep(.el-card__body) {
+      padding: 10px;
+    }
+
     .seckill-card {
       flex-direction: column;
-      gap: 16px;
+      gap: 10px;
+      align-items: stretch;
+      padding: 12px;
+      border-radius: 10px;
 
       .card-left,
       .card-center,
       .card-action {
         width: 100%;
         padding: 0;
-        text-align: center;
       }
-      .card-center .card-stock {
-        justify-content: center;
+
+      .card-left .card-product .card-product-img {
+        width: 64px;
+        height: 64px;
       }
+
+      .card-center {
+        .card-time {
+          margin-bottom: 8px;
+
+          .time-display .time-num {
+            min-width: 28px;
+            height: 28px;
+            font-size: 15px;
+          }
+
+          .time-display .time-colon {
+            font-size: 15px;
+          }
+        }
+
+        .card-stock {
+          gap: 8px;
+          font-size: 12px;
+
+          .stock-bar {
+            flex: 1;
+            max-width: none;
+          }
+        }
+      }
+
+      .card-action .el-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+/* 深色模式：硬编码的浅色渐变/边框需显式覆盖 */
+html.dark {
+  .seckill-page .seckill-card {
+    background: linear-gradient(135deg, #2b1d22 0%, #161b22 45%);
+    border-color: rgb(255 255 255 / 8%);
+
+    &.is-upcoming {
+      background: linear-gradient(135deg, #17222e 0%, #161b22 45%);
     }
   }
 }

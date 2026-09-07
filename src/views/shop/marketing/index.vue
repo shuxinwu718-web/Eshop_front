@@ -79,7 +79,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
-import { useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/store/modules/user";
 import {
   getActiveMarketingActivities,
@@ -91,6 +91,7 @@ import {
 // 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
 defineOptions({ name: "MarketingCenter" });
 
+const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
@@ -156,6 +157,15 @@ onActivated(() => {
     return;
   }
   fetchData();
+});
+
+// 离开时记录滚动位置，供路由 scrollBehavior 恢复
+onBeforeRouteLeave(() => {
+  try {
+    sessionStorage.setItem(`shop_scroll:${String(route.name)}`, String(window.scrollY));
+  } catch {
+    /* ignore */
+  }
 });
 </script>
 

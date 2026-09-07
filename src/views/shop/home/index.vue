@@ -430,7 +430,7 @@ import {
   onDeactivated,
   nextTick,
 } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ArrowDown, Shop, StarFilled, TrendCharts } from "@element-plus/icons-vue";
 
 // 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
@@ -699,6 +699,16 @@ onMounted(() => {
 onActivated(() => setupObserver());
 onDeactivated(() => teardownObserver());
 onUnmounted(() => teardownObserver());
+
+// 离开守卫时机最早：route 仍是本页（onDeactivated 时 route 已切到目标页）、
+// 窗口滚动尚未被路由重置，在此记录滚动位置供路由 scrollBehavior 恢复
+onBeforeRouteLeave(() => {
+  try {
+    sessionStorage.setItem(`shop_scroll:${String(route.name)}`, String(window.scrollY));
+  } catch {
+    /* ignore */
+  }
+});
 </script>
 
 <style lang="scss" scoped>

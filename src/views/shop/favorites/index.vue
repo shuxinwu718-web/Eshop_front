@@ -151,4 +151,53 @@ onMounted(() => {
   margin-top: 20px;
   text-align: center;
 }
+
+/* ===== 移动端：两列紧凑卡片 ===== */
+@media (max-width: 768px) {
+  .favorites {
+    padding: 0;
+  }
+
+  .favorites :deep(.el-card__body) {
+    padding: 10px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .product-card {
+    padding: 8px;
+
+    .product-img {
+      height: auto;
+      aspect-ratio: 1;
+    }
+
+    .product-name {
+      display: -webkit-box;
+      margin-top: 6px;
+      overflow: hidden;
+      -webkit-line-clamp: 2;
+      font-size: 13px;
+      -webkit-box-orient: vertical;
+    }
+
+    .product-price {
+      margin: 4px 0;
+      font-size: 15px;
+    }
+
+    .actions {
+      flex-direction: column;
+      gap: 6px;
+
+      .el-button {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  }
+}
 </style>

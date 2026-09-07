@@ -424,7 +424,12 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "favorites",
             name: "Favorites",
             component: () => import("@/views/shop/favorites/index.vue"),
-            meta: { title: "我的收藏", icon: "el-icon-star", roles: ["USER"], hidden: true },
+            meta: {
+              title: "我的收藏",
+              icon: "el-icon-star",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              hidden: true,
+            },
           },
           {
             path: "my-notice",
@@ -564,7 +569,22 @@ export const constantRoutes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes: constantRoutes,
-  scrollBehavior: () => ({ left: 0, top: 0 }),
+  scrollBehavior: (to, from) => {
+    // 返回 keepAlive 页面（底部 Tab 切回首页等）时，恢复其离开时记录的滚动位置，
+    // 避免每次被强制滚回顶部、看起来像"回到初始状态"
+    if (to.meta?.keepAlive && to.name !== from.name) {
+      try {
+        const key = `shop_scroll:${String(to.name)}`;
+        const saved = Number(sessionStorage.getItem(key) || 0);
+        // 位置消费即删：只在同会话内恢复一次，刷新页面后从顶部开始
+        sessionStorage.removeItem(key);
+        if (saved > 0) return { left: 0, top: saved };
+      } catch {
+        // 隐私模式等场景忽略
+      }
+    }
+    return { left: 0, top: 0 };
+  },
 });
 
 export function setupRouter(app: App<Element>) {
