@@ -49,6 +49,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/eshop/log/index.vue"),
         meta: { title: "操作日志", icon: "document", roles: ["ADMIN"] },
       },
+      {
+        path: "access-log",
+        name: "AccessLog",
+        component: () => import("@/views/eshop/accessLog/index.vue"),
+        meta: { title: "访问日志", icon: "monitor", roles: ["ADMIN"] },
+      },
 
       // ============================================================
       // 管理中心
@@ -261,6 +267,12 @@ export const constantRoutes: RouteRecordRaw[] = [
                 component: () => import("@/views/system/notice/index.vue"),
                 meta: { title: "通知管理", icon: "bell", keepAlive: true, roles: ["ADMIN"] },
               },
+              {
+                path: "/management/system-monitor",
+                name: "SystemMonitor",
+                component: () => import("@/views/eshop/monitor/index.vue"),
+                meta: { title: "系统监控", icon: "el-icon-monitor", roles: ["ADMIN"] },
+              },
             ],
           },
         ],
@@ -304,6 +316,8 @@ export const constantRoutes: RouteRecordRaw[] = [
               hidden: true,
               roles: ["USER", "MERCHANT", "ADMIN"],
               public: true,
+              // 详情页使用专属底部操作栏，隐藏商城移动端 TabBar
+              hideMobileTabbar: true,
             },
           },
           {
@@ -410,6 +424,18 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: { title: "确认订单", roles: ["USER", "MERCHANT", "ADMIN"], hidden: true },
           },
           {
+            // 支付宝沙箱回跳页：return-url 指向前端 /pay/result，展示支付结果并支持返回订单
+            path: "pay/result",
+            name: "PayResult",
+            component: () => import("@/views/shop/pay/result.vue"),
+            meta: {
+              title: "支付结果",
+              hidden: true,
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              public: true,
+            },
+          },
+          {
             path: "store/:merchantId",
             name: "Store",
             component: () => import("@/views/shop/store/index.vue"),
@@ -480,13 +506,13 @@ export const constantRoutes: RouteRecordRaw[] = [
             path: "products",
             name: "MerchantProducts",
             component: () => import("@/views/merchant/Products.vue"),
-            meta: { title: "我的小店", icon: "el-icon-house" },
+            meta: { title: "我的小店", icon: "el-icon-house", keepAlive: true },
           },
           {
             path: "product/create",
             name: "MerchantProductCreate",
             component: () => import("@/views/merchant/ProductForm.vue"),
-            meta: { title: "发布商品", keepAlive: true, hidden: true },
+            meta: { title: "发布商品", hidden: true },
           },
           {
             path: "product/edit/:id",

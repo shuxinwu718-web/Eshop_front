@@ -6,11 +6,17 @@
           <span class="title">限时秒杀</span>
           <span class="subtitle">限时抢购，手慢无！</span>
         </div>
+        <!-- 分区：全部 / 秒杀商品 / 秒杀优惠券 -->
+        <el-radio-group v-model="activeTab" class="seckill-tabs" @change="handleTabChange">
+          <el-radio-button value="all">全部</el-radio-button>
+          <el-radio-button value="product">秒杀商品</el-radio-button>
+          <el-radio-button value="coupon">优惠券</el-radio-button>
+        </el-radio-group>
       </template>
 
       <div v-loading="loading" class="seckill-grid">
         <div
-          v-for="item in list"
+          v-for="item in filteredList"
           :key="item.id"
           class="seckill-card"
           :class="[
@@ -132,15 +138,18 @@
           </div>
         </div>
 
-        <el-empty v-if="!loading && list.length === 0" description="暂无秒杀活动" />
+        <el-empty v-if="!loading && filteredList.length === 0" description="暂无秒杀活动" />
       </div>
+
+      <!-- 秒杀商品收银台：抢购成功后弹出选择支付方式 -->
+      <PayDialog v-model:visible="payVisible" :order="payOrder" @payed="onPayed" />
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from "vue";
-import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import { computed, ref, onMounted, onUnmounted, onActivated, onDeactivated } from "vue";
+import { onBeforeRouteLeave, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 
 // 与路由 name 一致，供 ShopLayout 的 keep-alive 缓存识别
@@ -148,25 +157,43 @@ defineOptions({ name: "Seckill" });
 import { Picture } from "@element-plus/icons-vue";
 import SeckillAPI, { type UserSeckillSessionItem } from "@/api/eshop/seckill";
 import AddressAPI from "@/api/eshop/address";
+import OrderAPI, { type OrderVO } from "@/api/eshop/order";
+import PayDialog from "@/views/shop/order/components/PayDialog/index.vue";
 import { getFullImageUrl } from "@/utils/url";
 import { promptLogin } from "@/utils/requireLogin";
+import { toTimeStamp } from "@/utils/format";
 import { useUserStore } from "@/store";
 
 const route = useRoute();
-const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
 const list = ref<UserSeckillSessionItem[]>([]);
 const seckillingId = ref<number | null>(null);
 const now = ref(Date.now());
+/** 分区 Tab：all=全部 product=秒杀商品 coupon=优惠券 */
+const activeTab = ref<"all" | "product" | "coupon">("all");
+/** 按所选分区过滤场次列表 */
+const filteredList = computed(() => {
+  if (activeTab.value === "all") return list.value;
+  const isProduct = activeTab.value === "product";
+  return list.value.filter((i) => (i.seckillType === 1) === isProduct);
+});
+/** 秒杀商品收银台状态 */
+const payOrder = ref<OrderVO | null>(null);
+const payVisible = ref(false);
 let timer: ReturnType<typeof setInterval> | null = null;
 let fetchTimer: ReturnType<typeof setInterval> | null = null;
+
+/** 切换分区后重拉一次数据，保证所看分区库存/状态是最新的 */
+const handleTabChange = () => {
+  fetchData();
+};
 
 const padZero = (n: number) => String(n).padStart(2, "0");
 
 const remainTime = (item: UserSeckillSessionItem) => {
   const target = item.status === 1 ? item.endTime : item.startTime;
-  const diff = new Date(target).getTime() - now.value;
+  const diff = (toTimeStamp(target) ?? 0) - now.value;
   if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
   return {
     d: Math.floor(diff / 86400000),
@@ -218,12 +245,16 @@ const handleSeckill = async (item: UserSeckillSessionItem) => {
         return;
       }
       const orderId = await SeckillAPI.seckill(item.id, addr.id);
-      ElMessage.success("抢购成功，请在 30 分钟内完成支付！");
-      if (typeof orderId === "number") {
-        // 跳转"我的订单"列表
-        router.push("/shop/order");
+      if (typeof orderId !== "number") {
+        // 服务端异常时兜底，避免无单可付
+        ElMessage.success("抢购成功");
         return;
       }
+      ElMessage.success("抢购成功，请选择支付方式完成付款");
+      // 拉取刚生成的秒杀订单，弹出收银台让用户选支付方式（微信/支付宝）
+      const detail = await OrderAPI.getDetail(orderId);
+      payOrder.value = detail;
+      payVisible.value = true;
     } else {
       // 秒杀优惠券：直接领取
       await SeckillAPI.seckill(item.id);
@@ -235,6 +266,13 @@ const handleSeckill = async (item: UserSeckillSessionItem) => {
   } finally {
     seckillingId.value = null;
   }
+};
+
+/** 秒杀订单支付成功：关闭收银台并刷新列表 */
+const onPayed = () => {
+  payVisible.value = false;
+  payOrder.value = null;
+  fetchData();
 };
 
 function startTimers() {
@@ -308,6 +346,12 @@ onBeforeRouteLeave(() => {
       font-size: 14px;
       color: var(--el-text-color-secondary);
     }
+  }
+
+  /* 分区 Tab */
+  .seckill-tabs {
+    display: flex;
+    margin-top: 12px;
   }
 
   .seckill-grid {

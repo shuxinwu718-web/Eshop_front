@@ -44,14 +44,8 @@
         <el-form-item label="手机号" prop="receiverPhone">
           <el-input v-model="form.receiverPhone" placeholder="11位手机号" />
         </el-form-item>
-        <el-form-item label="省份" prop="province">
-          <el-input v-model="form.province" placeholder="省份" />
-        </el-form-item>
-        <el-form-item label="城市" prop="city">
-          <el-input v-model="form.city" placeholder="城市" />
-        </el-form-item>
-        <el-form-item label="区/县" prop="district">
-          <el-input v-model="form.district" placeholder="区/县" />
+        <el-form-item label="省/市/区" prop="areaCodes">
+          <AddressPicker v-model="form.areaCodes" />
         </el-form-item>
         <el-form-item label="详细地址" prop="detailAddress">
           <el-input
@@ -79,6 +73,11 @@
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddressAPI, { type AddressItem, type AddressSaveParams } from "@/api/eshop/address";
+import { findAreaCodes, findAreaNames } from "@/utils/area";
+import AddressPicker from "@/components/AddressPicker/index.vue";
+
+/** 表单模型：areaCodes 为省市区代码数组（由 AddressPicker 选择填充） */
+type AddressForm = AddressSaveParams & { areaCodes: string[] };
 
 const loading = ref(false);
 const submitLoading = ref(false);
@@ -86,7 +85,7 @@ const list = ref<AddressItem[]>([]);
 const dialogVisible = ref(false);
 const isEdit = ref(false);
 const formRef = ref();
-const form = ref<AddressSaveParams>({
+const form = ref<AddressForm>({
   receiverName: "",
   receiverPhone: "",
   province: "",
@@ -94,6 +93,7 @@ const form = ref<AddressSaveParams>({
   district: "",
   detailAddress: "",
   isDefault: false,
+  areaCodes: [],
 });
 
 const rules = {
@@ -102,9 +102,9 @@ const rules = {
     { required: true, message: "请输入手机号", trigger: "blur" },
     { pattern: /^1[3-9]\d{9}$/, message: "请输入正确手机号", trigger: "blur" },
   ],
-  province: [{ required: true, message: "请输入省份", trigger: "blur" }],
-  city: [{ required: true, message: "请输入城市", trigger: "blur" }],
-  district: [{ required: true, message: "请输入区/县", trigger: "blur" }],
+  areaCodes: [
+    { required: true, type: "array", min: 3, message: "请选择省/市/区", trigger: "change" },
+  ],
   detailAddress: [{ required: true, message: "请输入详细地址", trigger: "blur" }],
 };
 
@@ -131,6 +131,7 @@ const openDialog = (addr?: AddressItem) => {
       district: addr.district || "",
       detailAddress: addr.detailAddress,
       isDefault: addr.isDefault === 1,
+      areaCodes: findAreaCodes(addr.province || "", addr.city || "", addr.district || ""),
     };
   } else {
     isEdit.value = false;
@@ -142,6 +143,7 @@ const openDialog = (addr?: AddressItem) => {
       district: "",
       detailAddress: "",
       isDefault: false,
+      areaCodes: [],
     };
   }
   dialogVisible.value = true;
@@ -149,18 +151,29 @@ const openDialog = (addr?: AddressItem) => {
 
 const onDialogClose = () => {
   formRef.value?.resetFields();
+  form.value.areaCodes = [];
 };
 
 const submitForm = async () => {
+  // 级联选中省市区后，把名称回写 form.province/city/district 再提交
+  if (form.value.areaCodes.length === 3) {
+    const [province, city, district] = findAreaNames(form.value.areaCodes);
+    form.value.province = province || form.value.province;
+    form.value.city = city || form.value.city;
+    form.value.district = district || form.value.district;
+  }
   const valid = await formRef.value?.validate().catch(() => false);
   if (!valid) return;
   submitLoading.value = true;
+  // areaCodes 仅用于前端级联选择，提交时剥离，只发送后端需要的字段
+  const payload = { ...form.value };
+  delete payload.areaCodes;
   try {
     if (isEdit.value) {
-      await AddressAPI.update(form.value);
+      await AddressAPI.update(payload);
       ElMessage.success("修改成功");
     } else {
-      await AddressAPI.add(form.value);
+      await AddressAPI.add(payload);
       ElMessage.success("添加成功");
     }
     dialogVisible.value = false;

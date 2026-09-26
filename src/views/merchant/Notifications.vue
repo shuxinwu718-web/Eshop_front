@@ -89,6 +89,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
+import { formatTimeMinute } from "@/utils/format";
 import type { NoticeItem, NoticeQueryParams } from "@/types/api";
 import type { TagType } from "@/api/eshop/order";
 
@@ -122,11 +123,7 @@ const getContentPreview = (content?: string, bizType?: string) => {
   return stripped.length > 120 ? stripped.slice(0, 120) + "..." : stripped;
 };
 
-const formatDate = (dateStr?: string | Date) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-};
+const formatDate = (dateStr?: string | Date) => formatTimeMinute(dateStr, "");
 
 async function handleQuery() {
   loading.value = true;

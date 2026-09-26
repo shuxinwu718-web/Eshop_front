@@ -88,13 +88,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import MerchantAPI, { type MerchantProduct } from "@/api/eshop/merchant";
 import { getFullImageUrl } from "@/utils/url";
 import { Picture } from "@element-plus/icons-vue";
 import { useExport } from "@/composables/useExport";
+
+// 与路由 name 一致，供 MerchantLayout 的 keep-alive 缓存识别
+defineOptions({ name: "MerchantProducts" });
+
 const router = useRouter();
 const loading = ref(false);
 const productList = ref<MerchantProduct[]>([]);
@@ -186,6 +190,17 @@ const handleDelete = async (row: MerchantProduct) => {
 };
 
 onMounted(() => {
+  loadProductList();
+});
+
+// keep-alive：从发布/编辑页返回时组件被缓存不重新挂载，
+// 在 onActivated 中刷新列表数据（分页/搜索条件由缓存保留，不会跳回第一页）
+let isFirstActivation = true;
+onActivated(() => {
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
   loadProductList();
 });
 </script>

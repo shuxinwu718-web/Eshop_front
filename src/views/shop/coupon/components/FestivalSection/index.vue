@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
 import { getFestivalCoupons, claimFestivalCoupon } from "@/api/eshop/festival";
 import type { FestivalCouponPlan } from "@/api/eshop/festival";
@@ -113,7 +113,19 @@ async function handleClaimFestival(item: FestivalCouponPlan) {
   }
 }
 
+// CouponCenter 路由配置了 keepAlive，从签到页等页面领券后返回时组件不会重新挂载，
+// 需在 onActivated 中刷新已领取/进度状态；首次激活已由 onMounted 触发，跳过避免重复请求
+let isFirstActivation = true;
+
 onMounted(() => {
+  fetchFestivalPlans();
+});
+
+onActivated(() => {
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
   fetchFestivalPlans();
 });
 </script>
@@ -281,21 +293,70 @@ onMounted(() => {
 }
 
 @media (max-width: 640px) {
-  .festival-section .festival-section-header {
-    flex-wrap: wrap;
-    gap: 6px;
+  .festival-section {
+    .festival-section-header {
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px 14px;
 
-    .festival-section-desc {
-      display: none;
+      .festival-section-desc {
+        display: none;
+      }
     }
-  }
 
-  .festival-section .festival-card-item {
-    flex-wrap: wrap;
-  }
+    .festival-section-list {
+      padding: 10px 12px;
+    }
 
-  .festival-section .festival-card-center {
-    order: 3;
+    // 移动端改纵向三段：名称行 → 券/按钮行 → 进度行，
+    // 避免 flex-wrap 后右侧不收缩把活动名压成竖排单字
+    .festival-card-item {
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+      padding: 12px;
+    }
+
+    .festival-card-left {
+      width: 100%;
+
+      .festival-card-icon {
+        font-size: 26px;
+      }
+
+      .festival-card-info {
+        flex: 1;
+
+        .festival-card-name {
+          font-size: 15px;
+          white-space: normal; // 名称完整横排，不再逐字竖排
+        }
+
+        .festival-card-desc {
+          white-space: normal;
+        }
+      }
+    }
+
+    .festival-card-right {
+      gap: 8px;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .festival-card-center {
+      width: 100%;
+
+      .festival-card-progress {
+        width: 100%;
+
+        // 进度条弹性占满中间空间（覆盖组件上的内联 width:120px）
+        :deep(.el-progress) {
+          flex: 1;
+          width: auto !important;
+        }
+      }
+    }
   }
 }
 </style>

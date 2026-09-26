@@ -51,7 +51,9 @@
     <div class="merchant-content">
       <router-view v-slot="{ Component }">
         <transition name="fade-transform" mode="out-in">
-          <component :is="Component" />
+          <keep-alive :include="cachedViews">
+            <component :is="Component" />
+          </keep-alive>
         </transition>
       </router-view>
     </div>
@@ -59,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   Shop,
@@ -71,14 +73,36 @@ import {
   Brush,
   WarningFilled,
 } from "@element-plus/icons-vue";
-import { useUserStore } from "@/store/modules/user";
+import { useUserStore, useTagsViewStore } from "@/store";
 import { getFullImageUrl } from "@/utils/url";
 import NoticeAPI from "@/api/system/notice";
+
+defineOptions({ name: "MerchantLayout" });
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const userInfo = ref(userStore.userInfo);
+
+// 商家端无 TagsView，需自行注册 keepAlive 缓存（如"我的小店"商品列表），
+// 复用 tagsView 的缓存名单，与管理端/商城端 keep-alive 行为一致
+const tagsViewStore = useTagsViewStore();
+const cachedViews = tagsViewStore.cachedViews;
+watch(
+  () => route.name,
+  () => {
+    if (route.meta?.keepAlive && route.name) {
+      tagsViewStore.addCachedView({
+        name: route.name as string,
+        title: route.meta?.title as string,
+        path: route.path,
+        fullPath: route.fullPath,
+        keepAlive: true,
+      });
+    }
+  },
+  { immediate: true }
+);
 
 // 当前激活的菜单项（根据路由路径匹配）
 const activeMenu = computed(() => {

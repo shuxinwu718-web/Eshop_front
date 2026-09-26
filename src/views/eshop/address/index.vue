@@ -83,23 +83,9 @@
         <el-form-item label="联系电话" prop="receiverPhone">
           <el-input v-model="form.receiverPhone" />
         </el-form-item>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="8" :md="8">
-            <el-form-item label="省" prop="province">
-              <el-input v-model="form.province" placeholder="省" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="8" :md="8">
-            <el-form-item label="市" prop="city">
-              <el-input v-model="form.city" placeholder="市" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="8" :md="8">
-            <el-form-item label="区" prop="district">
-              <el-input v-model="form.district" placeholder="区" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item label="省/市/区" prop="areaCodes">
+          <AddressPicker v-model="form.areaCodes" />
+        </el-form-item>
         <el-form-item label="详细地址" prop="detailAddress">
           <el-input v-model="form.detailAddress" type="textarea" :rows="2" />
         </el-form-item>
@@ -119,9 +105,12 @@
 defineOptions({ name: "EshopAddress" });
 
 import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import { ElMessage } from "element-plus";
 import AddressAPI, { type AddressItem } from "@/api/eshop/address";
 import { useExport } from "@/composables/useExport";
 import type { FormInstance } from "element-plus";
+import { findAreaCodes, findAreaNames } from "@/utils/area";
+import AddressPicker from "@/components/AddressPicker/index.vue";
 
 const loading = ref(false);
 const submitLoading = ref(false);
@@ -130,7 +119,8 @@ const addressList = ref<AddressItem[]>([]);
 const dialogVisible = ref(false);
 const isEdit = ref(false);
 const formRef = ref<FormInstance>();
-const form = reactive<AddressItem>({
+/** 表单模型：areaCodes 为级联选择器选中的省市区 code 数组 */
+const form = reactive<AddressItem & { areaCodes: string[] }>({
   receiverName: "",
   receiverPhone: "",
   province: "",
@@ -138,11 +128,15 @@ const form = reactive<AddressItem>({
   district: "",
   detailAddress: "",
   isDefault: 0,
+  areaCodes: [],
 });
 
 const rules = {
   receiverName: [{ required: true, message: "请输入收货人", trigger: "blur" }],
   receiverPhone: [{ required: true, message: "请输入联系电话", trigger: "blur" }],
+  areaCodes: [
+    { required: true, type: "array", min: 3, message: "请选择省/市/区", trigger: "change" },
+  ],
   detailAddress: [{ required: true, message: "请输入详细地址", trigger: "blur" }],
 };
 
@@ -164,7 +158,10 @@ async function fetchData() {
 function openDialog(row?: AddressItem) {
   isEdit.value = !!row;
   if (row) {
-    Object.assign(form, { ...row });
+    Object.assign(form, {
+      ...row,
+      areaCodes: findAreaCodes(row.province ?? "", row.city ?? "", row.district ?? ""),
+    });
   } else {
     resetForm();
   }
@@ -180,9 +177,17 @@ function resetForm() {
   form.district = "";
   form.detailAddress = "";
   form.isDefault = 0;
+  form.areaCodes = [];
 }
 
 async function submitForm() {
+  // 级联选中省市区后，把名称回写 province/city/district 再提交
+  if (form.areaCodes.length === 3) {
+    const [province, city, district] = findAreaNames(form.areaCodes);
+    form.province = province || form.province;
+    form.city = city || form.city;
+    form.district = district || form.district;
+  }
   const valid = await formRef.value?.validate().then(
     () => true,
     () => false
@@ -190,11 +195,14 @@ async function submitForm() {
   if (!valid) return;
   submitLoading.value = true;
   try {
+    // areaCodes 仅前端级联用，提交时剥离
+    const payload = { ...form };
+    delete payload.areaCodes;
     if (isEdit.value) {
-      await AddressAPI.update(form);
+      await AddressAPI.update(payload);
       ElMessage.success("修改成功");
     } else {
-      await AddressAPI.create(form);
+      await AddressAPI.create(payload);
       ElMessage.success("新增成功");
     }
     dialogVisible.value = false;

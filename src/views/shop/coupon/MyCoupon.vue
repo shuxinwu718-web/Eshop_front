@@ -30,7 +30,7 @@
                 <span class="condition">满¥{{ item.minAmount || 0 }}可用</span>
               </div>
               <div class="coupon-meta">
-                <span>有效期至 {{ formatDate(item.expireTime) }}</span>
+                <span>有效期至 {{ formatDate(item.expireTime, "") }}</span>
               </div>
             </div>
             <div class="coupon-card__status">
@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { getMyCoupons } from "@/api/eshop/user_coupons";
+import { formatDate } from "@/utils/format";
 
 interface MyCouponItem {
   userCouponId: number;
@@ -63,11 +64,6 @@ interface MyCouponItem {
 const loading = ref(false);
 const list = ref<MyCouponItem[]>([]);
 const status = ref(0);
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString();
-};
 
 const statusClass = (status: number) => {
   if (status === 0) return "coupon-card--usable";

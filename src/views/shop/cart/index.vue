@@ -31,7 +31,9 @@
           />
           <div class="card-info">
             <div class="product-name" @click="goDetail(item.productId)">{{ item.productName }}</div>
-            <div v-if="item.skuSpecs" class="product-specs">{{ item.skuSpecs }}</div>
+            <div v-if="formatSpecs(item.skuSpecs)" class="product-specs">
+              {{ formatSpecs(item.skuSpecs) }}
+            </div>
             <div class="product-price">¥{{ item.productPrice }}</div>
           </div>
           <div class="card-quantity">
@@ -99,6 +101,23 @@ const defaultImage =
 const totalPrice = computed(() => {
   return cartList.value.reduce((sum, item) => sum + (item.productPrice ?? 0) * item.quantity, 0);
 });
+
+// 规格在库里可能存成 JSON（{"容量":"512GB"}），展示给用户时转成"容量：512GB 尺寸：XXL"
+const formatSpecs = (specs?: string | null): string => {
+  if (!specs) return "";
+  try {
+    const obj = JSON.parse(specs);
+    if (obj && typeof obj === "object") {
+      return Object.entries(obj)
+        .map(([k, v]) => `${k}：${v}`)
+        .join("　");
+    }
+    return String(obj);
+  } catch {
+    // 非 JSON（纯文本规格）直接展示
+    return specs;
+  }
+};
 
 const fetchCart = async () => {
   loading.value = true;
@@ -454,15 +473,16 @@ onMounted(fetchCart);
   @media (max-width: 768px) {
     padding: 16px 12px 140px;
 
-    // 网格布局：左列图片占两行，右上信息区独占一行，第二行 数量|小计|删除 清晰分布，杜绝元素重叠
+    // 网格布局：左列图片占两行，右上信息区独占一行，第二行 数量|小计 清晰分布；
+    // 删除按钮绝对定位右上角，不占网格列，避免把小计挤压成竖排
     .cart-card {
       display: grid;
       grid-template-rows: auto auto;
-      grid-template-columns: 84px auto 1fr auto;
+      grid-template-columns: 84px auto 1fr;
       row-gap: 12px;
-      column-gap: 12px;
+      column-gap: 10px;
       align-items: center;
-      padding: 14px;
+      padding: 12px;
 
       .card-img {
         grid-row: 1 / 3;
@@ -473,14 +493,15 @@ onMounted(fetchCart);
 
       .card-info {
         grid-row: 1;
-        grid-column: 2 / 5;
+        grid-column: 2 / 4;
         min-width: 0;
+        padding-right: 24px; // 避开右上角删除按钮
 
         .product-specs {
           max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          font-size: 11px;
+          line-height: 1.5;
+          white-space: normal; // 多规格时允许换行，不再溢出/重叠
         }
       }
 
@@ -489,7 +510,7 @@ onMounted(fetchCart);
         grid-column: 2;
 
         :deep(.el-input-number) {
-          width: 108px;
+          width: 96px;
         }
       }
 
@@ -499,15 +520,22 @@ onMounted(fetchCart);
         grid-column: 3;
         gap: 4px;
         align-items: baseline;
+        justify-self: end;
         min-width: 0;
         margin: 0;
+
+        .subtotal-amount {
+          font-size: 16px;
+        }
       }
 
       .card-delete {
-        position: static;
-        grid-row: 2;
-        grid-column: 4;
-        opacity: 0.6;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        grid-row: auto;
+        grid-column: auto;
+        opacity: 0.5;
       }
     }
 

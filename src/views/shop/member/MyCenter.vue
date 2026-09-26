@@ -104,6 +104,15 @@
       </div>
     </div>
 
+    <!-- ===== 申请成为商家（普通用户） ===== -->
+    <div v-if="role === 'USER'" class="card list-card">
+      <div class="cell" @click="go('/apply-merchant')">
+        <span class="cell-icon" style="background: #fff7e6">🏪</span>
+        <span class="cell-label">申请成为商家</span>
+        <el-icon class="arrow"><ArrowRight /></el-icon>
+      </div>
+    </div>
+
     <!-- ===== 工作台入口（按角色显示） ===== -->
     <div v-if="role === 'MERCHANT' || role === 'ADMIN'" class="card list-card">
       <div v-if="role === 'MERCHANT'" class="cell" @click="go('/merchant/products')">

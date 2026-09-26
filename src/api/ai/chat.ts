@@ -52,6 +52,90 @@ export const sendAiChat = async (
   }
 };
 
+/** AI 商品描述生成参数 */
+export interface AiProductCopyParams {
+  name: string;
+  category?: string;
+  keywords?: string;
+  price?: number | null;
+  targets?: string;
+  supply_points?: string;
+}
+
+/** AI 商品描述生成响应 */
+export interface AiProductCopyResponse {
+  sound_bite: string;
+  detail: string;
+  seo_keywords: string;
+  error: string | null;
+}
+
+/**
+ * AI 生成商品描述（商家端）：返回一句卖点 + 详情 + SEO 关键词
+ * @param params 商品基础信息（名称必填）
+ */
+export const generateProductCopy = async (
+  params: AiProductCopyParams
+): Promise<AiProductCopyResponse> => {
+  try {
+    const { data } = await aiHttp.post<AiProductCopyResponse>("/generate-product-desc", params);
+    return data;
+  } catch (err) {
+    const msg =
+      (axios.isAxiosError(err) &&
+        ((err.response?.data as { error?: string } | undefined)?.error ||
+          err.response?.statusText ||
+          "AI 生成服务暂时不可用，请稍后再试。")) ||
+      "AI 生成服务暂时不可用，请稍后再试。";
+    throw new Error(msg, { cause: err });
+  }
+};
+
+/** AI 评论情感分析：输入评论 */
+export interface AiCommentInput {
+  id: number;
+  content: string;
+}
+
+/** AI 评论情感分析：单条结果 */
+export interface AiCommentSentiment {
+  id: number;
+  sentiment: "positive" | "negative" | "neutral";
+  sentiment_label: string;
+  tags: string[];
+  error?: string | null;
+}
+
+/** AI 评论情感分析：响应 */
+export interface AiAnalyzeCommentsResponse {
+  results: AiCommentSentiment[];
+}
+
+/**
+ * AI 批量分析评论情感（后台/商家端）
+ * @param comments 评论列表（id + content）
+ */
+export const analyzeComments = async (
+  comments: AiCommentInput[]
+): Promise<AiAnalyzeCommentsResponse> => {
+  try {
+    const { data } = await aiHttp.post<AiAnalyzeCommentsResponse>("/analyze-comments", {
+      comments,
+    });
+    return data;
+  } catch (err) {
+    const msg =
+      (axios.isAxiosError(err) &&
+        ((err.response?.data as { error?: string } | undefined)?.error ||
+          err.response?.statusText ||
+          "AI 分析服务暂时不可用，请稍后再试。")) ||
+      "AI 分析服务暂时不可用，请稍后再试。";
+    throw new Error(msg, { cause: err });
+  }
+};
+
 export default {
   sendAiChat,
+  generateProductCopy,
+  analyzeComments,
 };

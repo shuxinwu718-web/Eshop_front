@@ -119,6 +119,7 @@
           最新
         </span>
         <span class="m-filter-btn" @click="filterVisible = true">⚙ 筛选</span>
+        <span class="m-sort-item" @click="resetAll">重置</span>
       </div>
 
       <!-- 双列商品瀑布流 -->
@@ -381,6 +382,7 @@
           <span class="sep">—</span>
           <el-input v-model="maxPrice" placeholder="最高价" style="width: 100px" clearable />
           <el-button type="primary" plain size="small" @click="applyFilter">筛选</el-button>
+          <el-button plain size="small" @click="resetAll">重置</el-button>
         </div>
       </div>
 
@@ -602,6 +604,22 @@ function resetFilter() {
   activeCategoryId.value = undefined;
   filterVisible.value = false;
   pageNum.value = 1;
+  fetchProducts();
+}
+
+/** 重置全部搜索条件（关键词/分类/价格/排序），回到首页初始状态 */
+function resetAll() {
+  keyword.value = "";
+  minPrice.value = "";
+  maxPrice.value = "";
+  sortBy.value = "relevant";
+  activeCategoryId.value = undefined;
+  filterVisible.value = false;
+  pageNum.value = 1;
+  // 清掉地址栏的 ?keyword=xxx，否则刷新或返回本页时关键词会再次生效
+  if (route.query.keyword !== undefined) {
+    router.replace({ query: {} });
+  }
   fetchProducts();
 }
 

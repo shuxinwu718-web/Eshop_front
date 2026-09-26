@@ -1,12 +1,18 @@
 <template>
-  <div v-if="filteredActivities.length" class="group-buy-panel">
+  <div v-if="displayActivities.length" class="group-buy-panel">
     <div class="gb-title">
       <el-icon><UserFilled /></el-icon>
       <span class="gb-title-text">多人拼团</span>
-      <span class="gb-sub">拼团价更优惠，快邀请好友一起买</span>
+      <span class="gb-sub">
+        {{
+          totalJoinableGroups > 0
+            ? `${totalJoinableGroups} 个团正在拼${minRemainCount > 0 ? `，最快还差 ${minRemainCount} 人` : ""}`
+            : "拼团价更优惠，快邀请好友一起买"
+        }}
+      </span>
     </div>
 
-    <div v-for="act in filteredActivities" :key="act.id" class="gb-activity">
+    <div v-for="act in displayActivities" :key="act.id" class="gb-activity">
       <!-- 活动信息 -->
       <div class="gb-activity-head">
         <div class="gb-price">
@@ -14,13 +20,15 @@
           <span v-if="act.originalPrice" class="gb-price-original">¥{{ act.originalPrice }}</span>
         </div>
         <el-tag size="small" type="danger" effect="plain" round>{{ act.targetCount }}人团</el-tag>
-        <span v-if="act.skuSpecs" class="gb-sku">{{ act.skuSpecs }}</span>
+        <el-tag v-if="act.skuSpecs" size="small" type="warning" effect="light" round class="gb-sku">
+          {{ act.skuSpecs }}
+        </el-tag>
       </div>
 
       <!-- 进行中的团 -->
-      <div v-if="act.activeGroups && act.activeGroups.length" class="gb-groups">
+      <div v-if="visibleGroups(act).length" class="gb-groups">
         <div
-          v-for="g in act.activeGroups"
+          v-for="g in visibleGroups(act)"
           :key="g.id"
           class="gb-group"
           :class="{ urgent: remainOf(g) <= 1800 }"
@@ -32,7 +40,7 @@
                 :key="i"
                 :size="26"
                 class="gb-avatar"
-                :src="getFullImageUrl(a)"
+                :src="a ? getFullImageUrl(a) : undefined"
               >
                 {{ i === 0 ? "团" : "" }}
               </el-avatar>
@@ -74,6 +82,22 @@
         </div>
       </div>
 
+      <!-- 折叠/展开更多团 -->
+      <div v-if="hiddenCountOf(act) > 0" class="gb-expand" @click="toggleExpand(act.id)">
+        <span>
+          查看全部 {{ sortedGroups(act).length }} 个团（还有 {{ hiddenCountOf(act) }} 个）
+        </span>
+        <el-icon><ArrowDown /></el-icon>
+      </div>
+      <div
+        v-else-if="expandedActs.has(act.id) && sortedGroups(act).length > MAX_VISIBLE_GROUPS"
+        class="gb-expand"
+        @click="toggleExpand(act.id)"
+      >
+        <span>收起</span>
+        <el-icon><ArrowUp /></el-icon>
+      </div>
+
       <!-- 发起拼团 -->
       <div class="gb-start">
         <el-button
@@ -96,13 +120,14 @@
 import { ref, computed, onBeforeUnmount, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { UserFilled } from "@element-plus/icons-vue";
+import { UserFilled, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
 import GroupBuyAPI, {
   type GroupBuyActivityItem,
   type GroupBuyGroupItem,
 } from "@/api/eshop/groupBuy";
 import AddressAPI from "@/api/eshop/address";
 import { getFullImageUrl } from "@/utils/url";
+import { toTimeStamp } from "@/utils/format";
 import { useUserStore } from "@/store/modules/user";
 import { promptLogin } from "@/utils/requireLogin";
 
@@ -122,13 +147,76 @@ const loading = ref(false);
 const startingId = ref<number | null>(null);
 const joiningId = ref<number | null>(null);
 
-/** 按当前选中规格过滤活动（方案A：拼团绑定单规格） */
+/** 展示用活动列表（拼多多模式）：已选规格 → 只看该规格的团；未选规格 → 展示全部规格的进行中团。
+ *  参团免选规格：团本身绑定 SKU，选定团即选定规格；仅开团需要先选规格。 */
+const displayActivities = computed(() => {
+  if (props.hasSku && props.selectedSkuId) {
+    return activities.value.filter((a) => !a.skuId || a.skuId === props.selectedSkuId);
+  }
+  return activities.value;
+});
+
+/** 开团用活动列表（保留原约束：发起拼团必须先选规格） */
 const filteredActivities = computed(() => {
   if (props.hasSku && !props.selectedSkuId) {
-    return []; // 未选规格不展示，父组件按钮会提示先选规格
+    return []; // 未选规格不可开团，面板底部按钮会提示先选规格
   }
   return activities.value.filter((a) => !a.skuId || a.skuId === props.selectedSkuId);
 });
+
+/** 全部可参团数量（标题统计用） */
+const totalJoinableGroups = computed(() =>
+  displayActivities.value.reduce((n, a) => n + (a.activeGroups?.length || 0), 0)
+);
+
+/** 最快成团还差人数（所有团中"还差人数"的最小值） */
+const minRemainCount = computed(() => {
+  let min = Infinity;
+  displayActivities.value.forEach((a) =>
+    (a.activeGroups || []).forEach((g) => {
+      min = Math.min(min, Math.max(a.targetCount - g.memberCount, 0));
+    })
+  );
+  return Number.isFinite(min) ? min : 0;
+});
+
+// ==================== 团排序与折叠 ====================
+/** 每活动最多直接展示的团数，其余折叠 */
+const MAX_VISIBLE_GROUPS = 3;
+/** 已展开的活动 ID 集合 */
+const expandedActs = ref<Set<number>>(new Set());
+
+const toggleExpand = (id: number) => {
+  const next = new Set(expandedActs.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  expandedActs.value = next;
+};
+
+/** 团按"还差人数"升序（快满的优先展示） */
+const sortedGroups = (act: GroupBuyActivityItem): GroupBuyGroupItem[] => {
+  const groups = [...(act.activeGroups || [])];
+  groups.sort(
+    (a, b) =>
+      Math.max(act.targetCount - a.memberCount, 0) - Math.max(act.targetCount - b.memberCount, 0)
+  );
+  return groups;
+};
+
+/** 当前活动实际渲染的团：排序后按折叠状态截断 */
+const visibleGroups = (act: GroupBuyActivityItem): GroupBuyGroupItem[] => {
+  const groups = sortedGroups(act);
+  if (expandedActs.value.has(act.id) || groups.length <= MAX_VISIBLE_GROUPS) {
+    return groups;
+  }
+  return groups.slice(0, MAX_VISIBLE_GROUPS);
+};
+
+const hiddenCountOf = (act: GroupBuyActivityItem) =>
+  sortedGroups(act).length - visibleGroups(act).length;
 
 /** 当前规格下是否存在可参与的拼团活动（父组件据此显示「发起拼团」按钮） */
 const hasGroupBuy = computed(() => filteredActivities.value.length > 0);
@@ -151,7 +239,7 @@ let lastRefresh = 0;
 /** 团的实时剩余秒数：优先按后端 expireTime 计算（秒级准确），兜底用初始 remainSeconds */
 const remainOf = (g: GroupBuyGroupItem) => {
   if (g.expireTime) {
-    return Math.max(0, Math.floor((new Date(g.expireTime).getTime() - nowTick.value) / 1000));
+    return Math.max(0, Math.floor(((toTimeStamp(g.expireTime) ?? 0) - nowTick.value) / 1000));
   }
   return g.remainSeconds ?? 0;
 };
@@ -226,11 +314,15 @@ const handleStart = async (act: GroupBuyActivityItem) => {
     promptLogin("发起拼团需要登录");
     return;
   }
-  startingId.value = act.id;
+  const activityId = act.id;
+  if (!activityId) return;
+  startingId.value = activityId;
   try {
     const addr = await getDefaultAddress();
     if (!addr) return;
-    await GroupBuyAPI.user.startGroup(act.id, { addressId: addr.id });
+    const addressId = addr.id;
+    if (!addressId) return;
+    await GroupBuyAPI.user.startGroup(activityId, { addressId });
     ElMessage.success("拼团发起成功，请在 30 分钟内完成支付");
     router.push("/shop/order");
   } catch {
@@ -245,11 +337,15 @@ const handleJoin = async (g: GroupBuyGroupItem) => {
     promptLogin("参与拼团需要登录");
     return;
   }
-  joiningId.value = g.id;
+  const groupId = g.id;
+  if (!groupId) return;
+  joiningId.value = groupId;
   try {
     const addr = await getDefaultAddress();
     if (!addr) return;
-    await GroupBuyAPI.user.joinGroup(g.id, { addressId: addr.id });
+    const addressId = addr.id;
+    if (!addressId) return;
+    await GroupBuyAPI.user.joinGroup(groupId, { addressId });
     ElMessage.success("参团成功，请在 30 分钟内完成支付");
     router.push("/shop/order");
   } catch {
@@ -362,7 +458,22 @@ onBeforeUnmount(stopCountdown);
 
       .gb-sku {
         font-size: 12px;
-        color: var(--el-text-color-secondary);
+      }
+    }
+
+    .gb-expand {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 0 2px;
+      font-size: 12px;
+      color: var(--el-color-danger);
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        opacity: 0.8;
       }
     }
 

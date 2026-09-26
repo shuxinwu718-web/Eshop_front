@@ -70,25 +70,8 @@
       </div>
     </div>
 
-    <!-- 模拟支付弹窗 -->
-    <el-dialog v-model="payDialogVisible" title="模拟支付" width="400px" append-to-body>
-      <div class="pay-info">
-        <div class="pay-order-no">订单号：{{ paying?.groupNo }}</div>
-        <div class="pay-amount">¥{{ paying?.groupPrice }}</div>
-      </div>
-      <el-form label-width="80px">
-        <el-form-item label="支付方式">
-          <el-radio-group v-model="payMethod">
-            <el-radio label="wechat">微信支付</el-radio>
-            <el-radio label="alipay">支付宝支付</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="payDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="paying" @click="confirmPay">确认支付</el-button>
-      </template>
-    </el-dialog>
+    <!-- 统一收银台：以订单落库支付方式预选，改选自动同步回订单 -->
+    <PayDialog v-model:visible="payDialogVisible" :order="payingOrder" @payed="fetchData" />
   </div>
 </template>
 
@@ -97,8 +80,10 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import GroupBuyAPI, { type GroupBuyGroupItem } from "@/api/eshop/groupBuy";
-import OrderAPI from "@/api/eshop/order";
+import OrderAPI, { type OrderVO } from "@/api/eshop/order";
+import PayDialog from "@/views/shop/order/components/PayDialog/index.vue";
 import { getFullImageUrl } from "@/utils/url";
+import { formatTimeMinute } from "@/utils/format";
 
 const router = useRouter();
 const loading = ref(false);
@@ -123,10 +108,7 @@ const statusType = (s: number) =>
   ({ 0: "primary", 1: "success", 2: "danger", 3: "info" })[s] as
     "primary" | "success" | "danger" | "info";
 
-const formatTime = (t?: string) => {
-  if (!t) return "-";
-  return t.replace("T", " ").slice(0, 16);
-};
+const formatTime = (t?: string) => formatTimeMinute(t);
 
 // ==================== 操作 ====================
 const goProduct = (g: GroupBuyGroupItem) => {
@@ -153,30 +135,18 @@ const shareGroup = (g: GroupBuyGroupItem) => {
   }
 };
 
-// ==================== 模拟支付 ====================
+// ==================== 支付 ====================
 const payDialogVisible = ref(false);
-const paying = ref(false);
-const payingOrder = ref<GroupBuyGroupItem | null>(null);
-const payMethod = ref("wechat");
+const payingOrder = ref<OrderVO | null>(null);
 
-const openPay = (g: GroupBuyGroupItem) => {
-  payingOrder.value = g;
-  payMethod.value = "wechat";
-  payDialogVisible.value = true;
-};
-
-const confirmPay = async () => {
-  if (!payingOrder.value || !payingOrder.value.orderId) return;
-  paying.value = true;
+/** 打开统一收银台：先取真实订单（订单号/金额以数据库为准） */
+const openPay = async (g: GroupBuyGroupItem) => {
+  if (!g.orderId) return;
   try {
-    await OrderAPI.pay(payingOrder.value.orderId, payingOrder.value.groupPrice);
-    ElMessage.success(`支付成功（${payMethod.value === "wechat" ? "微信支付" : "支付宝支付"}）`);
-    payDialogVisible.value = false;
-    await fetchData();
+    payingOrder.value = await OrderAPI.getDetail(g.orderId);
+    payDialogVisible.value = true;
   } catch {
-    // 业务错误由拦截器统一提示
-  } finally {
-    paying.value = false;
+    ElMessage.error("获取订单信息失败");
   }
 };
 
@@ -336,3 +306,5 @@ onMounted(fetchData);
   }
 }
 </style>
+
+/* MARKER_TEST_20260908 */

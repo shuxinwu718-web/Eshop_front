@@ -118,7 +118,7 @@
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
-            value-format="YYYY-MM-DDTHH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
             style="width: 100%"
           />
           <div class="form-tip">仅活动进行期间，用户端活动中心才会展示</div>
@@ -196,6 +196,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import CouponAPI, { type CouponItem } from "@/api/eshop/coupon";
+import { formatTimeMinute } from "@/utils/format";
 import {
   getMarketingActivityPage,
   createMarketingActivity,
@@ -265,7 +266,7 @@ const couponLabel = (c: CouponItem) => {
   return `${c.name}（${value}，${threshold}）`;
 };
 
-const formatTime = (t?: string) => (t ? t.replace("T", " ").slice(0, 16) : "-");
+const formatTime = (t?: string) => formatTimeMinute(t);
 
 const autoFillTaskName = (task: TaskFormItem, type: MarketingTaskType) => {
   const opt = TASK_TYPE_OPTIONS.find((o) => o.value === type);

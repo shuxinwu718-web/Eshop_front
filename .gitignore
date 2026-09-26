@@ -68,3 +68,15 @@ md/*.png
 md/*.jpg
 public/current-home.png
 public/ui-mockup*.html
+# 毕设报告 mermaid 渲染构建产物（构建中间产物不入库；docs/images 为成稿图，保留）
+docs/.mermaid-build/
+
+# 个人面试/复习资料（勿提交公开仓库）
+docs/Day[0-9]-*.html
+docs/一周冲刺*.md
+docs/一周冲刺*.html
+docs/面试题库.html
+docs/岗位面试准备清单.html
+docs/秒杀压测复现实操速记卡.html
+docs/动手实操清单.html
+docs/AI时代完整项目开发指南.html

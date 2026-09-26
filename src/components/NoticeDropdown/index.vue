@@ -48,6 +48,7 @@ import { Bell } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import type { NoticeItem } from "@/types/api";
 import { useUserStore } from "@/store";
+import { parseDate } from "@/utils/format";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -99,7 +100,8 @@ const goToNoticePage = () => {
 // 格式化时间
 const formatTime = (time?: string | Date) => {
   if (!time) return "";
-  const date = new Date(time);
+  const date = parseDate(time);
+  if (!date) return "";
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;

@@ -1,5 +1,11 @@
 <template>
-  <div class="shop-layout" :class="{ 'is-mobile': isMobile }">
+  <div
+    class="shop-layout"
+    :class="{
+      'is-mobile': isMobile,
+      'hide-tabbar-pad': isMobile && route.meta?.hideMobileTabbar,
+    }"
+  >
     <!-- 顶部：按设备切换布局 -->
     <MobileHeader v-if="isMobile" :unread-count="unreadCount" />
     <DesktopHeader v-else :unread-count="unreadCount" @logout="handleLogout" />
@@ -13,15 +19,17 @@
       </router-view>
     </main>
 
-    <!-- 底部：桌面为页脚，移动为底部 Tab 栏 -->
+    <!-- 底部：桌面为页脚，移动为底部 Tab 栏（详情页等使用专属操作栏时隐藏） -->
     <footer v-if="!isMobile" class="shop-footer">E-Shop 电商平台</footer>
-    <MobileTabBar v-else />
+    <MobileTabBar v-else-if="!route.meta?.hideMobileTabbar" />
 
     <!-- AI 客服悬浮球 -->
     <CustomerServiceFab />
-
     <!-- 返回顶部（跟随窗口滚动，移动端避开底部 Tab 栏） -->
-    <el-backtop :right="isMobile ? 14 : 30" :bottom="isMobile ? 76 : 70" />
+    <el-backtop
+      :right="isMobile ? 14 : 30"
+      :bottom="isMobile ? (route.meta?.hideMobileTabbar ? 16 : 76) : 70"
+    />
   </div>
 </template>
 
@@ -150,8 +158,15 @@ onUnmounted(() => {
   .shop-main {
     max-width: 100%;
     padding: 12px;
-    /* 给固定底部的 Tab 栏留出空间 */
+    /* 给固定底部的 Tab 栏 / 详情页专属操作栏留出空间 */
     padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* 详情页等隐藏 TabBar 时，底部预留交给页面自身的 Dock 处理，避免双重留白 */
+.shop-layout.is-mobile.hide-tabbar-pad {
+  .shop-main {
+    padding-bottom: 0;
   }
 }
 

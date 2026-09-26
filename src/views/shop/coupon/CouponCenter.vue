@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onActivated } from "vue";
 import { Search } from "@element-plus/icons-vue";
 import { getAvailableCoupons } from "@/api/eshop/user_coupons";
 
@@ -89,7 +89,19 @@ const handleFilterChange = () => {
   fetchData();
 };
 
+// 路由配置了 keepAlive，组件被缓存后再次进入不会重新挂载（onMounted 不触发），
+// 需在 onActivated 中刷新列表；首次激活已由 onMounted 触发，跳过避免重复请求
+let isFirstActivation = true;
+
 onMounted(() => {
+  fetchData();
+});
+
+onActivated(() => {
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
   fetchData();
 });
 </script>

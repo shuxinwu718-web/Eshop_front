@@ -7,12 +7,13 @@
 
       <!-- 右侧：商品信息 -->
       <div class="info">
-        <h1>{{ product.name }}</h1>
-        <div class="price">
+        <!-- 桌面端：商品名 / 价格 / meta（移动端隐藏） -->
+        <h1 class="desktop-only">{{ product.name }}</h1>
+        <div class="price desktop-only">
           <template v-if="selectedSku">¥{{ selectedSku.price }}</template>
           <template v-else>¥{{ product.price }}</template>
         </div>
-        <div class="meta">
+        <div class="meta desktop-only">
           <template v-if="selectedSku">
             <span class="stock">库存：{{ selectedSku.stock }}件</span>
           </template>
@@ -25,23 +26,66 @@
           <span class="sales">已售：{{ (selectedSku?.sales ?? product.sales) || 0 }}件</span>
         </div>
 
-        <!-- SKU 多规格选择器 -->
+        <!-- ========== 移动端信息卡片（桌面端隐藏） ========== -->
+        <!-- a) 价格卡 -->
+        <div class="mb-card mb-price-card mb-only">
+          <div class="mb-price-row">
+            <span class="mb-price-big">¥{{ selectedSku?.price ?? product.price }}</span>
+            <span class="mb-sales">已售 {{ (selectedSku?.sales ?? product.sales) || 0 }}件</span>
+          </div>
+          <div class="mb-stock">
+            <template v-if="selectedSku">库存：{{ selectedSku.stock }}件</template>
+            <template v-else-if="product.skus && product.skus.length > 0 && !allSpecsSelected">
+              请选择规格
+            </template>
+            <template v-else>库存：{{ product.stock }}件</template>
+          </div>
+        </div>
+
+        <!-- b) 商品名卡 -->
+        <div class="mb-card mb-name-card mb-only">
+          <h1 class="mb-title">{{ product.name }}</h1>
+        </div>
+
+        <!-- c) 规格行卡 -->
+        <div
+          v-if="parsedSpecs.length > 0"
+          class="mb-card mb-spec-card mb-only"
+          @click="openSkuDrawer"
+        >
+          <span class="mb-spec-label">规格</span>
+          <span v-if="allSpecsSelected" class="mb-spec-value">
+            {{ parsedSpecs.map((s) => skuMap[s.specName]).join(" / ") }}
+          </span>
+          <template v-else>
+            <span class="mb-spec-value mb-spec-placeholder">
+              请选择{{ parsedSpecs.map((s) => s.specName).join(" / ") }}
+            </span>
+          </template>
+          <el-icon class="mb-spec-arrow"><ArrowRight /></el-icon>
+        </div>
+
+        <!-- 桌面端：SKU 多规格选择器（移动端改由规格抽屉承载） -->
         <SkuSelector
           v-if="parsedSpecs.length > 0"
+          class="desktop-only"
           :specs="parsedSpecs"
           :gb-spec-value-set="gbSpecValueSet"
           @change="handleSkuChange"
         />
 
-        <!-- 商家小店入口 -->
-        <StoreEntry
-          v-if="product.merchantId"
-          :merchant-id="product.merchantId"
-          :merchant-name="product.merchantName"
-          :merchant-avatar="product.merchantAvatar"
-        />
+        <!-- d) 店铺入口（桌面端保持原样；移动端为卡片行） -->
+        <div class="store-entry-wrap">
+          <StoreEntry
+            v-if="product.merchantId"
+            :merchant-id="product.merchantId"
+            :merchant-name="product.merchantName"
+            :merchant-avatar="product.merchantAvatar"
+          />
+        </div>
 
-        <div class="actions">
+        <!-- 桌面端：操作按钮组（移动端由底部 Dock 承载） -->
+        <div class="actions desktop-only">
           <el-input-number v-model="quantity" :min="1" :max="maxStock" size="large" />
           <el-button type="primary" size="large" @click="addToCart">加入购物车</el-button>
           <el-button v-if="hasGroupBuy" type="warning" size="large" @click="handleStartGroup">
@@ -78,6 +122,9 @@
       :data="sizeChartDisplayData"
     />
 
+    <!-- 关联推荐（同类相似 + 同店热销） -->
+    <RecommendSection v-if="product.id" :product-id="product.id" />
+
     <!-- 评论区 -->
     <CommentSection
       v-if="product.id"
@@ -92,6 +139,79 @@
       :product-id="product.id"
       :merchant-id="product.merchantId"
     />
+
+    <!-- 移动端：规格选择抽屉（btt） -->
+    <el-drawer
+      v-model="skuDrawerVisible"
+      class="mob-sku-drawer"
+      direction="btt"
+      size="auto"
+      :show-close="false"
+      :with-header="false"
+    >
+      <div class="mob-drawer-inner">
+        <div class="mob-drawer-title">
+          <span>请选择规格</span>
+          <el-icon class="mob-drawer-close" @click="skuDrawerVisible = false"><Close /></el-icon>
+        </div>
+        <SkuSelector
+          v-if="parsedSpecs.length > 0"
+          :specs="parsedSpecs"
+          :gb-spec-value-set="gbSpecValueSet"
+          @change="handleSkuChange"
+        />
+        <div class="mob-drawer-actions">
+          <el-input-number
+            v-model="quantity"
+            :min="1"
+            :max="maxStock"
+            size="large"
+            class="mob-drawer-qty"
+          />
+          <div class="mob-drawer-btns">
+            <el-button type="primary" size="large" class="dock-main" @click="addToCart">
+              加入购物车
+            </el-button>
+            <el-button
+              v-if="hasGroupBuy"
+              type="warning"
+              size="large"
+              class="dock-main"
+              @click="handleStartGroup"
+            >
+              <el-icon class="gb-btn-icon"><UserFilled /></el-icon>
+              发起拼团
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- 移动端：底部固定操作栏（Dock） -->
+    <div class="mb-dock">
+      <button class="dock-icon-btn" @click="toggleFavorite">
+        <el-icon v-if="isFavorited" class="dock-icon"><StarFilled /></el-icon>
+        <el-icon v-else class="dock-icon"><Star /></el-icon>
+        <span>{{ isFavorited ? "已收藏" : "收藏" }}</span>
+      </button>
+      <button class="dock-icon-btn" @click="contactDialogRef?.open()">
+        <el-icon class="dock-icon"><Service /></el-icon>
+        <span>客服</span>
+      </button>
+      <div class="dock-btns">
+        <el-button type="primary" size="large" class="dock-main" @click="handleAddToCartMobile">
+          加入购物车
+        </el-button>
+        <el-button
+          size="large"
+          class="dock-main"
+          :type="hasGroupBuy ? 'warning' : 'danger'"
+          @click="hasGroupBuy ? handleStartGroupMobile() : handleBuyNow()"
+        >
+          {{ hasGroupBuy ? "发起拼团" : "立即购买" }}
+        </el-button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -105,7 +225,7 @@ import ProductAPI, { type ProductItem, type ProductImageItem } from "@/api/eshop
 import CartAPI from "@/api/eshop/cart";
 import FavoriteAPI from "@/api/eshop/favorite";
 import HistoryAPI from "@/api/eshop/history";
-import { UserFilled } from "@element-plus/icons-vue";
+import { UserFilled, Star, StarFilled, Service, Close, ArrowRight } from "@element-plus/icons-vue";
 import type { ProductSpec, ProductSku } from "@/api/eshop/product";
 import { resolveRichContent } from "@/utils/url";
 import { promptLogin } from "@/utils/requireLogin";
@@ -113,6 +233,7 @@ import ProductGallery from "./components/ProductGallery/index.vue";
 import SkuSelector from "./components/SkuSelector/index.vue";
 import StoreEntry from "./components/StoreEntry/index.vue";
 import SizeChartTable from "./components/SizeChartTable/index.vue";
+import RecommendSection from "./components/RecommendSection/index.vue";
 import CommentSection from "./components/CommentSection/index.vue";
 import ContactDialog from "./components/ContactDialog/index.vue";
 import GroupBuyPanel from "./components/GroupBuyPanel/index.vue";
@@ -135,6 +256,49 @@ const groupBuyPanelRef = ref<{
 
 /** 联系商家弹窗组件引用 */
 const contactDialogRef = ref<{ open: () => void } | null>(null);
+
+// ============ 移动端：规格抽屉 + 底部 Dock ============
+/** 规格选择抽屉开关 */
+const skuDrawerVisible = ref(false);
+/** 未选规格时挂起待执行的动作（选全规格后自动继续） */
+const pendingAction = ref<"cart" | "buy" | "startGroup" | null>(null);
+
+/** 打开规格抽屉（由规格行卡触发） */
+const openSkuDrawer = () => {
+  skuDrawerVisible.value = true;
+};
+
+/** 判断当前是否需要先选规格 */
+const needSelectSpec = computed(
+  () => !!product.value.skus && product.value.skus.length > 0 && !allSpecsSelected.value
+);
+
+/** 移动端：若缺规格则打开抽屉提示选规格，否则返回 true 直接执行 */
+const guardSpec = (action: "cart" | "buy" | "startGroup") => {
+  if (needSelectSpec.value) {
+    pendingAction.value = action;
+    skuDrawerVisible.value = true;
+    return false;
+  }
+  return true;
+};
+
+const handleAddToCartMobile = () => {
+  if (!guardSpec("cart")) return;
+  addToCart();
+};
+
+const handleStartGroupMobile = () => {
+  if (!guardSpec("startGroup")) return;
+  handleStartGroup();
+};
+
+/** 移动端「立即购买」：规格就绪后加入购物车并直达确认订单页 */
+const handleBuyNow = async () => {
+  if (!guardSpec("buy")) return;
+  await addToCart();
+  router.push("/checkout");
+};
 
 // ============ SKU 多规格选择 ============
 /** 解析后的规格列表 */
@@ -186,12 +350,10 @@ const selectedSku = computed<ProductSku | null>(() => {
 });
 
 /** 当前选中规格是否存在拼团活动（控制「发起拼团」按钮显隐） */
-const hasGroupBuy = computed(() => groupBuyPanelRef.value?.hasGroupBuy?.value ?? false);
+const hasGroupBuy = computed(() => groupBuyPanelRef.value?.hasGroupBuy ?? false);
 
 /** 参与拼团活动的 SKU ID 集合 */
-const groupBuySkuIds = computed<number[]>(
-  () => groupBuyPanelRef.value?.groupBuySkuIds?.value ?? []
-);
+const groupBuySkuIds = computed<number[]>(() => groupBuyPanelRef.value?.groupBuySkuIds ?? []);
 
 /** 参与拼团的规格值集合（用于规格标签上的「拼团」角标） */
 const gbSpecValueSet = computed<Set<string>>(() => {
@@ -326,6 +488,18 @@ const handleStartGroup = () => {
   groupBuyPanelRef.value?.startCurrent();
 };
 
+// 在规格抽屉内选全规格后，继续执行此前挂起的动作
+watch(allSpecsSelected, (selected) => {
+  if (selected && pendingAction.value) {
+    const action = pendingAction.value;
+    pendingAction.value = null;
+    skuDrawerVisible.value = false;
+    if (action === "cart") addToCart();
+    else if (action === "buy") handleBuyNow();
+    else handleStartGroup();
+  }
+});
+
 const isFavorited = ref(false);
 const favoriteLoading = ref(false);
 
@@ -375,6 +549,23 @@ onMounted(() => {
     HistoryAPI.add(Number(route.params.id)).catch(() => {});
   }
 });
+
+// 详情页内跳转到另一商品（如点击关联推荐）时路由复用同一组件，需手动重置并重新拉取
+watch(
+  () => route.params.id,
+  (id) => {
+    if (!id) return;
+    skuMap.value = {};
+    quantity.value = 1;
+    images.value = [];
+    isFavorited.value = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    fetchDetail();
+    if (userStore.isLoggedIn()) {
+      HistoryAPI.add(Number(id)).catch(() => {});
+    }
+  }
+);
 </script>
 
 <style lang="scss" scoped>
@@ -473,32 +664,236 @@ onMounted(() => {
   }
 }
 
+/* 移动端专属元素：桌面端一律隐藏 */
+.mb-only {
+  display: none;
+}
+
+.mb-dock {
+  display: none;
+}
+
 /* 移动端适配 */
 @media (max-width: 768px) {
   .product-detail {
-    padding: 12px;
+    padding: 10px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 
     .main {
       flex-direction: column;
       gap: 20px;
-      padding: 16px;
+      padding: 12px;
+    }
+
+    /* 桌面端块在移动端隐藏 */
+    .desktop-only {
+      display: none !important;
+    }
+
+    /* 移动端信息卡片统一显示，并以纵向卡片流排布 */
+    .mb-only {
+      display: block;
     }
 
     .info {
-      h1 {
-        font-size: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      h1.desktop-only {
+        display: none;
+      }
+    }
+
+    .mb-card {
+      padding: 14px 16px;
+      background: #fff;
+      border-radius: 10px;
+    }
+
+    /* a) 价格卡 */
+    .mb-price-card {
+      .mb-price-row {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        justify-content: space-between;
       }
 
-      .price {
-        font-size: 26px;
+      .mb-price-big {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--price-color, #e02e24);
       }
 
-      .actions {
+      .mb-sales {
+        font-size: 13px;
+        color: var(--el-text-color-secondary);
+        white-space: nowrap;
+      }
+
+      .mb-stock {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--el-text-color-regular);
+      }
+    }
+
+    /* b) 商品名卡（两行截断） */
+    .mb-name-card {
+      padding-top: 0;
+      padding-bottom: 0;
+
+      .mb-title {
+        display: -webkit-box;
+        margin: 14px 16px;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--el-text-color-primary);
+        -webkit-box-orient: vertical;
+      }
+    }
+
+    /* c) 规格行卡 */
+    .mb-spec-card {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      cursor: pointer;
+
+      .mb-spec-label {
+        flex-shrink: 0;
+        color: var(--el-text-color-secondary);
+      }
+
+      .mb-spec-value {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--el-text-color-primary);
+        white-space: nowrap;
+      }
+
+      .mb-spec-placeholder {
+        color: var(--el-text-color-secondary);
+      }
+
+      .mb-spec-arrow {
+        flex-shrink: 0;
+        font-size: 16px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
+    /* d) 店铺入口行卡 */
+    .store-entry-wrap {
+      padding: 6px;
+      background: #fff;
+      border-radius: 10px;
+
+      :deep(.store-entry) {
+        padding: 10px 12px;
+        margin: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    /* 底部固定操作栏 */
+    .mb-dock {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+      background: #fff;
+      border-top: 1px solid var(--el-border-color-light);
+
+      .dock-icon-btn {
+        display: flex;
         flex-direction: column;
+        gap: 2px;
+        align-items: center;
+        padding: 4px 6px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+        cursor: pointer;
+        background: none;
+        border: none;
 
-        .el-button,
-        .el-input-number {
+        .dock-icon {
+          font-size: 20px;
+        }
+      }
+
+      .dock-btns {
+        display: flex;
+        flex: 1;
+        gap: 10px;
+
+        .dock-main {
+          flex: 1;
+          min-width: 0;
+          margin-left: 0;
+        }
+      }
+    }
+
+    /* 规格选择抽屉（class 透传到 .el-drawer 面板元素自身，直接命中即可） */
+    .mob-sku-drawer {
+      max-height: 75vh;
+
+      :deep(.el-drawer__body) {
+        padding: 16px;
+        overflow-y: auto;
+      }
+    }
+
+    .mob-drawer-inner {
+      .mob-drawer-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+
+        .mob-drawer-close {
+          font-size: 18px;
+          color: var(--el-text-color-secondary);
+          cursor: pointer;
+        }
+      }
+
+      .mob-drawer-actions {
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--el-border-color-light);
+
+        .mob-drawer-qty {
           width: 100%;
+          margin-bottom: 12px;
+        }
+
+        .mob-drawer-btns {
+          display: flex;
+          gap: 10px;
+
+          .dock-main {
+            flex: 1;
+            margin-left: 0;
+          }
         }
       }
     }

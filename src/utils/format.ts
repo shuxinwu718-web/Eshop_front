@@ -74,7 +74,6 @@ export function formatNumber(num: number): string {
  * @returns 格式化后的金额字符串
  *
  * @example
- * ```ts
  * formatCurrency(1234567);      // "¥1,234,567.00"
  * formatCurrency(1234567.8);    // "¥1,234,567.80"
  * formatCurrency(1234567, 0);   // "¥1,234,567"
@@ -83,4 +82,94 @@ export function formatNumber(num: number): string {
 export function formatCurrency(amount: number, decimals: number = 2): string {
   const formatted = amount.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return "¥" + formatted;
+}
+
+// ============ 时间格式化（全项目唯一入口） ============
+//
+// 约定：
+// - 日期时间统一展示为 "YYYY-MM-DD HH:mm:ss"（不带 T，不用斜杠）
+// - 纯日期统一展示为 "YYYY-MM-DD"
+// - 输入兼容：后端 "YYYY-MM-DD HH:mm:ss"、ISO 带 T、Date 对象、时间戳
+// - 解析时把空格分隔补成 T，避免 Safari 无法解析 "YYYY-MM-DD HH:mm:ss"
+
+/**
+ * 将任意时间输入安全地转为 Date；无法解析或为空时返回 null。
+ * 后端 "YYYY-MM-DD HH:mm:ss" 空格格式在 Safari 下无法直接 new Date，
+ * 全项目解析后端时间字符串必须走此函数。
+ */
+export function parseDate(value: string | Date | number | null | undefined): Date | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "number") return Number.isNaN(value) ? null : new Date(value);
+  const str = String(value).trim();
+  if (!str) return null;
+  // "2026-09-04 11:37:19" -> "2026-09-04T11:37:19"（Safari 兼容）
+  const normalized = /^\d{4}-\d{2}-\d{2}[ ]/.test(str) ? str.replace(" ", "T") : str;
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * 安全获取时间戳（毫秒），无法解析时返回 null
+ */
+export function toTimeStamp(value: string | Date | number | null | undefined): number | null {
+  const date = parseDate(value);
+  return date ? date.getTime() : null;
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/**
+ * 格式化为日期时间 "YYYY-MM-DD HH:mm:ss"
+ * @param value 时间值（字符串/Date/时间戳）
+ * @param fallback 空值占位，默认 "-"
+ *
+ * @example
+ * formatDateTime("2026-09-04T11:37:19");      // "2026-09-04 11:37:19"
+ * formatDateTime("2026-09-04 11:37:19");      // "2026-09-04 11:37:19"
+ * formatDateTime(undefined, "");              // ""
+ */
+export function formatDateTime(
+  value: string | Date | number | null | undefined,
+  fallback: string = "-"
+): string {
+  const date = parseDate(value);
+  if (!date) return fallback;
+  return (
+    `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ` +
+    `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+  );
+}
+
+/**
+ * 格式化为日期 "YYYY-MM-DD"
+ * @param value 时间值（字符串/Date/时间戳）
+ * @param fallback 空值占位，默认 "-"
+ */
+export function formatDate(
+  value: string | Date | number | null | undefined,
+  fallback: string = "-"
+): string {
+  const date = parseDate(value);
+  if (!date) return fallback;
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/**
+ * 格式化为分钟精度 "YYYY-MM-DD HH:mm"（列表紧凑场景使用）
+ * @param value 时间值（字符串/Date/时间戳）
+ * @param fallback 空值占位，默认 "-"
+ */
+export function formatTimeMinute(
+  value: string | Date | number | null | undefined,
+  fallback: string = "-"
+): string {
+  const date = parseDate(value);
+  if (!date) return fallback;
+  return (
+    `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ` +
+    `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+  );
 }

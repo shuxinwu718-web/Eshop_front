@@ -51,7 +51,7 @@
           <template v-if="getTimeStatus(item) === 'upcoming'">
             {{ formatDateTime(item.startTime) }} 开始
           </template>
-          <template v-else>有效期至 {{ formatDate(item.endTime) }}</template>
+          <template v-else>有效期至 {{ formatDate(item.endTime, "") }}</template>
         </div>
         <div class="coupon-action">
           <el-button
@@ -86,6 +86,7 @@ import { ElMessage } from "element-plus";
 import { receiveCoupon } from "@/api/eshop/user_coupons";
 import type { AvailableCouponItem } from "@/api/eshop/user_coupons";
 import { promptLogin } from "@/utils/requireLogin";
+import { formatDate, formatTimeMinute, toTimeStamp } from "@/utils/format";
 import { useUserStore } from "@/store";
 
 const props = defineProps<{
@@ -107,34 +108,17 @@ watch(
   }
 );
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-};
-
-const formatDateTime = (dateStr: string | undefined) => {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+const formatDateTime = (dateStr: string | undefined) => formatTimeMinute(dateStr, "");
 
 const getTimeStatus = (item: AvailableCouponItem) => {
   const now = Date.now();
-  if (item.startTime && new Date(item.startTime).getTime() > now) {
+  if (item.startTime && (toTimeStamp(item.startTime) ?? 0) > now) {
     return "upcoming";
   }
-  if (item.endTime && new Date(item.endTime).getTime() < now) {
+  if (item.endTime && (toTimeStamp(item.endTime) ?? 0) < now) {
     return "expired";
   }
-  return "ongoing";
+  return "available";
 };
 
 // 用户已持有数量达到领取上限 → 显示"已领取"，无需再请求后端

@@ -132,6 +132,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
+import { formatTimeMinute } from "@/utils/format";
 import type { NoticeItem, NoticeDetail, NoticeQueryParams } from "@/types/api";
 import type { TagType } from "@/api/eshop/order";
 
@@ -194,11 +195,7 @@ const getContentPreview = (content?: string, bizType?: string) => {
 };
 
 // 格式化日期
-const formatDate = (dateStr?: string | Date) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-};
+const formatDate = (dateStr?: string | Date) => formatTimeMinute(dateStr, "");
 
 // 加载数据
 async function handleQuery() {

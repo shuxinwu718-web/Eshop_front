@@ -4,7 +4,13 @@
       <template #header>
         <div class="flex-x-between">
           <span>评论管理</span>
-          <el-button type="primary" @click="handleExport">导出Excel</el-button>
+          <div>
+            <el-button type="success" plain :loading="analyzing" @click="handleAnalyze">
+              <el-icon style="margin-right: 4px"><MagicStick /></el-icon>
+              AI 情感分析
+            </el-button>
+            <el-button type="primary" @click="handleExport">导出Excel</el-button>
+          </div>
         </div>
       </template>
 
@@ -55,6 +61,14 @@
         </el-form-item>
       </el-form>
 
+      <!-- AI 情感概览（分析后显示） -->
+      <div v-if="sentimentStat.total > 0" class="sentiment-summary">
+        <span class="summary-label">AI 情感分析（当前页 {{ sentimentStat.total }} 条）：</span>
+        <el-tag type="success" size="small">正面 {{ sentimentStat.positive }}</el-tag>
+        <el-tag type="danger" size="small">负面 {{ sentimentStat.negative }}</el-tag>
+        <el-tag type="info" size="small">中性 {{ sentimentStat.neutral }}</el-tag>
+      </div>
+
       <!-- 评论表格 -->
       <el-table v-loading="loading" :data="list" stripe border>
         <el-table-column prop="id" label="ID" width="70" />
@@ -72,6 +86,17 @@
           </template>
         </el-table-column>
         <el-table-column prop="content" label="评论内容" min-width="200" show-overflow-tooltip />
+        <el-table-column label="AI 情感" width="200">
+          <template #default="{ row }">
+            <template v-if="sentimentMap[row.id]">
+              <el-tag :type="sentimentTagType(sentimentMap[row.id].sentiment)" size="small">
+                {{ sentimentMap[row.id].sentiment_label }}
+              </el-tag>
+              <span v-for="t in sentimentMap[row.id].tags" :key="t" class="ai-tag">{{ t }}</span>
+            </template>
+            <span v-else class="ai-none">—</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
@@ -112,14 +137,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { MagicStick } from "@element-plus/icons-vue";
 import CommentAPI, { type CommentItem, type CommentQueryParams } from "@/api/eshop/comment";
+import AiAPI, { type AiCommentSentiment } from "@/api/ai/chat";
 import { useExport } from "@/composables/useExport";
 
 const loading = ref(false);
 const list = ref<CommentItem[]>([]);
 const total = ref(0);
+
+// ========== AI 情感分析 ==========
+const analyzing = ref(false);
+// 评论 id -> 情感结果
+const sentimentMap = ref<Record<number, AiCommentSentiment>>({});
+
+/** AI 分析当前页评论情感 */
+const handleAnalyze = async () => {
+  const comments = list.value
+    .filter((c) => c.content && c.content.trim())
+    .map((c) => ({ id: c.id, content: c.content }));
+  if (!comments.length) {
+    ElMessage.warning("当前页没有可分析的评论");
+    return;
+  }
+  analyzing.value = true;
+  try {
+    const res = await AiAPI.analyzeComments(comments);
+    const map: Record<number, AiCommentSentiment> = {};
+    res.results.forEach((r) => (map[r.id] = r));
+    sentimentMap.value = map;
+    ElMessage.success("AI 情感分析完成");
+  } catch (error) {
+    console.error(error);
+    ElMessage.error((error as Error).message || "AI 分析失败，请稍后再试");
+  } finally {
+    analyzing.value = false;
+  }
+};
+
+/** 情感 → el-tag 类型 */
+const sentimentTagType = (s: AiCommentSentiment["sentiment"]) => {
+  if (s === "positive") return "success";
+  if (s === "negative") return "danger";
+  return "info";
+};
+
+/** 当前页情感统计 */
+const sentimentStat = computed(() => {
+  const vals = Object.values(sentimentMap.value);
+  return {
+    total: vals.length,
+    positive: vals.filter((v) => v.sentiment === "positive").length,
+    negative: vals.filter((v) => v.sentiment === "negative").length,
+    neutral: vals.filter((v) => v.sentiment === "neutral").length,
+  };
+});
 
 const queryParams = reactive<CommentQueryParams>({
   pageNum: 1,
@@ -137,6 +211,8 @@ const fetchData = async () => {
     const res = await CommentAPI.getPage(queryParams);
     list.value = res.records;
     total.value = res.total;
+    // 列表变化后清空上一次的 AI 分析结果（避免与当前页错位）
+    sentimentMap.value = {};
   } catch (error) {
     console.error("加载评论失败", error);
     ElMessage.error("加载失败");
@@ -220,6 +296,32 @@ onMounted(() => {
 }
 .search-form {
   margin-bottom: 20px;
+}
+.sentiment-summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--el-fill-color-light);
+  border-radius: 6px;
+
+  .summary-label {
+    font-size: 13px;
+    color: var(--el-text-color-regular);
+  }
+}
+.ai-tag {
+  display: inline-block;
+  padding: 0 4px;
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  border-radius: 3px;
+}
+.ai-none {
+  color: var(--el-text-color-placeholder);
 }
 .pagination {
   margin-top: 20px;

@@ -1,0 +1,4125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Shop 数据库表结构文档（40 张表）</title>
+    <style>
+      :root {
+        --bg: #f4f6fa;
+        --card: #fff;
+        --ink: #1f2d3d;
+        --ink2: #5c6b7e;
+        --line: #e3e8ef;
+        --brand: #2563eb;
+        --brand-2: #0ea5e9;
+        --brand-soft: #eef4ff;
+        --good: #16a34a;
+        --good-soft: #eaf7ee;
+        --warn: #d97706;
+        --warn-soft: #fdf3e3;
+        --miss: #dc2626;
+        --miss-soft: #fdeeee;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .hero {
+        padding: 40px 20px 84px;
+        color: #fff;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb 55%, #0ea5e9);
+      }
+      .hero-inner {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 27px;
+      }
+      .hero p {
+        max-width: 760px;
+        margin: 0;
+        font-size: 14px;
+        opacity: 0.92;
+      }
+      .wrap {
+        position: relative;
+        z-index: 2;
+        max-width: 960px;
+        padding: 0 16px;
+        margin: -52px auto 50px;
+      }
+      .card {
+        padding: 24px 26px;
+        margin-bottom: 20px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+      }
+      h2.sec {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding-left: 12px;
+        margin: 4px 0 14px;
+        font-size: 20px;
+        border-left: 4px solid var(--brand);
+      }
+      h2.sec .no {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        color: #fff;
+        background: var(--brand);
+        border-radius: 8px;
+      }
+      h2.sec .sub {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--ink2);
+      }
+      h3 {
+        margin: 16px 0 6px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      .muted {
+        font-size: 13px;
+        color: var(--ink2);
+      }
+      table {
+        width: 100%;
+        margin: 10px 0;
+        font-size: 13.5px;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px 11px;
+        vertical-align: top;
+        text-align: left;
+        border: 1px solid var(--line);
+      }
+      th {
+        font-weight: 600;
+        background: #f8fafc;
+      }
+      tr:nth-child(even) td {
+        background: #fbfcfe;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 999px;
+      }
+      .pill.ok {
+        color: var(--good);
+        background: var(--good-soft);
+      }
+      .pill.gap {
+        color: var(--miss);
+        background: var(--miss-soft);
+      }
+      .pill.mid {
+        color: var(--warn);
+        background: var(--warn-soft);
+      }
+      .pill.plus {
+        color: var(--brand);
+        background: var(--brand-soft);
+      }
+      .tip {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 16px;
+        margin: 12px 0;
+        font-size: 13.5px;
+        border-radius: 10px;
+      }
+      .tip.brand {
+        background: var(--brand-soft);
+        border: 1px solid #d3e0ff;
+      }
+      .tip.warn {
+        background: var(--warn-soft);
+        border: 1px solid #f4e2c3;
+      }
+      .tip.red {
+        background: var(--miss-soft);
+        border: 1px solid #f7d2d2;
+      }
+      .code {
+        padding: 12px 14px;
+        margin: 8px 0;
+        overflow-x: auto;
+        font-family: Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--code-ink);
+        white-space: pre;
+        background: var(--code-bg);
+        border-radius: 10px;
+      }
+      footer {
+        padding: 10px 0 30px;
+        font-size: 12px;
+        color: var(--ink2);
+        text-align: center;
+      }
+      /* 搜索框 */
+      .search-box {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .search-box input {
+        flex: 1;
+        padding: 9px 12px;
+        font-size: 14px;
+        outline: none;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .search-box input:focus {
+        border-color: var(--brand);
+      }
+      .search-box .hint {
+        font-size: 12.5px;
+        color: var(--ink2);
+        white-space: nowrap;
+      }
+      /* 表卡片 */
+      .tbl-card {
+        padding: 4px 16px 14px;
+        margin: 16px 0;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .tbl-title {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin: 12px 0 2px;
+      }
+      .tbl-name {
+        padding: 3px 10px;
+        font-family: Consolas, monospace;
+        font-size: 16.5px;
+        color: #0f172a;
+        background: #eef1f6;
+        border: 1px solid #dde3ec;
+        border-radius: 6px;
+      }
+      .tbl-fn {
+        font-size: 13.5px;
+        font-weight: 400;
+        color: var(--ink2);
+      }
+      code.colname {
+        font-family: Consolas, monospace;
+        font-size: 12.5px;
+        color: #0f172a;
+      }
+      code.ov-tbl {
+        display: inline-block;
+        padding: 1px 6px;
+        margin: 0 2px 2px 0;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        color: #0f172a;
+        background: #eef1f6;
+        border-radius: 4px;
+      }
+      .legend {
+        margin: 6px 0 0;
+        font-size: 12.5px;
+        color: var(--ink2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="hero-inner">
+        <h1>E-Shop 数据库表结构文档</h1>
+        <p>
+          完整收录 eshops 库 40 张表的建表定义与字段含义，按业务模块分组。全文简体中文，由
+          docs/_tmp_eshops_schema.sql 解析生成。
+        </p>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- 使用指引 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">?</span>
+          使用指引
+          <span class="sub">30 秒上手</span>
+        </h2>
+        <p>
+          <b>快速查表</b>
+          ：① 用顶部概览区的搜索框，输入表名/功能关键词即可实时过滤下方的表卡片；② 或直接浏览器
+          <b>Ctrl+F</b>
+          搜表名（如
+          <code>seckill_session</code>
+          、
+          <code>order</code>
+          ）。
+        </p>
+        <p>
+          <b>约定说明（依据建表语句归纳，非臆测）</b>
+          ：
+        </p>
+        <table>
+          <tr>
+            <th style="width: 26%">约定</th>
+            <th>依据</th>
+          </tr>
+          <tr>
+            <td>
+              金额统一
+              <code>decimal(10,2)</code>
+              （元，两位小数）
+            </td>
+            <td>订单金额、退款金额、优惠券面值、拼团价、秒杀价等均为 decimal(10,2)。</td>
+          </tr>
+          <tr>
+            <td>
+              时间多用
+              <code>datetime</code>
+              ，
+              <code>create_time/update_time</code>
+              成对出现且 update_time 自动更新
+            </td>
+            <td>
+              绝大多数表都有
+              <code>create_time datetime DEFAULT CURRENT_TIMESTAMP</code>
+              、
+              <code>update_time ... ON UPDATE CURRENT_TIMESTAMP</code>
+              ；签到按天用
+              <code>date</code>
+              （sign_date）。
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>user_id</code>
+              普遍关联 user 表主键
+            </td>
+            <td>
+              address、favorite、order、payment_transaction、refund_application、merchant_message
+              等都有 user_id 且注释标明"用户ID"。
+            </td>
+          </tr>
+          <tr>
+            <td>
+              逻辑删除用
+              <code>deleted</code>
+              （tinyint，0 正常 / 1 已删）
+            </td>
+            <td>user、product、category、order、group_buy_*、marketing_* 等均含 deleted 字段。</td>
+          </tr>
+          <tr>
+            <td>
+              状态/类型字段用
+              <code>tinyint</code>
+              ，取值以列注释为准
+            </td>
+            <td>
+              如 order.pay_status、product.status、seckill_session.status
+              等，注释里都写明了各取值含义。
+            </td>
+          </tr>
+          <tr>
+            <td>高并发库存单独建字段做原子扣减</td>
+            <td>
+              group_buy_activity.total_stock
+              注释"拼团可售库存（原子扣减）"、seckill_session.seckill_stock"秒杀独立库存"。
+            </td>
+          </tr>
+          <tr>
+            <td>可空性以字段定义为准</td>
+            <td>表中"可空"列：否 = NOT NULL，是 = 允许 NULL。</td>
+          </tr>
+        </table>
+        <div class="tip warn">
+          ⚠️
+          <div>
+            <b>关于行数：</b>
+            概览中的行数为
+            <b>估算值</b>
+            （由各表建表语句的 AUTO_INCREMENT 推算，未实际连库核对；AUTO_INCREMENT 与
+            information_schema.table_rows 同为近似口径）。若需精确值，可在 MySQL 执行：
+            <code>
+              SELECT table_name, table_rows FROM information_schema.tables WHERE
+              table_schema='eshops';
+            </code>
+          </div>
+        </div>
+      </div>
+
+      <!-- 概览 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">1</span>
+          概览 · 40 张表 / 8 个模块
+          <span class="sub">搜索框实时过滤下方全部表卡片</span>
+        </h2>
+        <div class="search-box">
+          <input
+            id="q"
+            type="text"
+            placeholder="输入表名或功能关键词，如：order / 秒杀 / 优惠券 / 退款 ..."
+            autocomplete="off"
+          />
+          <span class="hint" id="match-n">共 40 张表</span>
+        </div>
+        <table>
+          <tr>
+            <th style="width: 22%">模块</th>
+            <th style="width: 9%">表数量</th>
+            <th style="width: 10%">行数合计(估)</th>
+            <th>表名列表（表名 + 估算行数）</th>
+          </tr>
+          <tr>
+            <td><b>用户与商家（认证与权限）</b></td>
+            <td>3</td>
+            <td>≈40</td>
+            <td>
+              <code class="ov-tbl">user</code>
+              <span class="muted">≈27</span>
+              <code class="ov-tbl">merchant_apply</code>
+              <span class="muted">≈5</span>
+              <code class="ov-tbl">store_design</code>
+              <span class="muted">≈8</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>商品与分类</b></td>
+            <td>7</td>
+            <td>≈4461</td>
+            <td>
+              <code class="ov-tbl">category</code>
+              <span class="muted">≈17</span>
+              <code class="ov-tbl">product</code>
+              <span class="muted">≈436</span>
+              <code class="ov-tbl">product_sku</code>
+              <span class="muted">≈2730</span>
+              <code class="ov-tbl">product_spec</code>
+              <span class="muted">≈1148</span>
+              <code class="ov-tbl">product_image</code>
+              <span class="muted">≈92</span>
+              <code class="ov-tbl">product_intro_version</code>
+              <span class="muted">≈35</span>
+              <code class="ov-tbl">product_size_chart</code>
+              <span class="muted">≈3</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>购物车与地址</b></td>
+            <td>2</td>
+            <td>≈132</td>
+            <td>
+              <code class="ov-tbl">cart</code>
+              <span class="muted">≈117</span>
+              <code class="ov-tbl">address</code>
+              <span class="muted">≈15</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>订单与支付退款</b></td>
+            <td>8</td>
+            <td>≈3319</td>
+            <td>
+              <code class="ov-tbl">order</code>
+              <span class="muted">≈812</span>
+              <code class="ov-tbl">order_item</code>
+              <span class="muted">≈1349</span>
+              <code class="ov-tbl">order_shipment</code>
+              <span class="muted">≈1087</span>
+              <code class="ov-tbl">payment_transaction</code>
+              <span class="muted">≈9</span>
+              <code class="ov-tbl">refund_application</code>
+              <span class="muted">≈12</span>
+              <code class="ov-tbl">refund_progress_log</code>
+              <span class="muted">≈40</span>
+              <code class="ov-tbl">refund_reason_category</code>
+              <span class="muted">≈5</span>
+              <code class="ov-tbl">refund_satisfaction</code>
+              <span class="muted">≈5</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>营销活动</b></td>
+            <td>13</td>
+            <td>≈743</td>
+            <td>
+              <code class="ov-tbl">coupon</code>
+              <span class="muted">≈35</span>
+              <code class="ov-tbl">user_coupon</code>
+              <span class="muted">≈135</span>
+              <code class="ov-tbl">user_signin_record</code>
+              <span class="muted">≈69</span>
+              <code class="ov-tbl">user_signin_reward</code>
+              <span class="muted">≈10</span>
+              <code class="ov-tbl">user_activity_record</code>
+              <span class="muted">≈15</span>
+              <code class="ov-tbl">seckill_session</code>
+              <span class="muted">≈18</span>
+              <code class="ov-tbl">group_buy_activity</code>
+              <span class="muted">≈402</span>
+              <code class="ov-tbl">group_buy_group</code>
+              <span class="muted">≈14</span>
+              <code class="ov-tbl">group_buy_member</code>
+              <span class="muted">≈18</span>
+              <code class="ov-tbl">marketing_activity</code>
+              <span class="muted">≈5</span>
+              <code class="ov-tbl">marketing_task</code>
+              <span class="muted">≈16</span>
+              <code class="ov-tbl">promotion_activity</code>
+              <span class="muted">≈0</span>
+              <code class="ov-tbl">festival_coupon_plan</code>
+              <span class="muted">≈6</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>消息通知</b></td>
+            <td>3</td>
+            <td>≈724</td>
+            <td>
+              <code class="ov-tbl">sys_notice</code>
+              <span class="muted">≈462</span>
+              <code class="ov-tbl">sys_notice_read</code>
+              <span class="muted">≈261</span>
+              <code class="ov-tbl">merchant_message</code>
+              <span class="muted">≈1</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>用户行为</b></td>
+            <td>2</td>
+            <td>≈1575</td>
+            <td>
+              <code class="ov-tbl">product_comment</code>
+              <span class="muted">≈1552</span>
+              <code class="ov-tbl">favorite</code>
+              <span class="muted">≈23</span>
+            </td>
+          </tr>
+          <tr>
+            <td><b>日志与监控</b></td>
+            <td>2</td>
+            <td>≈30601</td>
+            <td>
+              <code class="ov-tbl">visit_log</code>
+              <span class="muted">≈30364</span>
+              <code class="ov-tbl">operation_log</code>
+              <span class="muted">≈237</span>
+            </td>
+          </tr>
+        </table>
+        <p class="legend">
+          键标记说明：
+          <span class="pill plus">PK</span>
+          =主键　
+          <span class="pill ok">UK</span>
+          =唯一键　
+          <span class="pill mid">索引</span>
+          =普通索引（建表语句中的 KEY）　"—"=无键。
+        </p>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">2</span>
+          用户与商家（认证与权限） · 3 张表
+          <span class="sub">用户、商家入驻申请、店铺装修</span>
+        </h2>
+        <div
+          class="tbl-card"
+          data-tags="user 用户主表：注册用户、商家、管理员都在这张表里，用 role 字段区分身份，存登录凭证与基本资料。 用户与商家（认证与权限）"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">user</code>
+            <span class="pill plus">27 行(估)</span>
+            <span class="tbl-fn">
+              用户主表：注册用户、商家、管理员都在这张表里，用 role
+              字段区分身份，存登录凭证与基本资料。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">username</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">nickname</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">password</code></td>
+              <td>varchar(255) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">phone</code></td>
+              <td>varchar(20) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">email</code></td>
+              <td>varchar(100) DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">avatar</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">gender</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>性别 0-未知 1-男 2-女</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0-正常 1-冻结</td>
+            </tr>
+            <tr>
+              <td><code class="colname">role</code></td>
+              <td>varchar(20) NOT NULL DEFAULT &#39;USER&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>USER,ADMIN,MERCHANT</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="merchant_apply 商家入驻申请表 用户与商家（认证与权限）">
+          <h3 class="tbl-title">
+            <code class="tbl-name">merchant_apply</code>
+            <span class="pill plus">5 行(估)</span>
+            <span class="tbl-fn">商家入驻申请表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>主键</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>申请人用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">business_name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>店铺名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">business_license</code></td>
+              <td>varchar(500) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>营业执照图片URL</td>
+            </tr>
+            <tr>
+              <td><code class="colname">contact_name</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>联系人姓名</td>
+            </tr>
+            <tr>
+              <td><code class="colname">contact_phone</code></td>
+              <td>varchar(20) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>联系人电话</td>
+            </tr>
+            <tr>
+              <td><code class="colname">business_scope</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>经营范围</td>
+            </tr>
+            <tr>
+              <td><code class="colname">address</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>经营地址</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>审核状态 0-待审核 1-通过 2-拒绝</td>
+            </tr>
+            <tr>
+              <td><code class="colname">remark</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>审核备注（拒绝原因）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="store_design 商家小店设计配置 用户与商家（认证与权限）">
+          <h3 class="tbl-title">
+            <code class="tbl-name">store_design</code>
+            <span class="pill plus">8 行(估)</span>
+            <span class="tbl-fn">商家小店设计配置</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">merchant_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>商家ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">background_color</code></td>
+              <td>varchar(20) NOT NULL DEFAULT &#39;#667eea&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>店铺头背景色</td>
+            </tr>
+            <tr>
+              <td><code class="colname">banner_url</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>店铺头像URL</td>
+            </tr>
+            <tr>
+              <td><code class="colname">announcement</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>店铺公告</td>
+            </tr>
+            <tr>
+              <td><code class="colname">draft_layout</code></td>
+              <td>longtext</td>
+              <td>是</td>
+              <td>—</td>
+              <td>装修草稿楼层配置JSON</td>
+            </tr>
+            <tr>
+              <td><code class="colname">layout</code></td>
+              <td>longtext</td>
+              <td>是</td>
+              <td>—</td>
+              <td>已发布楼层配置JSON（用户端渲染）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">3</span>
+          商品与分类 · 7 张表
+          <span class="sub">商品、分类、SKU、规格、图片、介绍版本、尺码表</span>
+        </h2>
+        <div
+          class="tbl-card"
+          data-tags="category 商品分类：parent_id 自关联支持多级分类，管理分类层级、排序与启停状态。 商品与分类"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">category</code>
+            <span class="pill plus">17 行(估)</span>
+            <span class="tbl-fn">
+              商品分类：parent_id 自关联支持多级分类，管理分类层级、排序与启停状态。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">parent_id</code></td>
+              <td>bigint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">level</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="product 商品主表：商品的基础信息——名称、拼音、分类、商家、价格、库存、销量、浏览量、上下架状态。 商品与分类"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">product</code>
+            <span class="pill plus">436 行(估)</span>
+            <span class="tbl-fn">
+              商品主表：商品的基础信息——名称、拼音、分类、商家、价格、库存、销量、浏览量、上下架状态。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name</code></td>
+              <td>varchar(200) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name_pinyin</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">category_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">merchant_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商家ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">price</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">stock</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">description</code></td>
+              <td>longtext</td>
+              <td>是</td>
+              <td>—</td>
+              <td>商品介绍（富文本 HTML，审核通过后写入）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">cover_image</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0-下架 1-上架</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sales</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>销量</td>
+            </tr>
+            <tr>
+              <td><code class="colname">views</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>浏览量</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>排序权重</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="product_sku 商品 SKU（库存单元）：每个规格组合一行，含售价、库存、编码、专属图片与销量。 商品与分类"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_sku</code>
+            <span class="pill plus">2730 行(估)</span>
+            <span class="tbl-fn">
+              商品 SKU（库存单元）：每个规格组合一行，含售价、库存、编码、专属图片与销量。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">specs</code></td>
+              <td>json NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>规格组合</td>
+            </tr>
+            <tr>
+              <td><code class="colname">price</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>SKU售价</td>
+            </tr>
+            <tr>
+              <td><code class="colname">stock</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>SKU库存</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_code</code></td>
+              <td>varchar(100) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>SKU编码</td>
+            </tr>
+            <tr>
+              <td><code class="colname">image</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>SKU专属图片</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sales</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>SKU销量</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="product_spec 商品规格定义：每个规格（颜色/尺码/容量等）一行，可选值列表用 JSON 存储。 商品与分类"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_spec</code>
+            <span class="pill plus">1148 行(估)</span>
+            <span class="tbl-fn">
+              商品规格定义：每个规格（颜色/尺码/容量等）一行，可选值列表用 JSON 存储。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">spec_name</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>规格名称（颜色/尺码/容量/配置...）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">spec_values</code></td>
+              <td>json NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>可选值列表</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort_order</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>排序</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="product_image 商品图片表 商品与分类">
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_image</code>
+            <span class="pill plus">92 行(估)</span>
+            <span class="tbl-fn">商品图片表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">image_url</code></td>
+              <td>varchar(500) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>图片URL</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>排序</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="product_intro_version 商品介绍版本 商品与分类">
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_intro_version</code>
+            <span class="pill plus">35 行(估)</span>
+            <span class="tbl-fn">商品介绍版本</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">version_no</code></td>
+              <td>int NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>版本号（每次提交审核递增）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">content</code></td>
+              <td>longtext NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>富文本 HTML 正文</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0-草稿 1-待审核 2-已通过 3-已驳回</td>
+            </tr>
+            <tr>
+              <td><code class="colname">audit_remark</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>驳回原因/审核意见</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="product_size_chart 商品尺码/规格对照表：用 JSON 存列头与行数据，一个商品最多一张。 商品与分类"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_size_chart</code>
+            <span class="pill plus">3 行(估)</span>
+            <span class="tbl-fn">
+              商品尺码/规格对照表：用 JSON 存列头与行数据，一个商品最多一张。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">chart_title</code></td>
+              <td>varchar(100) DEFAULT &#39;尺寸表&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>尺寸表标题</td>
+            </tr>
+            <tr>
+              <td><code class="colname">columns_json</code></td>
+              <td>json NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>列头定义</td>
+            </tr>
+            <tr>
+              <td><code class="colname">rows_json</code></td>
+              <td>json NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>行数据</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">4</span>
+          购物车与地址 · 2 张表
+          <span class="sub">加购、收货地址</span>
+        </h2>
+        <div
+          class="tbl-card"
+          data-tags="cart 购物车：记录用户把哪些商品（可精确到 SKU 规格）加进了购物车，含数量与勾选状态。 购物车与地址"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">cart</code>
+            <span class="pill plus">117 行(估)</span>
+            <span class="tbl-fn">
+              购物车：记录用户把哪些商品（可精确到 SKU 规格）加进了购物车，含数量与勾选状态。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>选中的SKU ID（无规格商品为NULL）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_specs</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>SKU规格描述，如"颜色:黑色, 尺码:41"</td>
+            </tr>
+            <tr>
+              <td><code class="colname">quantity</code></td>
+              <td>int NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">selected</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="address 收货地址表 购物车与地址">
+          <h3 class="tbl-title">
+            <code class="tbl-name">address</code>
+            <span class="pill plus">15 行(估)</span>
+            <span class="tbl-fn">收货地址表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">receiver_name</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>收货人姓名</td>
+            </tr>
+            <tr>
+              <td><code class="colname">receiver_phone</code></td>
+              <td>varchar(20) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>收货人电话</td>
+            </tr>
+            <tr>
+              <td><code class="colname">province</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">city</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">district</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">detail_address</code></td>
+              <td>varchar(200) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">is_default</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>0-非默认 1-默认</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">5</span>
+          订单与支付退款 · 8 张表
+          <span class="sub">订单、发货、支付流水、退款申请与进度</span>
+        </h2>
+        <div
+          class="tbl-card"
+          data-tags="order 订单主表：一笔订单一行，记录金额、支付方式、订单状态与收货信息，秒杀订单会标记来源场次。 订单与支付退款"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">order</code>
+            <span class="pill plus">812 行(估)</span>
+            <span class="tbl-fn">
+              订单主表：一笔订单一行，记录金额、支付方式、订单状态与收货信息，秒杀订单会标记来源场次。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_no</code></td>
+              <td>varchar(32) NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">total_amount</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">pay_amount</code></td>
+              <td>decimal(10,2) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">type</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">seckill_session_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>秒杀场次ID（秒杀商品订单来源标记）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">pay_status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">pay_method</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;2&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>支付方式 1微信 2支付宝</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">receiver_name</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">receiver_phone</code></td>
+              <td>varchar(20) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">receiver_address</code></td>
+              <td>varchar(200) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">remark</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">pay_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">finish_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">cancel_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="order_item 订单明细：把一笔订单拆成多行商品快照，记录下单时的商品名、价格、数量与 SKU 规格。 订单与支付退款"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">order_item</code>
+            <span class="pill plus">1349 行(估)</span>
+            <span class="tbl-fn">
+              订单明细：把一笔订单拆成多行商品快照，记录下单时的商品名、价格、数量与 SKU 规格。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">shipment_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>选中的SKU ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_specs</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>规格组合描述</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_name</code></td>
+              <td>varchar(200) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_image</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">price</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">quantity</code></td>
+              <td>int NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">total_price</code></td>
+              <td>
+                decimal(10,2)
+                <span class="pill mid">生成列</span>
+                <span class="muted" style="font-size: 12px">（price * quantity）</span>
+              </td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="order_shipment 发货单（按商家拆分的履约单元） 订单与支付退款"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">order_shipment</code>
+            <span class="pill plus">1087 行(估)</span>
+            <span class="tbl-fn">发货单（按商家拆分的履约单元）</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>关联订单ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">seller_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商家ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">delivery_status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>发货状态 0-待发货 1-已发货 2-已收货</td>
+            </tr>
+            <tr>
+              <td><code class="colname">shipping_name</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>快递公司</td>
+            </tr>
+            <tr>
+              <td><code class="colname">shipping_no</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>快递单号</td>
+            </tr>
+            <tr>
+              <td><code class="colname">shipping_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>发货时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">received_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>收货时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">total_amount</code></td>
+              <td>decimal(10,2) NOT NULL DEFAULT &#39;0.00&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>本单商品总额</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="payment_transaction 支付流水表（支付宝） 订单与支付退款">
+          <h3 class="tbl-title">
+            <code class="tbl-name">payment_transaction</code>
+            <span class="pill plus">9 行(估)</span>
+            <span class="tbl-fn">支付流水表（支付宝）</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>主键</td>
+            </tr>
+            <tr>
+              <td><code class="colname">out_trade_no</code></td>
+              <td>varchar(64) NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>商户订单号（order.orderNo）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>订单ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>支付用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">amount</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>订单实付金额</td>
+            </tr>
+            <tr>
+              <td><code class="colname">trade_no</code></td>
+              <td>varchar(64) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>支付宝交易号（回调/查单获得）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">buyer_logon_id</code></td>
+              <td>varchar(64) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>买家支付宝账号（脱敏）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0待支付 1支付成功 2已关闭 3需退款(支付时订单已取消)</td>
+            </tr>
+            <tr>
+              <td><code class="colname">notify_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>支付宝最后一次通知时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>创建时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>更新时间</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="refund_application 退款申请表 订单与支付退款">
+          <h3 class="tbl-title">
+            <code class="tbl-name">refund_application</code>
+            <span class="pill plus">12 行(估)</span>
+            <span class="tbl-fn">退款申请表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>订单ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>申请人用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reason</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>退款原因</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reason_category_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>退款原因分类ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>0-待商户审核 1-待管理员审核 2-已通过 3-已拒绝 4-退款执行中 5-已退款</td>
+            </tr>
+            <tr>
+              <td><code class="colname">remark</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>审核备注（拒绝原因）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">refund_amount</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>退款金额（实付金额）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">apply_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">audit_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">merchant_audit_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>商户审核时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">admin_audit_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>管理员审核时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">refund_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>退款执行时间</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="refund_progress_log 退款进度日志 订单与支付退款">
+          <h3 class="tbl-title">
+            <code class="tbl-name">refund_progress_log</code>
+            <span class="pill plus">40 行(估)</span>
+            <span class="tbl-fn">退款进度日志</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">refund_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>退款申请ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">node_name</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>节点名称：申请提交/商户审核/管理员审核/退款执行/退款完成</td>
+            </tr>
+            <tr>
+              <td><code class="colname">operator</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>操作人</td>
+            </tr>
+            <tr>
+              <td><code class="colname">operator_role</code></td>
+              <td>varchar(20) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>操作人角色：USER/MERCHANT/ADMIN</td>
+            </tr>
+            <tr>
+              <td><code class="colname">remark</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>备注</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="refund_reason_category 退款原因分类 订单与支付退款">
+          <h3 class="tbl-title">
+            <code class="tbl-name">refund_reason_category</code>
+            <span class="pill plus">5 行(估)</span>
+            <span class="tbl-fn">退款原因分类</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>分类名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">description</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>分类描述</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>排序</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>0-禁用 1-启用</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="refund_satisfaction 退款满意度反馈 订单与支付退款">
+          <h3 class="tbl-title">
+            <code class="tbl-name">refund_satisfaction</code>
+            <span class="pill plus">5 行(估)</span>
+            <span class="tbl-fn">退款满意度反馈</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">refund_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">rating</code></td>
+              <td>tinyint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>评分 1-5</td>
+            </tr>
+            <tr>
+              <td><code class="colname">feedback</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>反馈意见</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">6</span>
+          营销活动 · 13 张表
+          <span class="sub">优惠券、签到、秒杀、拼团、平台营销活动与任务</span>
+        </h2>
+        <div class="tbl-card" data-tags="coupon 优惠券定义 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">coupon</code>
+            <span class="pill plus">35 行(估)</span>
+            <span class="tbl-fn">优惠券定义</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>优惠券名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">type</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>类型: 0=满减券, 1=折扣券</td>
+            </tr>
+            <tr>
+              <td><code class="colname">value</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>面值/折扣率</td>
+            </tr>
+            <tr>
+              <td><code class="colname">min_amount</code></td>
+              <td>decimal(10,2) DEFAULT &#39;0.00&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>最低使用金额</td>
+            </tr>
+            <tr>
+              <td><code class="colname">max_discount</code></td>
+              <td>decimal(10,2) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>最高抵扣(折扣券)</td>
+            </tr>
+            <tr>
+              <td><code class="colname">stock</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>库存</td>
+            </tr>
+            <tr>
+              <td><code class="colname">limit_per_user</code></td>
+              <td>int DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>每人限领</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>生效时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>失效时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>状态: 0=下架, 1=上架</td>
+            </tr>
+            <tr>
+              <td><code class="colname">description</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>描述</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">obtain_type</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>获取方式：0-普通领取（显示在领券中心） 1-签到 2-新人礼包 3-秒杀 4-其他活动</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="user_coupon 用户优惠券 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">user_coupon</code>
+            <span class="pill plus">135 行(估)</span>
+            <span class="tbl-fn">用户优惠券</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">coupon_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>优惠券ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_no</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>使用订单号</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>状态: 0=未使用, 1=已使用, 2=已过期</td>
+            </tr>
+            <tr>
+              <td><code class="colname">get_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>领取时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">use_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>使用时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="user_signin_record 用户签到记录表 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">user_signin_record</code>
+            <span class="pill plus">69 行(估)</span>
+            <span class="tbl-fn">用户签到记录表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sign_date</code></td>
+              <td>date NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>签到日期</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="user_signin_reward 用户签到奖励发放记录：记录签到满多少天后发放了哪张优惠券。 营销活动"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">user_signin_reward</code>
+            <span class="pill plus">10 行(估)</span>
+            <span class="tbl-fn">用户签到奖励发放记录：记录签到满多少天后发放了哪张优惠券。</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reward_type</code></td>
+              <td>tinyint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>1-优惠券</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reward_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>优惠券模板ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">signin_consecutive_days</code></td>
+              <td>int NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>触发时的连续签到天数</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="user_activity_record 用户参与营销活动的领取记录：谁在哪个活动领了哪张券，用于防重复领取。 营销活动"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">user_activity_record</code>
+            <span class="pill plus">15 行(估)</span>
+            <span class="tbl-fn">
+              用户参与营销活动的领取记录：谁在哪个活动领了哪张券，用于防重复领取。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">activity_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">coupon_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>领取的优惠券ID（关联coupon表）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">task_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>营销任务ID（营销活动奖励防重）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">source</code></td>
+              <td>varchar(50) DEFAULT &#39;ACTIVITY&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>来源：ACTIVITY-活动领取，SIGNIN-签到，LOTTERY-抽奖</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="seckill_session 秒杀场次表 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">seckill_session</code>
+            <span class="pill plus">18 行(估)</span>
+            <span class="tbl-fn">秒杀场次表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">seckill_type</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>0=秒杀优惠券 1=秒杀商品</td>
+            </tr>
+            <tr>
+              <td><code class="colname">coupon_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>秒杀商品ID（seckill_type=1）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>指定SKU ID（seckill_type=1，可选）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">seckill_price</code></td>
+              <td>decimal(10,2) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>秒杀价（seckill_type=1）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">session_name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>秒杀场次名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>开始时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>结束时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">seckill_stock</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>秒杀独立库存</td>
+            </tr>
+            <tr>
+              <td><code class="colname">limit_per_user</code></td>
+              <td>int NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>每人限领</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0-待开始 1-进行中 2-已结束 3-已撤销</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="group_buy_activity 拼团活动表 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">group_buy_activity</code>
+            <span class="pill plus">402 行(估)</span>
+            <span class="tbl-fn">拼团活动表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>活动ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">merchant_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商家ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sku_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>SKU ID（无规格商品为 NULL，绑定单规格拼团价）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">group_price</code></td>
+              <td>decimal(10,2) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>拼团价</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_count</code></td>
+              <td>int NOT NULL DEFAULT &#39;2&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>成团人数（2/3/5）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">duration_hours</code></td>
+              <td>int NOT NULL DEFAULT &#39;24&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>拼团有效期（小时，开团后该团成团截止时间）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动开始时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>活动结束时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">total_stock</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>拼团可售库存（原子扣减）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sold_count</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>已成团份数</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>状态：0草稿 1进行中 2已暂停 3已终止</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>创建时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>更新时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>逻辑删除</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="group_buy_group 拼团团表 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">group_buy_group</code>
+            <span class="pill plus">14 行(估)</span>
+            <span class="tbl-fn">拼团团表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>团ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">activity_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">group_no</code></td>
+              <td>varchar(32) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>团号</td>
+            </tr>
+            <tr>
+              <td><code class="colname">leader_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>开团用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>状态：0拼团中 1已成团 2拼团失败已退款 3已取消</td>
+            </tr>
+            <tr>
+              <td><code class="colname">expire_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>成团截止时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">success_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>成团时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>创建时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>更新时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>逻辑删除</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="group_buy_member 拼团成员表 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">group_buy_member</code>
+            <span class="pill plus">18 行(估)</span>
+            <span class="tbl-fn">拼团成员表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>成员ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">group_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>团ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">order_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>订单ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">role</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>角色：1开团 0参团</td>
+            </tr>
+            <tr>
+              <td><code class="colname">pay_status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>支付状态：0待支付 1已支付</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>加入时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>逻辑删除</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="marketing_activity 平台营销活动 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">marketing_activity</code>
+            <span class="pill plus">5 行(估)</span>
+            <span class="tbl-fn">平台营销活动</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">activity_name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>活动名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">activity_icon</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>活动图标(emoji)</td>
+            </tr>
+            <tr>
+              <td><code class="colname">description</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>活动说明</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动开始时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动结束时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>0停用 1启用</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort_order</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>排序（越小越靠前）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="marketing_task 营销活动任务 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">marketing_task</code>
+            <span class="pill plus">16 行(估)</span>
+            <span class="tbl-fn">营销活动任务</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">activity_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>所属活动ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">task_type</code></td>
+              <td>varchar(30) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>
+                任务类型: SIGNIN_DAYS-累计签到天数 ORDER_COUNT-已支付订单数 COLLECT_COUNT-收藏商品数
+              </td>
+            </tr>
+            <tr>
+              <td><code class="colname">task_name</code></td>
+              <td>varchar(100) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>任务名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_value</code></td>
+              <td>int NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>目标值（如签到5天/下单3笔/收藏2件）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reward_coupon_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>奖励优惠券ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reward_icon</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>奖励展示图标(emoji)</td>
+            </tr>
+            <tr>
+              <td><code class="colname">sort_order</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>排序（越小越靠前）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div
+          class="tbl-card"
+          data-tags="promotion_activity 平台促销活动（签到/抽奖/任务/限时抢券）：定义活动时间、配额与关联的优惠券。 营销活动"
+        >
+          <h3 class="tbl-title">
+            <code class="tbl-name">promotion_activity</code>
+            <span class="pill plus">0 行(估)</span>
+            <span class="tbl-fn">
+              平台促销活动（签到/抽奖/任务/限时抢券）：定义活动时间、配额与关联的优惠券。
+            </span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>活动名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">type</code></td>
+              <td>tinyint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>活动类型：1-签到 2-抽奖 3-任务 4-限时抢券</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>开始时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_time</code></td>
+              <td>datetime NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>结束时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">coupon_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>关联的优惠券ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">total_quota</code></td>
+              <td>int DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>总配额（null表示不限）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">daily_limit</code></td>
+              <td>int DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>每日领取限制（null表示不限）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">per_user_limit</code></td>
+              <td>int DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>每人总领取限制</td>
+            </tr>
+            <tr>
+              <td><code class="colname">config</code></td>
+              <td>json DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>活动配置（如签到天数、抽奖概率等）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>0-禁用 1-启用</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="festival_coupon_plan 节日优惠券活动规则 营销活动">
+          <h3 class="tbl-title">
+            <code class="tbl-name">festival_coupon_plan</code>
+            <span class="pill plus">6 行(估)</span>
+            <span class="tbl-fn">节日优惠券活动规则</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">coupon_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>关联优惠券模板ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">festival_name</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>节日名称</td>
+            </tr>
+            <tr>
+              <td><code class="colname">festival_icon</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>节日图标(emoji)</td>
+            </tr>
+            <tr>
+              <td><code class="colname">start_date</code></td>
+              <td>date NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动开始日期</td>
+            </tr>
+            <tr>
+              <td><code class="colname">end_date</code></td>
+              <td>date NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>活动结束日期</td>
+            </tr>
+            <tr>
+              <td><code class="colname">required_signin_days</code></td>
+              <td>int NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>所需连续签到天数</td>
+            </tr>
+            <tr>
+              <td><code class="colname">description</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>活动描述文案</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>0-停用 1-启用</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">7</span>
+          消息通知 · 3 张表
+          <span class="sub">系统通知、通知已读、商家留言</span>
+        </h2>
+        <div class="tbl-card" data-tags="sys_notice 系统通知表 消息通知">
+          <h3 class="tbl-title">
+            <code class="tbl-name">sys_notice</code>
+            <span class="pill plus">462 行(估)</span>
+            <span class="tbl-fn">系统通知表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>通知ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">title</code></td>
+              <td>varchar(100) NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>通知标题</td>
+            </tr>
+            <tr>
+              <td><code class="colname">type</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>通知类型（0=系统公告 1=活动通知 2=订单提醒）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">level</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>通知等级（0=普通 1=重要 2=紧急）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_type</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;1&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>目标类型（1-全体，2-指定用户）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_user_ids</code></td>
+              <td>varchar(1000) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>指定用户ID，逗号分隔</td>
+            </tr>
+            <tr>
+              <td><code class="colname">content</code></td>
+              <td>longtext NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>通知内容（HTML）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">publisher_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>发布人ID（关联user表）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">publisher_name</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>发布人姓名</td>
+            </tr>
+            <tr>
+              <td><code class="colname">publish_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>发布时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">revoke_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>撤回时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>状态：0-草稿 1-已发布 2-已撤回</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">biz_type</code></td>
+              <td>varchar(32) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>业务类型: new_order/order_paid/order_cancelled/new_message/reply_message</td>
+            </tr>
+            <tr>
+              <td><code class="colname">biz_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>业务ID (订单ID/留言ID)</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="sys_notice_read 通知已读记录表 消息通知">
+          <h3 class="tbl-title">
+            <code class="tbl-name">sys_notice_read</code>
+            <span class="pill plus">261 行(估)</span>
+            <span class="tbl-fn">通知已读记录表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">notice_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>通知ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">read_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>阅读时间</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="merchant_message 商家留言 消息通知">
+          <h3 class="tbl-title">
+            <code class="tbl-name">merchant_message</code>
+            <span class="pill plus">1 行(估)</span>
+            <span class="tbl-fn">商家留言</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">merchant_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商家用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>关联商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">content</code></td>
+              <td>text NOT NULL</td>
+              <td>否</td>
+              <td>—</td>
+              <td>留言内容</td>
+            </tr>
+            <tr>
+              <td><code class="colname">is_read</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>是否已读 0未读 1已读</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>创建时间</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reply_content</code></td>
+              <td>text</td>
+              <td>是</td>
+              <td>—</td>
+              <td>商家回复</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reply_time</code></td>
+              <td>datetime DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>回复时间</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">8</span>
+          用户行为 · 2 张表
+          <span class="sub">商品评论、收藏</span>
+        </h2>
+        <div class="tbl-card" data-tags="product_comment 商品评论表 用户行为">
+          <h3 class="tbl-title">
+            <code class="tbl-name">product_comment</code>
+            <span class="pill plus">1552 行(估)</span>
+            <span class="tbl-fn">商品评论表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">rating</code></td>
+              <td>tinyint NOT NULL DEFAULT &#39;0&#39;</td>
+              <td>否</td>
+              <td>—</td>
+              <td>评分1-5</td>
+            </tr>
+            <tr>
+              <td><code class="colname">content</code></td>
+              <td>varchar(1000) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>评论内容</td>
+            </tr>
+            <tr>
+              <td><code class="colname">images</code></td>
+              <td>varchar(2000) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>图片URL列表，JSON数组格式</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status</code></td>
+              <td>tinyint DEFAULT &#39;1&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>状态：0-隐藏 1-正常</td>
+            </tr>
+            <tr>
+              <td><code class="colname">parent_id</code></td>
+              <td>bigint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>父评论ID（0为顶级评论），用于楼中楼</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reply_user_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>被回复的用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">reply_content</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>回复内容</td>
+            </tr>
+            <tr>
+              <td><code class="colname">like_count</code></td>
+              <td>int DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>点赞数</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">update_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">deleted</code></td>
+              <td>tinyint DEFAULT &#39;0&#39;</td>
+              <td>是</td>
+              <td>—</td>
+              <td>逻辑删除</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="favorite 用户收藏表 用户行为">
+          <h3 class="tbl-title">
+            <code class="tbl-name">favorite</code>
+            <span class="pill plus">23 行(估)</span>
+            <span class="tbl-fn">用户收藏表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>用户ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">product_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill ok">UK</span></td>
+              <td>商品ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <!-- 模块 -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">9</span>
+          日志与监控 · 2 张表
+          <span class="sub">访问日志、操作日志</span>
+        </h2>
+        <div class="tbl-card" data-tags="visit_log 用户访问日志表 日志与监控">
+          <h3 class="tbl-title">
+            <code class="tbl-name">visit_log</code>
+            <span class="pill plus">30364 行(估)</span>
+            <span class="tbl-fn">用户访问日志表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>用户ID（未登录则为NULL）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">ip</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>访问IP</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_agent</code></td>
+              <td>varchar(255) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>User-Agent</td>
+            </tr>
+            <tr>
+              <td><code class="colname">request_uri</code></td>
+              <td>varchar(255) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>请求URI</td>
+            </tr>
+            <tr>
+              <td><code class="colname">method</code></td>
+              <td>varchar(10) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>请求方法（GET/POST等）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">status_code</code></td>
+              <td>int DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>HTTP 状态码</td>
+            </tr>
+            <tr>
+              <td><code class="colname">duration_ms</code></td>
+              <td>int DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>请求耗时（毫秒）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">visit_time</code></td>
+              <td>datetime NOT NULL DEFAULT CURRENT_TIMESTAMP</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>访问时间</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tbl-card" data-tags="operation_log 操作日志表 日志与监控">
+          <h3 class="tbl-title">
+            <code class="tbl-name">operation_log</code>
+            <span class="pill plus">237 行(估)</span>
+            <span class="tbl-fn">操作日志表</span>
+          </h3>
+          <table>
+            <tr>
+              <th style="width: 19%">字段名</th>
+              <th style="width: 26%">类型</th>
+              <th style="width: 6%">可空</th>
+              <th style="width: 8%">键</th>
+              <th>注释/含义</th>
+            </tr>
+            <tr>
+              <td><code class="colname">id</code></td>
+              <td>bigint NOT NULL AUTO_INCREMENT</td>
+              <td>否</td>
+              <td><span class="pill plus">PK</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">operator_id</code></td>
+              <td>bigint NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>操作人ID（管理员ID）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">operator_name</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>操作人用户名</td>
+            </tr>
+            <tr>
+              <td><code class="colname">operation_type</code></td>
+              <td>varchar(50) NOT NULL</td>
+              <td>否</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>操作类型（如 DELETE_PRODUCT, FREEZE_USER）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_type</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>目标类型（如 Product, User, Order）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">target_id</code></td>
+              <td>bigint DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>目标ID</td>
+            </tr>
+            <tr>
+              <td><code class="colname">content</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>操作内容描述</td>
+            </tr>
+            <tr>
+              <td><code class="colname">request_url</code></td>
+              <td>varchar(200) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>请求URL</td>
+            </tr>
+            <tr>
+              <td><code class="colname">request_params</code></td>
+              <td>text</td>
+              <td>是</td>
+              <td>—</td>
+              <td>请求参数（JSON格式）</td>
+            </tr>
+            <tr>
+              <td><code class="colname">ip</code></td>
+              <td>varchar(50) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">user_agent</code></td>
+              <td>varchar(500) DEFAULT NULL</td>
+              <td>是</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code class="colname">create_time</code></td>
+              <td>datetime DEFAULT CURRENT_TIMESTAMP</td>
+              <td>是</td>
+              <td><span class="pill mid">索引</span></td>
+              <td>—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        本文档由 docs/_tmp_eshops_schema.sql 生成（40 张表 · 8 个业务模块 · 行数合计约 41595 行）·
+        E-Shop 项目 · 2026-09-26
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var box = document.getElementById("q");
+        if (!box) return;
+        box.addEventListener("input", function () {
+          var q = box.value.trim().toLowerCase();
+          var parts = q.split(/\s+/).filter(Boolean);
+          var visible = 0,
+            total = 0;
+          document.querySelectorAll(".tbl-card").forEach(function (c) {
+            total++;
+            var tags = (c.getAttribute("data-tags") || "").toLowerCase();
+            var show =
+              parts.length === 0 ||
+              parts.every(function (p) {
+                return tags.indexOf(p) > -1;
+              });
+            c.style.display = show ? "" : "none";
+            if (show) visible++;
+          });
+          document.getElementById("match-n").textContent =
+            parts.length === 0
+              ? "共 " + total + " 张表"
+              : "匹配 " + visible + " / " + total + " 张表";
+        });
+      })();
+    </script>
+  </body>
+</html>

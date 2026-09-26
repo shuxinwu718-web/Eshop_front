@@ -60,15 +60,6 @@
             <el-button
               v-if="row.status === 0"
               link
-              type="success"
-              size="small"
-              @click="handlePay(row)"
-            >
-              支付
-            </el-button>
-            <el-button
-              v-if="row.status === 0"
-              link
               type="danger"
               size="small"
               @click="handleCancel(row)"
@@ -191,12 +182,6 @@ async function viewDetail(row: OrderVO) {
     currentOrder.value = row;
     detailVisible.value = true;
   }
-}
-
-async function handlePay(row: OrderVO) {
-  await OrderAPI.pay(row.id, row.payAmount ?? row.totalAmount);
-  ElMessage.success("支付成功");
-  fetchData();
 }
 
 async function handleCancel(row: OrderVO) {

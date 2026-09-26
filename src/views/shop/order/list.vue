@@ -79,6 +79,7 @@ import OrderItemCard from "./components/OrderItemCard/index.vue";
 import PayDialog from "./components/PayDialog/index.vue";
 import RefundApplyDialog from "./components/RefundApplyDialog/index.vue";
 import RefundProgressDialog from "./components/RefundProgressDialog/index.vue";
+import { toTimeStamp } from "@/utils/format";
 import SatisfactionDialog from "./components/SatisfactionDialog/index.vue";
 
 const route = useRoute();
@@ -171,7 +172,7 @@ const updateRemainSeconds = () => {
   const newMap = new Map<number, number>();
   orderList.value.forEach((order) => {
     if (order.status === 0) {
-      const createTime = new Date(order.createTime).getTime();
+      const createTime = toTimeStamp(order.createTime) ?? 0;
       const expireTime = createTime + payTimeoutMs;
       const remaining = Math.max(0, Math.floor((expireTime - now) / 1000));
       newMap.set(order.id, remaining);

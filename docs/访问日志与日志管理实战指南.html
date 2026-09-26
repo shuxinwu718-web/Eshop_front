@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>访问日志与日志管理实战指南 · E-Shop 项目 + 生产环境视角</title>
+    <style>
+      :root {
+        --bg: #f4f6fa;
+        --card: #fff;
+        --ink: #1f2d3d;
+        --ink2: #5c6b7e;
+        --line: #e3e8ef;
+        --brand: #2563eb;
+        --brand-2: #0ea5e9;
+        --brand-soft: #eef4ff;
+        --good: #16a34a;
+        --good-soft: #eaf7ee;
+        --warn: #d97706;
+        --warn-soft: #fdf3e3;
+        --miss: #dc2626;
+        --miss-soft: #fdeeee;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .hero {
+        padding: 40px 20px 84px;
+        color: #fff;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb 55%, #0ea5e9);
+      }
+      .hero-inner {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 27px;
+      }
+      .hero p {
+        max-width: 760px;
+        margin: 0;
+        font-size: 14px;
+        opacity: 0.92;
+      }
+      .wrap {
+        position: relative;
+        z-index: 2;
+        max-width: 960px;
+        padding: 0 16px;
+        margin: -52px auto 50px;
+      }
+      .card {
+        padding: 24px 26px;
+        margin-bottom: 20px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+      }
+      h2.sec {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding-left: 12px;
+        margin: 4px 0 14px;
+        font-size: 20px;
+        border-left: 4px solid var(--brand);
+      }
+      h2.sec .no {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        color: #fff;
+        background: var(--brand);
+        border-radius: 8px;
+      }
+      h2.sec .sub {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--ink2);
+      }
+      h3 {
+        margin: 16px 0 6px;
+        font-size: 15px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      .muted {
+        font-size: 13px;
+        color: var(--ink2);
+      }
+      table {
+        width: 100%;
+        margin: 10px 0;
+        font-size: 13.5px;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 9px 11px;
+        vertical-align: top;
+        text-align: left;
+        border: 1px solid var(--line);
+      }
+      th {
+        font-weight: 600;
+        background: #f8fafc;
+      }
+      tr:nth-child(even) td {
+        background: #fbfcfe;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 999px;
+      }
+      .pill.ok {
+        color: var(--good);
+        background: var(--good-soft);
+      }
+      .pill.gap {
+        color: var(--miss);
+        background: var(--miss-soft);
+      }
+      .pill.mid {
+        color: var(--warn);
+        background: var(--warn-soft);
+      }
+      .pill.plus {
+        color: var(--brand);
+        background: var(--brand-soft);
+      }
+
+      /* 勾选 */
+      .checklist {
+        padding: 0;
+        margin: 8px 0;
+        list-style: none;
+      }
+      .checklist li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        margin: 4px 0;
+        font-size: 13.5px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .checklist li:hover {
+        background: #f8fafc;
+      }
+      .checklist li.done {
+        color: var(--ink2);
+        text-decoration: line-through;
+        background: var(--good-soft);
+        border-color: #d3ecd9;
+      }
+      .checklist .cb {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 17px;
+        height: 17px;
+        margin-top: 2px;
+        font-size: 12px;
+        color: #fff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 5px;
+      }
+      .checklist li.done .cb {
+        background: var(--good);
+        border-color: var(--good);
+      }
+      .checklist li.done .cb::after {
+        content: "✓";
+      }
+      .checklist input {
+        display: none;
+      }
+      .progress-num {
+        font-size: 12px;
+        color: var(--ink2);
+        text-align: right;
+      }
+      .progress-bar {
+        height: 9px;
+        margin: 6px 0 2px;
+        overflow: hidden;
+        background: #eef1f6;
+        border-radius: 999px;
+      }
+      .progress-bar > div {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--brand), var(--brand-2));
+        transition: width 0.3s;
+      }
+
+      .tip {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 16px;
+        margin: 12px 0;
+        font-size: 13.5px;
+        border-radius: 10px;
+      }
+      .tip.brand {
+        background: var(--brand-soft);
+        border: 1px solid #d3e0ff;
+      }
+      .tip.warn {
+        background: var(--warn-soft);
+        border: 1px solid #f4e2c3;
+      }
+      .tip.red {
+        background: var(--miss-soft);
+        border: 1px solid #f7d2d2;
+      }
+      .code {
+        padding: 12px 14px;
+        margin: 8px 0;
+        overflow-x: auto;
+        font-family: Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--code-ink);
+        white-space: pre;
+        background: var(--code-bg);
+        border-radius: 10px;
+      }
+      .code .cm {
+        color: #94a3b8;
+      }
+      details {
+        margin: 10px 0;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      details summary {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 11px 15px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+      }
+      details summary::before {
+        color: var(--brand);
+        content: "▸";
+        transition: transform 0.2s;
+      }
+      details[open] summary::before {
+        transform: rotate(90deg);
+      }
+      details .body {
+        padding: 2px 16px 14px;
+        border-top: 1px dashed var(--line);
+      }
+      footer {
+        padding: 10px 0 30px;
+        font-size: 12px;
+        color: var(--ink2);
+        text-align: center;
+      }
+      @media print {
+        .wrap {
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="hero-inner">
+        <h1>访问日志与日志管理实战指南</h1>
+        <p>
+          围绕你的 E-Shop
+          项目讲透三件事：访问日志该记什么、生产环境怎么管日志、日志报警怎么设计。先讲清"本项目怎么做"，再对照"真实生产怎么做"，最后给零经验学生一条可执行的学习路径。
+        </p>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- ===== 板块一 访问日志分类清单 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">1</span>
+          板块一 · E-Shop 访问日志分类清单：应记录 vs 不应记录
+          <span class="sub">先搞清楚"谁在污染数据"，再谈统计</span>
+        </h2>
+
+        <h3>1.1 本项目现有日志基础设施（先对齐事实）</h3>
+        <p>你项目里访问日志的完整链路是这样跑的，面试被问到先把这条链路说清楚：</p>
+        <div class="code">
+          <span class="cm"># 访问日志链路（E-Shop 现状）</span>
+          TraceFilter（com/shopsphere/eshop/config/TraceFilter） 请求入口生成 traceId → 放入 MDC →
+          异步发 RabbitMQ → VisitLogConsumer 消费落库 MySQL visit_log 表 → 监控大盘 MonitorMapper
+          查询（PV / UV / 趋势 / 热点路径 / 慢接口）
+        </div>
+        <p>
+          visit_log 表的列：
+          <b>
+            id / user_id / ip / user_agent / request_uri / method / status_code / duration_ms /
+            visit_time
+          </b>
+          。有了状态码和耗时字段，才能算错误率和慢接口——这是 2026-09-14 那次扩展加上的。
+        </p>
+
+        <div class="tip brand">
+          💡
+          <div>
+            <b>为什么是"异步"？</b>
+            日志是低优先级数据，绝不能因为写日志把用户的下单请求拖慢。你用的有界线程池/队列 +
+            丢弃策略就是这个道理：日志允许丢一点，业务不能卡一秒。
+          </div>
+        </div>
+
+        <h3>1.2 已经在排除的请求（写死的事实，别动）</h3>
+        <table>
+          <tr>
+            <th style="width: 22%">判断函数</th>
+            <th style="width: 38%">排除对象</th>
+            <th>理由</th>
+          </tr>
+          <tr>
+            <td><span class="pill ok">isStaticResource</span></td>
+            <td>静态资源（css/js/图片）、/actuator/、swagger/v3/api-docs</td>
+            <td>
+              静态资源不代表真实业务行为；actuator 是运维探活、api-docs
+              是文档生成，都会周期性被访问，记了纯属噪音。
+            </td>
+          </tr>
+          <tr>
+            <td><span class="pill ok">isNoiseEndpoint</span></td>
+            <td>
+              /api/v1/notices/unread-*（unread-count、unread-list）、/api/merchant/messages/unread-count
+            </td>
+            <td>
+              这是"小红点"轮询接口，前端每 30 秒拉一次。如果计入，PV 会被轮询刷爆，趋势图全是假的。
+            </td>
+          </tr>
+        </table>
+
+        <h3>1.3 建议分类一：应该记录（代表真实用户行为）</h3>
+        <table>
+          <tr>
+            <th style="width: 24%">类别 / 接口路径</th>
+            <th style="width: 26%">前端调用方式</th>
+            <th>记录理由（面试讲这些）</th>
+          </tr>
+          <tr>
+            <td>商品类 /api/product/*（详情、搜索、热卖）</td>
+            <td>用户点商品、搜关键词、看热卖榜</td>
+            <td>PV 主力来源；搜索词是运营热词的数据基础，详情页访问量直接反映商品热度。</td>
+          </tr>
+          <tr>
+            <td>交易类 /api/order/*（下单、列表、详情）</td>
+            <td>下单、查订单</td>
+            <td>转化漏斗关键一环，从"浏览→下单"的每一步都在这张表里可追溯。</td>
+          </tr>
+          <tr>
+            <td>支付 /api/pay/alipay/*（尤其异步通知 notify 回调）</td>
+            <td>后端回调 + 前端支付结果轮询</td>
+            <td>
+              <b>支付宝 notify 回调必须留痕</b>
+              ：审计、对账、排查"支付成功但订单没更新"全靠它。这条是重点中的重点。
+            </td>
+          </tr>
+          <tr>
+            <td>退款 /api/refund/*</td>
+            <td>用户申请退款、商家审核</td>
+            <td>资金敏感操作，留痕用于审计与纠纷取证。</td>
+          </tr>
+          <tr>
+            <td>秒杀抢购 /api/seckill/*</td>
+            <td>秒杀页抢购按钮</td>
+            <td>
+              高并发路径，监控并发量、失败率、超卖风险；压测数据（QPS 217.9→365.9）就是靠它验证的。
+            </td>
+          </tr>
+          <tr>
+            <td>加购 /api/cart/*、领券 /api/user/coupons/*</td>
+            <td>加购物车、领优惠券</td>
+            <td>购物车是转化漏斗第二环；领券是营销活动效果的量化指标。</td>
+          </tr>
+          <tr>
+            <td>收藏 /api/favorite/*、评论 /api/comments/*、浏览历史 /api/product/history/*</td>
+            <td>收藏、评论、浏览记录</td>
+            <td>用户兴趣画像的来源，运营做推荐、做内容都靠这些行为数据。</td>
+          </tr>
+          <tr>
+            <td>登录注册 /api/user、/api/auth/email</td>
+            <td>登录、邮箱验证码登录</td>
+            <td>账号安全审计：异常登录、暴力破解的检测都从登录日志开始。</td>
+          </tr>
+          <tr>
+            <td>管理端 /admin/*、/api/admin/*</td>
+            <td>管理后台操作</td>
+            <td>管理员操作审计，出问题能定位"谁在什么时候改了什么"。</td>
+          </tr>
+          <tr>
+            <td>活动签到 /api/user/activities、/api/group-buy、/api/marketing-activity</td>
+            <td>签到、拼团、营销活动</td>
+            <td>活动参与度统计，判断活动 ROI 的核心数据。</td>
+          </tr>
+          <tr>
+            <td>商家端 /merchant/*</td>
+            <td>商家后台</td>
+            <td>商家操作审计 + 商家活跃度（你的 B2B2C 多租户模式下尤其重要）。</td>
+          </tr>
+        </table>
+
+        <h3>1.4 已新增排除（噪音，已落实到 TraceFilter.isNoiseEndpoint，2026-09-26）</h3>
+        <table>
+          <tr>
+            <th style="width: 30%">接口路径</th>
+            <th style="width: 30%">为什么是噪音</th>
+            <th>排除做法</th>
+          </tr>
+          <tr>
+            <td>/api/captcha 验证码图片生成</td>
+            <td>带随机参数，用户每刷新一次页面就调一次，容易刷屏、污染 PV。</td>
+            <td>
+              图片生成请求不记录；
+              <b>校验动作可以留</b>
+              （校验是真实行为）。
+            </td>
+          </tr>
+          <tr>
+            <td>/api/v1/sse/connect（SSE 长连接建立）</td>
+            <td>长连接建立一次就挂着，不代表页面访问次数；断线重连还会反复建立。</td>
+            <td>已排除。SSE 的活跃度用连接数/心跳统计，不走 visit_log。</td>
+          </tr>
+          <tr>
+            <td>/api/admin/monitor/*（监控页 loadAll 轮询）</td>
+            <td>监控页前端自动刷新、定时 loadAll，自己污染自己的访问日志，监控数据越统计越假。</td>
+            <td>已排除，不然"监控大盘"统计出的热点路径会被自己顶上去。</td>
+          </tr>
+          <tr>
+            <td>秒杀场次状态查询 /api/seckill/sessions（每 10 秒轮询）</td>
+            <td>轮询频率高，纯状态查询，代表不了真实抢购行为。</td>
+            <td>已排除；抢购动作（/api/seckill/* 下单）仍然保留。</td>
+          </tr>
+        </table>
+
+        <h3>1.5 边界情况：想清楚再决定</h3>
+        <table>
+          <tr>
+            <th style="width: 30%">接口路径</th>
+            <th style="width: 35%">情况</th>
+            <th>结论</th>
+          </tr>
+          <tr>
+            <td>/api/pay/alipay 支付结果页轮询（查询）</td>
+            <td>
+              用户主动打开结果页时的
+              <b>短时轮询</b>
+              ，不是后台自动刷。
+            </td>
+            <td>
+              <span class="pill ok">建议保留</span>
+              ——它和你的对账自愈 reconcilePendingTransactions 呼应：轮询查询 +
+              定时对账，是支付闭环的一部分，留痕有助于排查对账不一致。
+            </td>
+          </tr>
+          <tr>
+            <td>首页 / 分类页 / 活动聚合页</td>
+            <td>低频（相对轮询），用户真正打开的行为。</td>
+            <td>
+              <span class="pill ok">保留</span>
+              ——首页 PV 是运营最看重的指标之一。
+            </td>
+          </tr>
+        </table>
+
+        <div class="tip warn">
+          ⚠️
+          <div>
+            <b>核心原则一句话：</b>
+            记录"用户的真实意图行为"，排除"机器自动触发的周期行为"。面试官问你为什么这么分类，就答这一句，然后举你项目里的例子（轮询、SSE、captcha）。
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 板块二 真实项目统计哪些接口与指标 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">2</span>
+          板块二 · 真实项目中访问日志一般统计哪些接口与指标
+          <span class="sub">从"我有一张表"到"我知道发生了什么"</span>
+        </h2>
+
+        <h3>2.1 通用指标清单（面试必背）</h3>
+        <table>
+          <tr>
+            <th style="width: 22%">指标</th>
+            <th style="width: 34%">定义</th>
+            <th>典型用途</th>
+          </tr>
+          <tr>
+            <td>PV / UV</td>
+            <td>页面浏览量 / 独立访客数（按 user_id 或 cookie 去重）</td>
+            <td>整体流量水位，运营日报的核心数字。</td>
+          </tr>
+          <tr>
+            <td>独立 IP</td>
+            <td>按 IP 去重</td>
+            <td>粗粒度覆盖度；也能侧面发现单 IP 爬虫。</td>
+          </tr>
+          <tr>
+            <td>热门 URI TopN</td>
+            <td>请求量最高的 N 个路径</td>
+            <td>发现热点功能、判断功能入口设计是否合理。</td>
+          </tr>
+          <tr>
+            <td>状态码分布</td>
+            <td>2xx/3xx/4xx/5xx 占比</td>
+            <td>接口健康度的第一眼；5xx 占比高立刻报警。</td>
+          </tr>
+          <tr>
+            <td>5xx 错误率</td>
+            <td>5xx 请求 / 总请求</td>
+            <td>服务可用性的核心红线指标。</td>
+          </tr>
+          <tr>
+            <td>平均耗时 / P99</td>
+            <td>平均响应时间 / 99 分位耗时</td>
+            <td>P99 代表"最差的那 1% 用户的体验"，比平均值更能暴露问题。</td>
+          </tr>
+          <tr>
+            <td>峰值 QPS</td>
+            <td>每秒请求数最大值</td>
+            <td>容量规划依据：要不要加机器、限流阈值设多少。</td>
+          </tr>
+          <tr>
+            <td>时段分布</td>
+            <td>按小时/天的流量曲线</td>
+            <td>发现高峰时段，安排限流和扩容节奏。</td>
+          </tr>
+          <tr>
+            <td>转化漏斗</td>
+            <td>曝光→详情→加购→下单→支付</td>
+            <td>定位用户在哪一步流失最多，是电商最值钱的指标。</td>
+          </tr>
+        </table>
+
+        <h3>2.2 采集层：生产环境一般怎么收日志</h3>
+        <table>
+          <tr>
+            <th style="width: 26%">方案</th>
+            <th style="width: 38%">组成</th>
+            <th>适用场景</th>
+          </tr>
+          <tr>
+            <td>Nginx access log + ELK</td>
+            <td>Filebeat（采集）→ Logstash（清洗）→ Elasticsearch（存储检索）→ Kibana（可视化）</td>
+            <td>业界最经典组合；Nginx 网关层记访问日志，业务层记应用日志。</td>
+          </tr>
+          <tr>
+            <td>Loki + Promtail + Grafana</td>
+            <td>Promtail 采集 → Loki 存日志 → Grafana 展示</td>
+            <td>云原生 / K8s 场景，轻量，和 Prometheus 指标体系同框展示。</td>
+          </tr>
+          <tr>
+            <td>云厂商 SLS</td>
+            <td>阿里云日志服务（采集 + 检索 + 告警一体）</td>
+            <td>国内上云团队最省事的选型，免运维。</td>
+          </tr>
+          <tr>
+            <td>业务访问日志落库（本项目方式）</td>
+            <td>TraceFilter → RabbitMQ → MySQL visit_log → 监控大盘</td>
+            <td>适合做业务维度统计（漏斗、热词、用户行为），和生产方案不冲突、互补。</td>
+          </tr>
+        </table>
+
+        <div class="tip brand">
+          💡
+          <div>
+            <b>访问日志 ≠ 应用日志，这个区别必须讲清：</b>
+            访问日志回答"谁访问了什么、快不快、成没成功"（数据驱动运营与容量规划）；应用日志回答"为什么失败"（异常栈、业务上下文）。你的项目里
+            visit_log 是访问日志，logback 输出的 eshop.log 是应用日志，两条线。
+          </div>
+        </div>
+
+        <h3>2.3 统计口径实践：真实项目通常不纳入统计的请求</h3>
+        <table>
+          <tr>
+            <th style="width: 24%">请求类型</th>
+            <th style="width: 40%">识别方式</th>
+            <th>处理</th>
+          </tr>
+          <tr>
+            <td>健康检查</td>
+            <td>/actuator/health、K8s liveness/readiness probe</td>
+            <td>排除，或单独统计为"探活成功率"。</td>
+          </tr>
+          <tr>
+            <td>静态资源</td>
+            <td>后缀 .js/.css/.png/.jpg，或 CDN 已拦截</td>
+            <td>排除；静态资源由 CDN 统计。</td>
+          </tr>
+          <tr>
+            <td>轮询</td>
+            <td>短间隔重复请求同一 URI（unread-count、订单状态）</td>
+            <td>排除，防止 PV 虚高。</td>
+          </tr>
+          <tr>
+            <td>爬虫 / 扫描器</td>
+            <td>User-Agent 特征 + IP 频控 + 访问模式</td>
+            <td>
+              标记或排除；你的项目日志里常见的
+              <b>Infrawatch、zgrab</b>
+              就是扫描器，被 WAF 拦截返回 403 的记录。
+            </td>
+          </tr>
+          <tr>
+            <td>监控自查询</td>
+            <td>监控系统 / 大盘自身拉数据的接口</td>
+            <td>排除，避免自己污染自己的统计。</td>
+          </tr>
+          <tr>
+            <td>压测流量标记</td>
+            <td>请求头 X-Load-Test: 1 或专属 UA</td>
+            <td>打标后单独统计，或直接排除，避免混进线上指标。</td>
+          </tr>
+        </table>
+
+        <div class="tip warn">
+          ⚠️
+          <div>
+            <b>用 UA 识别爬虫/扫描器的实操：</b>
+            扫描器 UA 通常带明显特征（Infrawatch、zgrab、masscan、python-requests
+            不带浏览器头等），做法是：查 visit_log 里 UA 含这些关键字的记录 → 看 IP 是否高频 403 →
+            进 IP 黑名单或加频控。你的项目已经在做 WAF 层拦截，日志里留着的 403
+            记录正好用来验证拦截是否生效。
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 板块三 日志应该如何管理 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">3</span>
+          板块三 · 日志应该如何管理
+          <span class="sub">分类、级别、格式、链路、存储、检索</span>
+        </h2>
+
+        <h3>3.1 日志分类（一张表背下来）</h3>
+        <table>
+          <tr>
+            <th style="width: 20%">分类</th>
+            <th style="width: 44%">内容</th>
+            <th>典型产出</th>
+          </tr>
+          <tr>
+            <td>应用日志</td>
+            <td>业务日志（下单、退款、秒杀）+ 框架日志（Spring、MyBatis）</td>
+            <td>eshop.log / eshop-error.log（logback 输出）</td>
+          </tr>
+          <tr>
+            <td>访问日志</td>
+            <td>请求级记录：谁、什么路径、多快、成没成功</td>
+            <td>visit_log 表（本项目）+ Nginx access log（生产）</td>
+          </tr>
+          <tr>
+            <td>慢查询日志</td>
+            <td>MySQL 中执行超过阈值的 SQL</td>
+            <td>MySQL slow_query_log；配合 EXPLAIN 分析</td>
+          </tr>
+          <tr>
+            <td>系统日志</td>
+            <td>OS / 中间件 / 容器日志（Linux syslog、Docker、JVM GC）</td>
+            <td>dmesg、GC log、容器 stdout</td>
+          </tr>
+          <tr>
+            <td>审计日志</td>
+            <td>管理员操作、资金变动、越权尝试</td>
+            <td>操作日志表（防误操作）、敏感操作留痕</td>
+          </tr>
+        </table>
+
+        <h3>3.2 级别规范：ERROR / WARN / INFO / DEBUG / TRACE 怎么取舍</h3>
+        <table>
+          <tr>
+            <th style="width: 14%">级别</th>
+            <th style="width: 40%">什么时候用</th>
+            <th>反例（你的项目踩过的坑）</th>
+          </tr>
+          <tr>
+            <td>ERROR</td>
+            <td>系统级故障：异常未捕获、DB 连接失败、MQ 消费失败、OOM 前兆</td>
+            <td>把"业务可预期的拒绝"打成 ERROR 会刷屏告警。</td>
+          </tr>
+          <tr>
+            <td>WARN</td>
+            <td>异常但可降级：重试后成功、参数不合法、缓存穿透走了 DB</td>
+            <td>用 INFO 打大量参数错误，浪费存储。</td>
+          </tr>
+          <tr>
+            <td>INFO</td>
+            <td>关键流程节点：下单成功、支付回调收到、对账完成</td>
+            <td>把每个方法进出的都打 INFO，一天几个 G。</td>
+          </tr>
+          <tr>
+            <td>DEBUG</td>
+            <td>开发期排查、高并发路径的细节打点（生产默认关）</td>
+            <td>
+              <b>秒杀拒绝路径（重复/售罄）就该用 debug</b>
+              ，而不是 info/warn。
+            </td>
+          </tr>
+          <tr>
+            <td>TRACE</td>
+            <td>极细粒度链路追踪，基本只在定位疑难 bug 时临时开</td>
+            <td>生产常开 TRACE = 磁盘爆炸。</td>
+          </tr>
+        </table>
+
+        <div class="tip red">
+          ⛔
+          <div>
+            <b>本项目真实教训（面试能打的一手牌）：</b>
+            秒杀拒绝路径（重复抢购、售罄）当初用了 info/warn 级别。同步 ConsoleAppender
+            在高并发写日志时因为
+            <b>写锁串行化</b>
+            形成洪峰，日志反而成了瓶颈。改成 debug
+            级别后（同步输出、高并发下不再抢锁刷屏），压测实测：
+            <b>QPS 从 217.9 提到 365.9，P99 从 2425ms 降到 174ms</b>
+            。结论：高并发路径的日志级别也是性能参数，不是随便定的。
+          </div>
+        </div>
+
+        <h3>3.3 格式规范</h3>
+        <p>
+          统一格式是"能查"的前提。你的 logback-spring.xml 已经带了
+          traceId、线程、类名、时间戳，这个习惯保持下去。推荐格式要素：
+        </p>
+        <div class="code">
+          2026-09-26 14:32:01.123 [a1b2c3d4e5f6a7b8] INFO [http-nio-8080-exec-7]
+          c.s.e.service.impl.OrderServiceImpl : 订单创建成功 orderNo=20260926143201001
+        </div>
+        <p>
+          <b>① 时间戳</b>
+          ：精确到毫秒，统一时区（Asia/Shanghai）；
+          <b>② traceId</b>
+          ：贯穿一次请求；
+          <b>③ 级别</b>
+          ；
+          <b>④ 线程名</b>
+          ：定位并发问题；
+          <b>⑤ 类名</b>
+          ：快速跳代码；
+          <b>⑥ 消息</b>
+          ：业务上下文（订单号、用户 ID 这种"可检索的关键字"一定要带）。
+        </p>
+        <p>
+          <b>生产推荐结构化 JSON 日志</b>
+          （用 logstash-logback-encoder），字段化之后 ES/Loki
+          才能按字段检索、聚合，而不是对着文本正则抠：
+        </p>
+        <div class="code">
+          <span class="cm"># 结构化 JSON 日志（生产环境推荐，示意）</span>
+          {"@timestamp":"2026-09-26T14:32:01.123+08:00",
+          "level":"INFO","traceId":"a1b2c3d4e5f6a7b8", "thread":"http-nio-8080-exec-7",
+          "logger":"c.s.e.service.impl.OrderServiceImpl",
+          "message":"订单创建成功","orderNo":"20260926143201001"}
+        </div>
+        <p>
+          <b>敏感字段脱敏</b>
+          ：密码、手机号、token
+          一律不落日志。打印对象前先想一句"这行日志会不会进审计报告"——手机号中间四位打星，token
+          只打前几位。
+        </p>
+
+        <h3>3.4 链路追踪</h3>
+        <p>
+          你的 TraceFilter 在请求入口生成 traceId 并放进 MDC，logback 的 pattern 里打了
+          [%X{traceId}]，所以一次请求的所有日志都带同一个 traceId。生产里这就是跨服务排查的锚点：
+        </p>
+        <div class="code">
+          <span class="cm"># 排查套路：先拿 traceId，再按它串日志</span>
+          grep "a1b2c3d4e5f6a7b8" eshop.log # 把这次请求的日志全捞出来 grep "a1b2c3d4e5f6a7b8"
+          eshop-error.log # 看这次请求有没有报错
+        </div>
+        <div class="tip brand">
+          💡
+          <div>
+            <b>进阶（生产/微服务）：</b>
+            traceId 通过 HTTP 头（你项目里是 X-Trace-Id）跨服务传递，配合 spanId/parentId
+            就变成完整的分布式追踪（SkyWalking、Zipkin 都在做这件事）。你项目的做法已经是它的雏形。
+          </div>
+        </div>
+
+        <h3>3.5 存储与轮转</h3>
+        <p>
+          日志不能无限长，必须有滚动策略：
+          <b>按大小滚动</b>
+          （单个文件到 100MB 切一个）、
+          <b>按时间滚动</b>
+          （每天/每小时一个文件）、
+          <b>保留期</b>
+          （30 天）、
+          <b>归档压缩</b>
+          （.gz 冷存）、
+          <b>磁盘容量规划</b>
+          （估算：QPS × 每行日志字节数 × 时长 = 容量）。
+        </p>
+        <p>
+          你项目 logback-spring.xml 里
+          <b>prod 环境已经配了滚动</b>
+          （RollingFileAppender：按天 + 100MB 触发，保留 30 天，ERROR
+          单独一个文件），这套配置本身就可以当面试素材讲。假如某个环境没配，补齐做法如下（参考你现有配置）：
+        </p>
+        <div class="code">
+          <span class="cm"># logback-spring.xml 补滚动策略（示意，prod profile 内）</span>
+          &lt;appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+          &lt;file&gt;./logs/eshop.log&lt;/file&gt; &lt;rollingPolicy
+          class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+          &lt;fileNamePattern&gt;./logs/eshop.%d{yyyy-MM-dd}.%i.log&lt;/fileNamePattern&gt;
+          &lt;maxHistory&gt;30&lt;/maxHistory&gt; &lt;timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"&gt;
+          &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+          &lt;/timeBasedFileNamingAndTriggeringPolicy&gt; &lt;/rollingPolicy&gt; &lt;/appender&gt;
+        </div>
+
+        <h3>3.6 采集与检索：方案怎么选</h3>
+        <table>
+          <tr>
+            <th style="width: 20%">方案</th>
+            <th style="width: 34%">核心组件</th>
+            <th>适用规模</th>
+          </tr>
+          <tr>
+            <td>ELK / EFK</td>
+            <td>ES + Logstash/Fluentd + Kibana（+ Filebeat）</td>
+            <td>中大型、检索和聚合要求高；成本高、运维重。</td>
+          </tr>
+          <tr>
+            <td>Loki</td>
+            <td>Promtail + Loki + Grafana</td>
+            <td>云原生、只想"能搜"不想建索引；成本低。</td>
+          </tr>
+          <tr>
+            <td>阿里云 SLS</td>
+            <td>采集 + 检索 + 告警一体</td>
+            <td>上云团队；免运维，按量付费。</td>
+          </tr>
+          <tr>
+            <td>直查 MySQL（本项目）</td>
+            <td>visit_log 表 + MonitorMapper</td>
+            <td>
+              <b>小项目完全够用</b>
+              ：单机日 PV 几万级别，索引建好后秒级返回；等量级上来再上 ES 不迟。
+            </td>
+          </tr>
+        </table>
+        <div class="tip warn">
+          ⚠️
+          <div>
+            <b>规模边界要诚实：</b>
+            visit_log 直查 MySQL 的瓶颈在于：① 表行数大了聚合变慢（需要分区/归档）；②
+            全文检索能力弱（搜不到消息体里的关键字）；③ 日志增长吃掉业务库磁盘。当你发现
+            MonitorMapper 的聚合查询开始超 1
+            秒、或表超过千万行，就该考虑把访问日志挪到独立存储（ClickHouse/ES/SLS）。
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 板块四 日志报警怎么设计与处理 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">4</span>
+          板块四 · 日志报警怎么设计与处理
+          <span class="sub">让日志从"事后翻"变成"事前喊"</span>
+        </h2>
+
+        <h3>4.1 告警规则设计（阈值 + 持续时长，缺一不可）</h3>
+        <table>
+          <tr>
+            <th style="width: 24%">规则</th>
+            <th style="width: 42%">示例阈值 + 持续时长</th>
+            <th>为什么这么设</th>
+          </tr>
+          <tr>
+            <td>5xx 率突增</td>
+            <td>近 5 分钟 5xx 率 &gt; 5% 且持续 2 分钟</td>
+            <td>只看瞬时容易误报（一次压测抖动就触发）；持续才代表真故障。</td>
+          </tr>
+          <tr>
+            <td>P99 超阈值</td>
+            <td>P99 &gt; 1000ms 且持续 5 分钟</td>
+            <td>慢是慢性病，给它一点观察窗口，避免偶发抖动误报。</td>
+          </tr>
+          <tr>
+            <td>ERROR 关键字</td>
+            <td>ERROR 日志中匹配 OOM、Connection refused 等关键字</td>
+            <td>关键字告警必须"精准"，否则 ERROR 一多就疲劳。</td>
+          </tr>
+          <tr>
+            <td>磁盘/内存水位</td>
+            <td>磁盘使用率 &gt; 85%、堆内存 &gt; 80% 持续 10 分钟</td>
+            <td>水位告警要提前量，等 100% 就晚了。</td>
+          </tr>
+          <tr>
+            <td>支付对账失败</td>
+            <td>对账发现不一致订单数 &gt; 0（立即告警）</td>
+            <td>钱的事优先级最高，一条不一致就要人工介入。</td>
+          </tr>
+          <tr>
+            <td>秒杀超卖检查</td>
+            <td>库存扣减后 stock &lt; 0（立即告警，P0）</td>
+            <td>超卖是资损，发现即处理。</td>
+          </tr>
+        </table>
+
+        <h3>4.2 告警分级：P0 → P3</h3>
+        <table>
+          <tr>
+            <th style="width: 14%">级别</th>
+            <th style="width: 40%">含义</th>
+            <th>例子</th>
+          </tr>
+          <tr>
+            <td><span class="pill gap">P0</span></td>
+            <td>立即处理，可能资损或全站不可用</td>
+            <td>支付故障、全站 5xx 飙升、DB 挂了、超卖。</td>
+          </tr>
+          <tr>
+            <td><span class="pill mid">P1</span></td>
+            <td>高优处理，影响核心功能但可临时降级</td>
+            <td>下单接口 P99 大幅上升、MQ 消费积压。</td>
+          </tr>
+          <tr>
+            <td><span class="pill mid">P2</span></td>
+            <td>计划内处理</td>
+            <td>磁盘水位告警、非核心接口偶发 5xx。</td>
+          </tr>
+          <tr>
+            <td><span class="pill ok">P3</span></td>
+            <td>记录观察，不打扰值班</td>
+            <td>爬虫频次上升、某页 PV 异常波动。</td>
+          </tr>
+        </table>
+
+        <h3>4.3 降噪：别让告警变成"狼来了"</h3>
+        <ul>
+          <li>
+            <b>聚合</b>
+            ：同一 traceId / 同一接口的 N 条 ERROR 合并成 1 条告警，附数量。
+          </li>
+          <li>
+            <b>去重</b>
+            ：同一个问题 5 分钟内不重复发（第一次发，之后进入静默）。
+          </li>
+          <li>
+            <b>静默窗口</b>
+            ：已知维护窗口（发版、压测）提前静默，避免误报。
+          </li>
+          <li>
+            <b>值班时间窗</b>
+            ：P3 只在工作时间提醒，P0 24 小时响。
+          </li>
+          <li>
+            <b>目标</b>
+            ：告警要少而准，宁可漏掉 3 条不重要的，也不要 1 天 50 条把值班人搞麻。
+          </li>
+        </ul>
+
+        <h3>4.4 值班处理流程（背下来，面试直接演）</h3>
+        <div class="code">
+          <span class="cm"># 收到告警后的标准动作（按顺序）</span>
+          ① 确认影响面 ：这条告警影响谁？多大范围？先看一眼大盘 ② 看监控 ：QPS / 错误率 /
+          资源水位，判断是入口流量还是服务本身 ③ 看日志定位 ：grep traceId /
+          关键字，找到具体报错和调用链 ④ 止血 ：先恢复可用（降级 / 限流 / 回滚），再谈根治 ⑤ 修复
+          ：改代码 / 加索引 / 扩资源 ⑥ 验证 ：观察指标回落、错误消失 ⑦ 复盘 ：写事故报告：时间线 /
+          根因 / 影响 / 改进项
+        </div>
+
+        <h3>4.5 项目落地建议：给你的 E-Shop 设计一个"轻量告警"</h3>
+        <p>
+          个人项目没条件上 Prometheus，但你完全可以用
+          <b>@Scheduled 定时任务</b>
+          做一个轻量告警：每 2 分钟扫一次 visit_log 近 5 分钟的 5xx 率，超阈值就调企业微信/钉钉
+          webhook（或发邮件），这样睡觉时手机也会响——这也是面试亮点："我自己给项目做了告警闭环"。
+        </p>
+        <div class="code">
+          <span class="cm"># 轻量告警核心思路（示意，非完整代码）</span>
+          @Scheduled(fixedDelay = 120_000) // 每 2 分钟跑一次 public void check5xxRate() { // 1. 查
+          visit_log 近 5 分钟数据 // SELECT COUNT(*), SUM(status_code >= 500) // FROM visit_log
+          WHERE visit_time &gt; NOW() - INTERVAL 5 MINUTE // 2. 若 5xx 率 &gt; 5% 且连续两次触发 →
+          调企业微信/钉钉 webhook // POST { "msgtype":"text", "text":{ "content":"5xx率异常: 12%" }
+          } // 3. 触发后 5 分钟静默（Redis 存 lastAlarmTime），防刷屏 }
+        </div>
+        <div class="tip brand">
+          💡
+          <div>
+            <b>和现有代码联动：</b>
+            你已经有 reconcilePendingTransactions（每 5
+            分钟对账兜底）在跑，把它升级成"对账发现不一致 → 立即告警 +
+            标记退款"，支付侧的可观测闭环就完整了：支付宝回调 → 结果页轮询 → 定时对账 → 异常告警。
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 板块五 零经验学生怎么学 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">5</span>
+          板块五 · 零经验学生如何学习看日志、管日志、处理日志报警
+          <span class="sub">四个阶段，从"会读"到"懂体系"</span>
+        </h2>
+
+        <h3>阶段 1：会读（从自己项目开始）</h3>
+        <ul>
+          <li>
+            启动 E-Shop 后端，观察控制台：INFO 是正常流程、ERROR
+            是异常，先分清"哪些是框架噪音、哪些是业务日志"。
+          </li>
+          <li>
+            <b>故意制造一个异常</b>
+            ：调一个不存在的接口（404）、把某张表临时删掉再请求（SQL
+            报错），逐行解读异常栈：Exception 类型 → 出错方法 → 哪一行 → 根因。
+          </li>
+          <li>看到日志先回答三个问题：发生了什么？在哪个类哪一行？需要我处理吗？</li>
+        </ul>
+
+        <h3>阶段 2：会查（把日志当工具用）</h3>
+        <ul>
+          <li>
+            <b>grep / 关键字 / 时间窗口</b>
+            ：报错发生在 14:30 到 14:32 之间，就 grep 这个窗口的 ERROR；再拿 traceId
+            串联一次完整请求（前面 3.4 的套路）。
+          </li>
+          <li>
+            <b>EXPLAIN 定位慢 SQL</b>
+            ：慢接口 → 看 MyBatis 打的 SQL → EXPLAIN 看 type/索引 →
+            加索引或改写法。你的文档里已经有这个实操。
+          </li>
+          <li>
+            <b>jstack 抓线程栈</b>
+            ：
+            <span
+              class="code"
+              style="
+                display: inline-block;
+                padding: 1px 6px;
+                font-size: 12.5px;
+                color: #1f2d3d;
+                background: #eef1f6;
+              "
+            >
+              jstack &lt;pid&gt; &gt; dump.txt
+            </span>
+            ，看线程在等什么锁、卡在哪个方法。
+            <b>本项目实战：</b>
+            压测中发现单请求 46ms，抓 jstack 定位到 jjwt 每次解析都触发 ServiceLoader 全 classpath
+            扫描（打开 100+ JAR），把 JwtParser 改成全局复用单例后，单请求
+            <b>46ms → 23ms</b>
+            。这是"拿证据定位性能"的标准打法。
+          </li>
+        </ul>
+
+        <h3>阶段 3：会管（自己搭闭环）</h3>
+        <ul>
+          <li>自己给项目配 logback 滚动（按天 + 大小 + 保留期），重启观察文件切分。</li>
+          <li>写告警脚本（4.5 的 @Scheduled 思路落地成代码）。</li>
+          <li>
+            <b>做故障演练</b>
+            ：人为让一个接口返回 500（临时抛异常），观察告警是否触发、visit_log 里的 5xx
+            率是否抬头、日志能否按 traceId 定位到根因——演练完记得还原。
+          </li>
+        </ul>
+
+        <h3>阶段 4：懂体系（概念扫盲 + 拓宽视野）</h3>
+        <ul>
+          <li>
+            <b>概念扫盲</b>
+            ：ELK/EFK、Loki、Prometheus + Grafana、阿里云
+            SLS——知道各自解决什么问题、大概的组件组成（板块三 3.6 的表格先背熟）。
+          </li>
+          <li>
+            <b>看官方文档 + 可视化操作</b>
+            ：有条件就用 Docker 起一个 ELK 或 Grafana + Loki 玩一周；没条件就看官方文档截图，能说出
+            Kibana 怎么按字段过滤、Grafana 怎么加面板。
+          </li>
+          <li>
+            <b>了解 on-call 值班文化</b>
+            ：生产事故分级、值班交接、事故复盘（postmortem）——面试聊到"团队协作"时这是加分话题。
+          </li>
+        </ul>
+
+        <h3>面试话术卡（背熟，数字必须准）</h3>
+        <div class="code">
+          <span class="cm"># 卡1 · "讲讲你的项目怎么做可观测性？"</span>
+          "我做了三层：TraceFilter 在请求入口生成 traceId 贯穿整条链路； 访问日志异步落库
+          visit_log（MQ 有界队列 + 丢弃策略，日志绝不拖慢 业务），监控大盘按
+          PV/UV/热点路径/慢接口聚合；日志报警用定时任务 扫 5xx 率 + 对账任务兜底支付异常。"
+        </div>
+        <div class="code">
+          <span class="cm"># 卡2 · "日志和性能有什么关系？你踩过坑吗？"</span>
+          "踩过。秒杀拒绝路径当初用 info 级别，同步 ConsoleAppender 高并发
+          写日志时写锁串行化形成洪峰。改成 debug 后压测实测 QPS 从 217.9 提到 365.9，P99 从 2425ms
+          降到 174ms——日志级别在高并发路径上 也是性能参数。"
+        </div>
+        <div class="code">
+          <span class="cm"># 卡3 · "怎么定位线上性能问题？"</span>
+          "不猜，抓证据。压测发现单请求 46ms，我用 jstack 抓线程栈定位到 jjwt 每次解析触发
+          ServiceLoader 全 classpath 扫描 100+ JAR， 改成全局复用单例后降到 23ms。配合 traceId
+          能把一次请求的日志 从头串到尾。"
+        </div>
+        <div class="code">
+          <span class="cm"># 卡4 · "访问日志记了哪些？怎么保证数据可信？"</span>
+          "只记真实用户行为：商品/订单/支付/秒杀/加购/收藏等；静态资源、
+          actuator、轮询接口（unread-count、SSE、监控页 loadAll）都排除， 避免机器流量污染
+          PV。秒杀链路用 Lua 预扣 + 条件更新保证零超卖， 压测验证过。"
+        </div>
+      </div>
+
+      <!-- ===== 本周任务清单 ===== -->
+      <div class="card">
+        <h2 class="sec">
+          <span class="no">✓</span>
+          本周任务清单：把日志能力练成肌肉记忆
+          <span class="sub">对应板块五四个阶段 · 勾选自动保存（localStorage）</span>
+        </h2>
+        <ul class="checklist" data-key="log-guide-tasks">
+          <li>
+            <input type="checkbox" />
+            故意制造一个异常（调用不存在接口 / 删表触发 SQL 错误），逐行解读异常栈并截图记录
+          </li>
+          <li>
+            <input type="checkbox" />
+            用 grep + traceId 把一次完整请求（下单→支付回调）的日志从头串到尾
+          </li>
+          <li>
+            <input type="checkbox" />
+            用 EXPLAIN 分析一个慢接口的 SQL，写出索引优化结论
+          </li>
+          <li>
+            <input type="checkbox" />
+            压测中抓一次 jstack，确认能看懂线程状态与锁等待（对照 JWT 46→23ms 案例）
+          </li>
+          <li>
+            <input type="checkbox" />
+            确认/补齐 logback 滚动策略（按天 + 100MB + 保留 30 天），观察文件切分
+          </li>
+          <li>
+            <input type="checkbox" />
+            实现轻量告警：定时任务扫 visit_log 近 5 分钟 5xx 率，超阈值调 webhook/发消息
+          </li>
+          <li>
+            <input type="checkbox" />
+            做一次故障演练：人为让接口 500，验证告警触发 + 日志可定位，演练后还原
+          </li>
+          <li>
+            <input type="checkbox" />
+            背熟 4 张面试话术卡，数字默写一遍（217.9→365.9 / 2425→174ms / 46→23ms / 零超卖）
+          </li>
+        </ul>
+        <div class="progress-num" data-label="log-guide-tasks">0/8 完成</div>
+        <div class="progress-bar"><div data-fill="log-guide-tasks"></div></div>
+
+        <div class="tip red">
+          ⛔
+          <div>
+            <b>红线提醒：</b>
+            ① 秒杀调试的日志级别改动别提交到线上配置；② 日志里永远别打密码/手机号/token；③
+            故障演练前确认没有真用户在访问，演练完必须还原；④ 面试报数字前先想 3
+            秒，报错数字比报不出更扣分。
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        访问日志与日志管理实战指南 · E-Shop 项目 · 2026-09-26 · 核心数字：QPS 217.9→365.9 / P99
+        2425→174ms / JWT 46→23ms / 零超卖
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var KEY_PREFIX = "logGuide_v1_";
+        document.querySelectorAll("ul.checklist").forEach(function (ul) {
+          var key = KEY_PREFIX + (ul.getAttribute("data-key") || "x");
+          var saved = null;
+          try {
+            saved = JSON.parse(localStorage.getItem(key) || "null");
+          } catch (e) {}
+          var items = Array.prototype.slice.call(ul.querySelectorAll("li"));
+          var done =
+            saved && saved.length === items.length
+              ? saved
+              : items.map(function () {
+                  return false;
+                });
+          function render() {
+            items.forEach(function (li, i) {
+              li.classList.toggle("done", done[i]);
+              li.querySelector("input").checked = done[i];
+            });
+            var group = ul.getAttribute("data-key") || "";
+            var n = done.filter(Boolean).length;
+            var numEl = document.querySelector('.progress-num[data-label="' + group + '"]');
+            var barEl = document.querySelector('.progress-bar > div[data-fill="' + group + '"]');
+            if (numEl) {
+              numEl.textContent = n + "/" + items.length + " 完成";
+            }
+            if (barEl) {
+              var pct = items.length ? Math.round((n / items.length) * 100) : 0;
+              barEl.style.width = pct + "%";
+            }
+          }
+          items.forEach(function (li, i) {
+            li.style.cursor = "pointer";
+            li.addEventListener("click", function (ev) {
+              if (ev.target.tagName === "INPUT") return;
+              done[i] = !done[i];
+              try {
+                localStorage.setItem(key, JSON.stringify(done));
+              } catch (e) {}
+              render();
+            });
+            li.querySelector("input").addEventListener("change", function () {
+              done[i] = !done[i];
+              try {
+                localStorage.setItem(key, JSON.stringify(done));
+              } catch (e) {}
+              render();
+            });
+          });
+          render();
+        });
+      })();
+    </script>
+  </body>
+</html>

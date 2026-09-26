@@ -11,6 +11,8 @@ declare module "vue-router" {
     alwaysShow?: boolean;
     affix?: boolean;
     keepAlive?: boolean;
+    /** 移动端隐藏商城底部 TabBar（详情页等使用专属操作栏时） */
+    hideMobileTabbar?: boolean;
     breadcrumb?: boolean;
     activeMenu?: string;
   }

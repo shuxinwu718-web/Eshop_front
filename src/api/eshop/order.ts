@@ -75,6 +75,8 @@ export interface CreateOrderDTO {
   remark?: string;
   addressId?: number;
   userCouponId?: number;
+  /** 支付方式：1微信（模拟） 2支付宝（沙箱），默认2 */
+  payMethod?: number;
 }
 
 /** 发货单信息 */
@@ -96,6 +98,8 @@ export interface OrderVO {
   totalAmount: number;
   payAmount?: number;
   status: number;
+  /** 支付方式：1微信（模拟） 2支付宝（沙箱），下单时选定 */
+  payMethod?: number;
   receiverName?: string;
   receiverPhone?: string;
   receiverAddress?: string;
@@ -131,6 +135,15 @@ const OrderAPI = {
       url: `${BASE_URL}/pay/${orderId}`,
       method: "put",
       data: { actualAmount },
+    });
+  },
+
+  /** 收银台改选支付方式：同步回订单（仅待付款订单可改） */
+  updatePayMethod(orderId: number, payMethod: number) {
+    return request({
+      url: `${BASE_URL}/pay-method/${orderId}`,
+      method: "put",
+      data: { payMethod },
     });
   },
 

@@ -81,6 +81,7 @@ import { ref, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/store/modules/user";
+import { formatTimeMinute } from "@/utils/format";
 import {
   getActiveMarketingActivities,
   claimMarketingReward,
@@ -97,7 +98,7 @@ const userStore = useUserStore();
 const loading = ref(false);
 const activities = ref<MarketingActivityItem[]>([]);
 
-const formatTime = (t?: string) => (t ? t.replace("T", " ").slice(0, 16) : "-");
+const formatTime = (t?: string) => formatTimeMinute(t);
 
 const progressPercent = (task: MarketingTaskItem) => {
   const current = task.currentValue ?? 0;

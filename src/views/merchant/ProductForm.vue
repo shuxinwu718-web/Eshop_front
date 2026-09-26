@@ -26,6 +26,47 @@
           <el-input-number v-model="form.stock" :min="0" :step="1" />
         </el-form-item>
 
+        <!-- AI 生成商品介绍（复用 AI 客服服务，生成卖点 + 详情，写入富文本介绍草稿） -->
+        <el-form-item label="AI 介绍">
+          <div class="ai-copy-bar">
+            <el-button
+              type="success"
+              :loading="aiGeneratingCard"
+              :disabled="!form.name.trim()"
+              @click="generateCard"
+            >
+              <el-icon style="margin-right: 4px"><MagicStick /></el-icon>
+              AI 一键生成介绍
+            </el-button>
+            <el-button
+              plain
+              :loading="aiApplying"
+              :disabled="!aiResult.sound_bite && !aiResult.detail"
+              @click="applyAiToIntro"
+            >
+              填入商品介绍
+            </el-button>
+            <span v-if="form.name.trim()" class="ai-copy-tip">
+              基于商品名「{{ form.name }}」生成卖点与详情
+            </span>
+          </div>
+          <div v-if="aiResult.sound_bite || aiResult.detail" class="ai-copy-preview">
+            <div class="ai-copy-label">AI 生成结果（可编辑后填入）：</div>
+            <div v-if="aiResult.sound_bite" class="ai-copy-sound">
+              <b>卖点：</b>
+              {{ aiResult.sound_bite }}
+            </div>
+            <div v-if="aiResult.seo_keywords" class="ai-copy-seo">
+              <b>SEO关键词：</b>
+              {{ aiResult.seo_keywords }}
+            </div>
+            <div v-if="aiResult.detail" class="ai-copy-detail">
+              <b>详情：</b>
+              {{ aiResult.detail }}
+            </div>
+          </div>
+        </el-form-item>
+
         <!-- 封面图片 + 商品相册上传 -->
         <ImageUploaders v-model:cover-image="form.coverImage" v-model:images="form.images" />
 
@@ -165,8 +206,9 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { View } from "@element-plus/icons-vue";
+import { View, MagicStick } from "@element-plus/icons-vue";
 import MerchantAPI from "@/api/eshop/merchant";
+import AiAPI from "@/api/ai/chat";
 import CategoryAPI from "@/api/eshop/category";
 import type { CategoryItem } from "@/api/eshop/category";
 import ImageUploaders from "./components/ImageUploaders/index.vue";
@@ -220,6 +262,72 @@ const skuViewVisible = ref(false);
 const skuViewData = ref<
   { specsText: string; skuCode?: string; price: number; stock: number; sales: number }[]
 >([]);
+
+// ========== AI 商品介绍生成 ==========
+const aiGeneratingCard = ref(false);
+const aiApplying = ref(false);
+const aiResult = reactive({
+  sound_bite: "",
+  detail: "",
+  seo_keywords: "",
+});
+
+/** 根据表单商品信息生成 AI 介绍 */
+const generateCard = async () => {
+  if (!form.name.trim()) {
+    ElMessage.warning("请先填写商品名称");
+    return;
+  }
+  // 找分类名
+  const cat = categoryList.value.find((c) => c.id === form.categoryId);
+  aiGeneratingCard.value = true;
+  try {
+    aiResult.sound_bite = "";
+    aiResult.detail = "";
+    aiResult.seo_keywords = "";
+    const res = await AiAPI.generateProductCopy({
+      name: form.name.trim(),
+      category: cat?.name || "",
+      price: form.price || null,
+    });
+    if (res.error) {
+      ElMessage.error(res.error);
+      return;
+    }
+    aiResult.sound_bite = res.sound_bite || "";
+    aiResult.detail = res.detail || "";
+    aiResult.seo_keywords = res.seo_keywords || "";
+    ElMessage.success("AI 介绍生成成功");
+  } catch (error) {
+    console.error(error);
+    ElMessage.error((error as Error).message || "AI 生成失败，请稍后再试");
+  } finally {
+    aiGeneratingCard.value = false;
+  }
+};
+
+/** 把 AI 生成结果填入商品介绍富文本草稿（拼接卖点 + 详情，富文本兼容换行） */
+const applyAiToIntro = () => {
+  if (!aiResult.sound_bite && !aiResult.detail) {
+    ElMessage.warning("请先点击「AI 一键生成介绍」");
+    return;
+  }
+  const parts: string[] = [];
+  if (aiResult.sound_bite) parts.push(`<p><strong>${aiResult.sound_bite}</strong></p>`);
+  if (aiResult.detail) {
+    aiResult.detail
+      .split(/\n+/)
+      .filter((t) => t.trim())
+      .forEach((t) => parts.push(`<p>${t.trim()}</p>`));
+  }
+  aiApplying.value = true;
+  try {
+    introContent.value = parts.join("\n");
+    ElMessage.success("AI 内容已填入商品介绍，可编辑后保存草稿");
+  } finally {
+    aiApplying.value = false;
+  }
+};
 
 // 校验规则
 const rules = {
@@ -546,6 +654,46 @@ onMounted(() => {
 <style lang="scss" scoped>
 .product-form {
   padding: 20px;
+
+  .ai-copy-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+
+    .ai-copy-tip {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  .ai-copy-preview {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.7;
+    background: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color);
+    border-radius: 6px;
+
+    .ai-copy-label {
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+    .ai-copy-sound {
+      margin-bottom: 4px;
+      color: var(--el-color-success);
+    }
+    .ai-copy-seo {
+      margin-bottom: 4px;
+      color: var(--el-text-color-regular);
+    }
+    .ai-copy-detail {
+      color: var(--el-text-color-primary);
+    }
+  }
 
   .intro-actions {
     display: flex;

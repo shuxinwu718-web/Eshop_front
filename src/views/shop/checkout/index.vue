@@ -308,6 +308,7 @@ const submitOrder = async () => {
       addressId: selectedAddress.value.id,
       remark: remark.value,
       userCouponId: selectedUserCouponId.value, // 新增：传递选中的优惠券ID
+      payMethod: paymentType.value, // 支付方式落库（1微信 2支付宝），收银台据此预选
     });
     ElMessage.success("订单创建成功，即将跳转到订单列表");
     await CartAPI.clear();

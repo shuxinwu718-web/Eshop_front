@@ -6,7 +6,8 @@
         <span>我的入驻信息</span>
       </template>
 
-      <el-descriptions :column="1" border>
+      <el-empty v-if="!applyInfo.id" description="暂无入驻信息" />
+      <el-descriptions v-else :column="1" border>
         <el-descriptions-item label="店铺名称">
           {{ applyInfo.businessName || "-" }}
         </el-descriptions-item>

@@ -7,6 +7,14 @@
     @mouseenter="showPanel"
     @mouseleave="hidePanel"
   >
+    <!-- 首次进入的引导气泡：说明球的作用 -->
+    <transition name="el-fade-in-right">
+      <div v-if="showTip" class="cs-fab__tip" @click.stop="closeTip">
+        <div class="cs-fab__tip-title">Hi～我是 AI 智能客服 🤖</div>
+        <div class="cs-fab__tip-text">商品、订单、退款问题都可以问我，点我咨询</div>
+      </div>
+    </transition>
+
     <!-- 悬浮球 -->
     <div class="cs-fab__ball">
       <el-icon :size="24"><ChatDotRound /></el-icon>
@@ -28,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ChatDotRound } from "@element-plus/icons-vue";
 
@@ -36,7 +44,32 @@ const router = useRouter();
 const route = useRoute();
 
 const expanded = ref(false);
+const showTip = ref(false);
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
+let tipTimer: ReturnType<typeof setTimeout> | null = null;
+
+// 首次进入商城时弹出引导气泡，之后不再打扰
+const TIP_KEY = "ai_fab_tip_shown";
+onMounted(() => {
+  try {
+    if (!localStorage.getItem(TIP_KEY)) {
+      showTip.value = true;
+      tipTimer = setTimeout(closeTip, 6000);
+    }
+  } catch {
+    /* 忽略 */
+  }
+});
+
+const closeTip = () => {
+  showTip.value = false;
+  if (tipTimer) clearTimeout(tipTimer);
+  try {
+    localStorage.setItem(TIP_KEY, "1");
+  } catch {
+    /* 忽略 */
+  }
+};
 
 // 客服页自身不显示悬浮球
 const isActive = computed(() => route.path === "/shop/customer-service");
@@ -79,6 +112,7 @@ const askQuick = (q: string) => {
 };
 
 const handleClick = () => {
+  closeTip(); // 点击即关闭引导气泡
   // 移动端（无 hover）：直接跳转
   if (window.innerWidth <= 768) {
     goPage();
@@ -90,6 +124,7 @@ const handleClick = () => {
 // 路由变化时收起
 onUnmounted(() => {
   if (hideTimer) clearTimeout(hideTimer);
+  if (tipTimer) clearTimeout(tipTimer);
 });
 </script>
 
@@ -120,6 +155,47 @@ onUnmounted(() => {
       box-shadow: 0 8px 24px rgb(79 110 247 / 55%);
       transform: scale(1.08);
       animation-play-state: paused;
+    }
+  }
+
+  &__tip {
+    position: absolute;
+    right: 66px;
+    bottom: 0;
+    max-width: 240px;
+    padding: 12px 16px;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4f6ef7, #7b5cff);
+    border-radius: 16px 16px 4px 16px;
+    box-shadow: 0 10px 26px rgb(79 110 247 / 40%);
+
+    /* 右侧小尾巴，指向小球 */
+    &::after {
+      position: absolute;
+      right: -5px;
+      bottom: 14px;
+      width: 12px;
+      height: 12px;
+      content: "";
+      background: #7b5cff;
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
+
+    &-title {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 3px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    &-text {
+      font-size: 12px;
+      line-height: 1.5;
+      opacity: 0.92;
     }
   }
 
@@ -192,12 +268,24 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .cs-fab {
     right: 14px;
-    /* 上移到移动端底部 Tab 栏（56px+safe）之上，避免遮挡"我的"入口 */
-    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    /* 上移到移动端底部 Tab 栏（56px）+ 购物车结算栏（约 64px）之上，避免遮挡结算按钮和 Tab 入口 */
+    bottom: calc(128px + env(safe-area-inset-bottom, 0px));
 
     &__ball {
       width: 54px;
       height: 54px;
+    }
+
+    /* 移动端窄屏：气泡改到小球正上方，宽度自适应，尾巴朝下指向球 */
+    &__tip {
+      right: 0;
+      bottom: 68px;
+      max-width: calc(100vw - 60px);
+
+      &::after {
+        right: 18px;
+        bottom: -5px;
+      }
     }
   }
 }

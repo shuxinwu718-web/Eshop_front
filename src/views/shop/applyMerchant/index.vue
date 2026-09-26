@@ -1,6 +1,54 @@
 <template>
-  <div class="apply-merchant">
-    <el-card>
+  <div v-loading="loading" class="apply-merchant">
+    <!-- 已提交过申请：展示审核状态 -->
+    <el-card v-if="applyInfo">
+      <template #header>
+        <span>入驻申请状态</span>
+      </template>
+
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="审核状态">
+          <el-tag :type="statusType">{{ statusText }}</el-tag>
+          <span v-if="applyInfo.status === 1" class="status-tip">
+            审核已通过，请重新登录后进入商家中心
+          </span>
+        </el-descriptions-item>
+        <el-descriptions-item label="店铺名称">
+          {{ applyInfo.businessName || "-" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="联系人">
+          {{ applyInfo.contactName || "-" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="联系电话">
+          {{ applyInfo.contactPhone || "-" }}
+        </el-descriptions-item>
+        <el-descriptions-item label="营业执照">
+          <el-image
+            v-if="applyInfo.businessLicense"
+            :src="getFullImageUrl(applyInfo.businessLicense)"
+            style="width: 100px; height: auto"
+            fit="cover"
+          />
+          <span v-else>未上传</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="提交时间">
+          {{ applyInfo.createTime || "-" }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="applyInfo.status === 2" label="驳回原因">
+          {{ applyInfo.remark || "未填写" }}
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <div class="status-actions">
+        <el-button v-if="applyInfo.status === 0" disabled>审核中，请耐心等待</el-button>
+        <el-button v-else-if="applyInfo.status === 2" type="primary" @click="startReapply">
+          重新申请
+        </el-button>
+      </div>
+    </el-card>
+
+    <!-- 未申请 / 重新申请：展示表单 -->
+    <el-card v-else-if="!loading">
       <template #header>
         <span>商家入驻申请</span>
       </template>
@@ -56,17 +104,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import FileAPI from "@/api/file";
 import { getFullImageUrl } from "@/utils/url";
 import request from "@/utils/request";
 
+interface MerchantApplyInfo {
+  id: number;
+  businessName: string;
+  businessLicense: string;
+  contactName: string;
+  contactPhone: string;
+  businessScope: string;
+  address: string;
+  status: number; // 0-待审核 1-通过 2-拒绝
+  remark?: string;
+  createTime?: string;
+}
+
 const router = useRouter();
 const formRef = ref();
 const submitting = ref(false);
+const loading = ref(true);
 const fileInput = ref<HTMLInputElement | null>(null);
+// null 表示尚未提交过申请（展示表单），否则展示审核状态
+const applyInfo = ref<MerchantApplyInfo | null>(null);
 
 const form = reactive({
   businessName: "",
@@ -85,6 +149,41 @@ const rules = {
     { required: true, message: "请输入联系电话", trigger: "blur" },
     { pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号", trigger: "blur" },
   ],
+};
+
+const statusText = computed(() => {
+  if (!applyInfo.value) return "";
+  const s = applyInfo.value.status;
+  return s === 1 ? "已通过" : s === 0 ? "待审核" : "已驳回";
+});
+
+const statusType = computed(() => {
+  if (!applyInfo.value) return "info";
+  const s = applyInfo.value.status;
+  return s === 1 ? "success" : s === 0 ? "warning" : "danger";
+});
+
+/** 查询我的最新申请；无记录（接口返回空）则展示表单 */
+const loadApply = async () => {
+  try {
+    const data = await request<any, MerchantApplyInfo | null>({
+      url: "/merchant/my-apply",
+      method: "get",
+    });
+    applyInfo.value = data && data.id ? data : null;
+  } catch {
+    // 接口异常时按"未申请"处理，避免用户卡在空白页
+    applyInfo.value = null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(loadApply);
+
+/** 被驳回后重新申请：回到表单 */
+const startReapply = () => {
+  applyInfo.value = null;
 };
 
 const triggerFileUpload = () => {
@@ -128,7 +227,8 @@ const submitForm = async () => {
   try {
     await request.post("/user/merchant/apply", form);
     ElMessage.success("申请提交成功，请等待审核");
-    router.push("/member/center");
+    // 提交后刷新为「待审核」状态页，让用户看到申请已进入审核
+    await loadApply();
   } catch (error) {
     console.error(error);
     ElMessage.error("提交失败，请重试");
@@ -141,6 +241,7 @@ const submitForm = async () => {
 <style scoped lang="scss">
 .apply-merchant {
   max-width: 800px;
+  min-height: 200px;
   padding: 20px;
   margin: 0 auto;
 
@@ -159,6 +260,16 @@ const submitForm = async () => {
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+  }
+
+  .status-tip {
+    margin-left: 12px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .status-actions {
+    margin-top: 16px;
   }
 }
 </style>

@@ -87,6 +87,14 @@ export interface HotProductItem {
   avgRating: number;
 }
 
+/** 详情页关联推荐结果 */
+export interface RelatedProductsResult {
+  /** 同类相似商品 */
+  similar: HotProductItem[];
+  /** 同店热销商品 */
+  storeHot: HotProductItem[];
+}
+
 // ====== ES 搜索相关 ======
 
 /** ES 搜索响应中的单个商品 */
@@ -173,6 +181,15 @@ const ProductAPI = {
   getHot(limit = 10) {
     return request<any, HotProductItem[]>({
       url: `${BASE_URL}/hot`,
+      method: "get",
+      params: { limit },
+    });
+  },
+
+  /** 详情页关联推荐（同类相似 + 同店热销） */
+  getRelated(id: number, limit = 8) {
+    return request<any, RelatedProductsResult>({
+      url: `${BASE_URL}/${id}/related`,
       method: "get",
       params: { limit },
     });

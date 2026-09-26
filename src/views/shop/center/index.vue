@@ -39,6 +39,10 @@
             <el-icon><Clock /></el-icon>
             <span>浏览历史</span>
           </el-menu-item>
+          <el-menu-item v-if="userStore.role === 'USER'" index="applyMerchant">
+            <el-icon><Shop /></el-icon>
+            <span>申请成为商家</span>
+          </el-menu-item>
         </el-menu>
       </div>
 
@@ -88,7 +92,7 @@
                     v-if="order.status === 0"
                     type="primary"
                     size="small"
-                    @click="payOrder(order.id)"
+                    @click="openPayDialog(order)"
                   >
                     立即支付
                   </el-button>
@@ -101,6 +105,9 @@
             <el-empty v-if="!orderLoading && orderList.length === 0" description="暂无订单" />
           </div>
         </div>
+
+        <!-- 收银台弹窗（复用 PayDialog：支付宝走真实沙箱，微信为模拟支付） -->
+        <PayDialog v-model:visible="payDialogVisible" :order="payingOrder" @payed="fetchOrders" />
 
         <!-- 商品收藏 -->
         <div v-show="activeMenu === 'favorite'" class="favorite-section">
@@ -174,20 +181,21 @@
             />
           </div>
 
-          <!-- 地址编辑对话框（移动端适配） -->
+          <!-- 地址编辑对话框（与 eshop/address 模板一致：桌面右标签 / 移动端顶部标签） -->
           <el-dialog
             v-model="addressDialogVisible"
             :title="addressDialogTitle"
-            width="90%"
+            width="550px"
             top="5vh"
             class="address-dialog"
-            @close="addressFormRef?.resetFields()"
+            @close="onAddressDialogClose"
           >
             <el-form
               ref="addressFormRef"
               :model="addressForm"
               :rules="addressRules"
-              label-position="top"
+              :label-position="isMobile ? 'top' : 'right'"
+              label-width="100px"
             >
               <el-form-item label="收货人" prop="receiverName">
                 <el-input v-model="addressForm.receiverName" />
@@ -195,14 +203,8 @@
               <el-form-item label="手机号" prop="receiverPhone">
                 <el-input v-model="addressForm.receiverPhone" />
               </el-form-item>
-              <el-form-item label="省份" prop="province">
-                <el-input v-model="addressForm.province" />
-              </el-form-item>
-              <el-form-item label="城市" prop="city">
-                <el-input v-model="addressForm.city" />
-              </el-form-item>
-              <el-form-item label="区/县" prop="district">
-                <el-input v-model="addressForm.district" />
+              <el-form-item label="省/市/区" prop="areaCodes">
+                <AddressPicker v-model="addressForm.areaCodes" />
               </el-form-item>
               <el-form-item label="详细地址" prop="detailAddress">
                 <el-input v-model="addressForm.detailAddress" type="textarea" :rows="2" />
@@ -316,6 +318,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
+
 import {
   List,
   Star,
@@ -325,6 +328,7 @@ import {
   Clock,
   ShoppingBag,
   Search,
+  Shop,
 } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useCartStore } from "@/store/modules/cart";
@@ -337,8 +341,10 @@ import AddressAPI, { type AddressItem, type AddressSaveParams } from "@/api/esho
 import MessageAPI, { type MerchantMessage } from "@/api/eshop/merchant-message";
 import HistoryAPI from "@/api/eshop/history";
 import type { ProductItem } from "@/api/eshop/product";
+import PayDialog from "@/views/shop/order/components/PayDialog/index.vue";
+import AddressPicker from "@/components/AddressPicker/index.vue";
+import { findAreaCodes, findAreaNames } from "@/utils/area";
 import type { UserInfo } from "@/types/api/user";
-
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
@@ -355,12 +361,17 @@ const defaultImage =
   "https://fastly.picsum.photos/id/20/300/300.jpg?hmac=jE4J8fivrZv_MA5Xu9iSoEgNxfc_ucYlC_m6BgcSNNo";
 const addressList = ref<AddressItem[]>([]);
 const addressLoading = ref(false);
+const isMobile = ref(window.innerWidth <= 768);
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
 const addressDialogVisible = ref(false);
 const addressDialogTitle = ref("");
 const isEditAddress = ref(false);
 const addressFormRef = ref();
 const addressSubmitLoading = ref(false);
-const addressForm = ref<AddressSaveParams>({
+/** 表单模型：areaCodes 为级联选择器选中的省市区 code 数组 */
+const addressForm = ref<AddressSaveParams & { areaCodes: string[] }>({
   receiverName: "",
   receiverPhone: "",
   province: "",
@@ -368,6 +379,7 @@ const addressForm = ref<AddressSaveParams>({
   district: "",
   detailAddress: "",
   isDefault: false,
+  areaCodes: [],
 });
 
 const messageLoading = ref(false);
@@ -376,9 +388,9 @@ const messageList = ref<MerchantMessage[]>([]);
 const addressRules = {
   receiverName: [{ required: true, message: "请输入收货人", trigger: "blur" }],
   receiverPhone: [{ required: true, message: "请输入手机号", trigger: "blur" }],
-  province: [{ required: true, message: "请输入省份", trigger: "blur" }],
-  city: [{ required: true, message: "请输入城市", trigger: "blur" }],
-  district: [{ required: true, message: "请输入区/县", trigger: "blur" }],
+  areaCodes: [
+    { required: true, type: "array", min: 3, message: "请选择省/市/区", trigger: "change" },
+  ],
   detailAddress: [{ required: true, message: "请输入详细地址", trigger: "blur" }],
 };
 
@@ -463,6 +475,7 @@ const openAddressDialog = (addr?: AddressItem) => {
       district: addr.district ?? "",
       detailAddress: addr.detailAddress,
       isDefault: addr.isDefault === 1,
+      areaCodes: findAreaCodes(addr.province ?? "", addr.city ?? "", addr.district ?? ""),
     };
   } else {
     isEditAddress.value = false;
@@ -475,6 +488,7 @@ const openAddressDialog = (addr?: AddressItem) => {
       district: "",
       detailAddress: "",
       isDefault: false,
+      areaCodes: [],
     };
   }
   addressDialogVisible.value = true;
@@ -482,7 +496,19 @@ const openAddressDialog = (addr?: AddressItem) => {
 
 const editAddress = (addr: AddressItem) => openAddressDialog(addr);
 
+const onAddressDialogClose = () => {
+  addressFormRef.value?.resetFields();
+  addressForm.value.areaCodes = [];
+};
+
 const submitAddress = async () => {
+  // 级联选中省市区后，把名称回写 province/city/district 再提交
+  if (addressForm.value.areaCodes.length === 3) {
+    const [province, city, district] = findAreaNames(addressForm.value.areaCodes);
+    addressForm.value.province = province || addressForm.value.province;
+    addressForm.value.city = city || addressForm.value.city;
+    addressForm.value.district = district || addressForm.value.district;
+  }
   const valid = await addressFormRef.value?.validate().then(
     () => true,
     () => false
@@ -490,9 +516,11 @@ const submitAddress = async () => {
   if (!valid) return;
   addressSubmitLoading.value = true;
   try {
-    // 转换表单数据，将 isDefault 从 boolean 转为 number
+    // 转换表单数据，将 isDefault 从 boolean 转为 number；areaCodes 仅前端用，提交时剥离
+    const rest = { ...addressForm.value };
+    delete rest.areaCodes;
     const submitData: AddressItem = {
-      ...addressForm.value,
+      ...rest,
       isDefault: addressForm.value.isDefault ? 1 : 0,
     };
     if (isEditAddress.value) {
@@ -538,16 +566,13 @@ const viewOrderDetail = (orderId: number) => {
   router.push(`/order/detail/${orderId}`);
 };
 
-const payOrder = async (orderId: number) => {
-  await ElMessageBox.confirm("确认支付该订单？", "提示");
-  try {
-    const order = orderList.value.find((o) => o.id === orderId);
-    await OrderAPI.pay(orderId, order?.payAmount ?? order?.totalAmount ?? 0);
-    ElMessage.success("支付成功");
-    fetchOrders();
-  } catch {
-    ElMessage.error("支付失败");
-  }
+const payDialogVisible = ref(false);
+const payingOrder = ref<OrderVO | null>(null);
+
+/** 打开统一收银台：支付宝走真实沙箱，微信为模拟支付 */
+const openPayDialog = (order: OrderVO) => {
+  payingOrder.value = order;
+  payDialogVisible.value = true;
 };
 
 const cancelOrder = async (orderId: number) => {
@@ -642,6 +667,9 @@ const handleMenuSelect = (index: string) => {
   if (index === "groupBuy") {
     router.push("/shop/group-buy");
   }
+  if (index === "applyMerchant") {
+    router.push("/apply-merchant");
+  }
 };
 
 // 加载用户信息
@@ -652,6 +680,7 @@ const loadUserInfo = async () => {
 
 onMounted(async () => {
   await loadUserInfo();
+  window.addEventListener("resize", handleResize);
   // 支持链接指定初始分区（如「我的」页浏览历史入口 /member/center?tab=history）
   const tab = typeof route.query.tab === "string" ? route.query.tab : "";
   if (tab && tab !== "order") {
@@ -1047,7 +1076,7 @@ onMounted(async () => {
 
   /* 地址对话框移动端优化 */
   .address-dialog {
-    width: 90% !important;
+    width: 92% !important;
     margin: 5vh auto !important;
 
     .el-dialog__body {
@@ -1071,6 +1100,10 @@ onMounted(async () => {
 
     .el-textarea__inner {
       height: auto;
+    }
+
+    .el-dialog__footer .el-button {
+      min-width: 80px;
     }
   }
 }
