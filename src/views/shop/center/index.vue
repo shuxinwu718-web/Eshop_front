@@ -39,6 +39,10 @@
             <el-icon><Clock /></el-icon>
             <span>浏览历史</span>
           </el-menu-item>
+          <el-menu-item index="settings">
+            <el-icon><Brush /></el-icon>
+            <span>个性化设置</span>
+          </el-menu-item>
           <el-menu-item v-if="userStore.role === 'USER'" index="applyMerchant">
             <el-icon><Shop /></el-icon>
             <span>申请成为商家</span>
@@ -66,40 +70,70 @@
           </el-tabs>
           <div v-loading="orderLoading">
             <div v-for="order in orderList" :key="order.id" class="order-item">
-              <div class="order-header">
-                <span>订单号：{{ order.orderNo }}</span>
-                <span>{{ order.createTime }}</span>
-                <span class="order-status">{{ getOrderStatusText(order.status) }}</span>
+              <!-- 顶部行 -->
+              <div class="oc-h">
+                <div class="oc-h-left">
+                  <i class="oc-dot" :class="`oc-st-${order.status}`"></i>
+                  <span class="oc-orderno">{{ order.orderNo }}</span>
+                </div>
+                <span class="oc-status" :class="`oc-st-${order.status}`">
+                  {{ getOrderStatusText(order.status) }}
+                </span>
               </div>
-              <div class="order-products">
-                <div v-for="item in order.items" :key="item.productId" class="product-item">
+              <!-- 商品区 -->
+              <div class="gds">
+                <div v-for="item in order.items" :key="item.productId" class="gds-item">
                   <img
                     :src="getFullImageUrl(item.productImage) || defaultImage"
-                    class="product-img"
+                    class="gds-img"
                     @error="handleImageError"
                   />
-                  <div class="product-info">
-                    <div class="product-name">{{ item.productName }}</div>
-                    <div class="product-price">¥{{ item.price }} × {{ item.quantity }}</div>
+                  <div class="gds-info">
+                    <div class="gds-name">{{ item.productName }}</div>
+                    <div v-if="item.skuSpecs" class="gds-specs">{{ item.skuSpecs }}</div>
+                    <div class="gds-meta">
+                      <span>¥{{ item.price }} × {{ item.quantity }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="order-footer">
-                <span>共{{ order.items.length }}件商品 实付：¥{{ order.totalAmount }}</span>
-                <div class="order-actions">
-                  <el-button size="small" @click="viewOrderDetail(order.id)">查看详情</el-button>
-                  <el-button
-                    v-if="order.status === 0"
-                    type="primary"
-                    size="small"
-                    @click="openPayDialog(order)"
-                  >
-                    立即支付
-                  </el-button>
-                  <el-button v-if="order.status === 0" size="small" @click="cancelOrder(order.id)">
-                    取消订单
-                  </el-button>
-                </div>
+              <!-- 底部汇总行 -->
+              <div class="count">
+                <span class="count-time">{{ order.createTime }}</span>
+                <span class="count-sep">·</span>
+                <span class="count-qty">共{{ order.items.length }}件商品</span>
+                <span class="count-money">
+                  实付
+                  <b>¥{{ order.totalAmount }}</b>
+                </span>
+              </div>
+              <!-- 操作条 -->
+              <div class="ob">
+                <el-button
+                  size="small"
+                  class="ob-btn ob-btn--ghost"
+                  @click="viewOrderDetail(order.id)"
+                >
+                  查看详情
+                </el-button>
+                <el-button
+                  v-if="order.status === 0"
+                  size="small"
+                  class="ob-btn"
+                  plain
+                  @click="cancelOrder(order.id)"
+                >
+                  取消订单
+                </el-button>
+                <el-button
+                  v-if="order.status === 0"
+                  size="small"
+                  type="primary"
+                  class="ob-btn ob-btn--primary"
+                  @click="openPayDialog(order)"
+                >
+                  立即支付
+                </el-button>
               </div>
             </div>
             <el-empty v-if="!orderLoading && orderList.length === 0" description="暂无订单" />
@@ -108,6 +142,9 @@
 
         <!-- 收银台弹窗（复用 PayDialog：支付宝走真实沙箱，微信为模拟支付） -->
         <PayDialog v-model:visible="payDialogVisible" :order="payingOrder" @payed="fetchOrders" />
+
+        <!-- 个性化设置抽屉 -->
+        <ShopSettingsDrawer />
 
         <!-- 商品收藏 -->
         <div v-show="activeMenu === 'favorite'" class="favorite-section">
@@ -329,10 +366,12 @@ import {
   ShoppingBag,
   Search,
   Shop,
+  Brush,
 } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useCartStore } from "@/store/modules/cart";
 import { useUserStore } from "@/store/modules/user";
+import { useSettingsStore } from "@/store/modules/settings";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
 import FavoriteAPI, { type FavoriteItem } from "@/api/eshop/favorite";
 import CartAPI from "@/api/eshop/cart";
@@ -343,12 +382,14 @@ import HistoryAPI from "@/api/eshop/history";
 import type { ProductItem } from "@/api/eshop/product";
 import PayDialog from "@/views/shop/order/components/PayDialog/index.vue";
 import AddressPicker from "@/components/AddressPicker/index.vue";
+import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import { findAreaCodes, findAreaNames } from "@/utils/area";
 import type { UserInfo } from "@/types/api/user";
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const cartStore = useCartStore();
+const settingsStore = useSettingsStore();
 const userInfo = ref(userStore.userInfo);
 
 const activeMenu = ref("order");
@@ -656,6 +697,11 @@ const clearHistory = async () => {
   }
 };
 
+// 打开个性化设置抽屉
+const openSettings = () => {
+  settingsStore.settingsVisible = true;
+};
+
 // 在菜单切换时加载对应数据
 const handleMenuSelect = (index: string) => {
   activeMenu.value = index;
@@ -664,6 +710,7 @@ const handleMenuSelect = (index: string) => {
   if (index === "address") fetchAddresses();
   if (index === "messages") fetchMessages();
   if (index === "history") fetchHistory();
+  if (index === "settings") openSettings();
   if (index === "groupBuy") {
     router.push("/shop/group-buy");
   }
@@ -769,64 +816,184 @@ onMounted(async () => {
 
 /* 订单卡片 */
 .order-item {
-  margin-bottom: 16px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 8px;
+  padding: 14px 14px 12px;
+  margin-bottom: 14px;
+  background: var(--el-bg-color);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 
-  .order-header {
+  /* 顶部行 */
+  .oc-h {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
     align-items: center;
-    padding: 12px 16px;
-    background: var(--el-fill-color-lighter);
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
     border-bottom: 1px solid var(--el-border-color-lighter);
 
-    .order-status {
-      margin-left: auto;
-      color: var(--el-color-danger);
+    .oc-h-left {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+
+      .oc-dot {
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        background: currentColor;
+        border-radius: 50%;
+      }
+
+      .oc-orderno {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--el-text-color-primary);
+        white-space: nowrap;
+      }
+    }
+
+    .oc-status {
+      flex-shrink: 0;
+      margin-left: 8px;
+      font-size: 14px;
+      font-weight: 600;
     }
   }
 
-  .order-products {
-    padding: 12px 16px;
+  /* 状态色映射 */
+  .oc-st-0 {
+    color: #e89b0c;
+  } /* 待付款 */
+  .oc-st-1 {
+    color: #6b7b90;
+  } /* 已付款 */
+  .oc-st-2 {
+    color: #2f7fe0;
+  } /* 已发货 */
+  .oc-st-3 {
+    color: #34a853;
+  } /* 已完成 */
+  .oc-st-4 {
+    color: #909399;
+  } /* 已取消（灰） */
+  .oc-st-5 {
+    color: #e24c3b;
+  } /* 退款中 */
+  .oc-st-6 {
+    color: #34a853;
+  } /* 已退款 */
 
-    .product-item {
+  /* 商品区 */
+  .gds {
+    .gds-item {
       display: flex;
       gap: 12px;
       margin-bottom: 12px;
 
-      .product-img {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 4px;
+      &:last-child {
+        margin-bottom: 0;
       }
 
-      .product-info {
-        flex: 1;
+      .gds-img {
+        flex-shrink: 0;
+        width: 76px;
+        height: 76px;
+        object-fit: cover;
+        background: var(--el-fill-color-light);
+        border-radius: 8px;
+      }
 
-        .product-name {
-          font-weight: 500;
+      .gds-info {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+
+        .gds-name {
+          display: -webkit-box;
+          overflow: hidden;
+          -webkit-line-clamp: 2;
+          font-size: 14px;
+          line-height: 1.4;
+          color: var(--el-text-color-primary);
+          -webkit-box-orient: vertical;
         }
 
-        .product-price {
-          color: var(--el-color-danger);
+        .gds-specs {
+          margin-top: 4px;
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+        }
+
+        .gds-meta {
+          padding-top: 4px;
+          margin-top: auto;
+          font-size: 13px;
+          color: var(--el-text-color-regular);
         }
       }
     }
   }
 
-  .order-footer {
+  /* 底部汇总行 */
+  .count {
     display: flex;
+    gap: 6px;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
+    justify-content: flex-end;
+    padding-top: 10px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
     border-top: 1px solid var(--el-border-color-lighter);
 
-    .order-actions {
+    .count-time,
+    .count-qty {
       display: flex;
-      gap: 8px;
+      align-items: center;
+    }
+
+    .count-sep {
+      color: var(--el-border-color);
+    }
+
+    .count-money {
+      display: flex;
+      align-items: center;
+      color: var(--el-text-color-regular);
+
+      b {
+        margin-left: 2px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #e02424;
+      }
+    }
+  }
+
+  /* 操作条 */
+  .ob {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+
+    .ob-btn {
+      margin-left: 0;
+      border-radius: 20px;
+    }
+
+    .ob-btn--primary {
+      font-weight: 600;
+    }
+
+    .ob-btn--ghost {
+      color: var(--el-text-color-regular);
+      border-color: var(--el-border-color);
     }
   }
 }
@@ -996,34 +1163,36 @@ onMounted(async () => {
 
   /* 订单卡片移动端优化 */
   .order-item {
-    .order-header {
-      gap: 8px;
-      font-size: 12px;
+    padding: 12px 12px 10px;
 
-      .order-status {
-        margin-left: 0;
-      }
-    }
-
-    .product-item {
-      .product-img {
-        width: 50px;
-        height: 50px;
+    .oc-h {
+      .oc-orderno {
+        font-size: 13px;
       }
 
-      .product-info {
+      .oc-status {
         font-size: 13px;
       }
     }
 
-    .order-footer {
-      flex-direction: column;
-      gap: 12px;
-      align-items: flex-start;
+    .gds-item {
+      .gds-img {
+        width: 64px;
+        height: 64px;
+      }
 
-      .order-actions {
-        justify-content: flex-end;
-        width: 100%;
+      .gds-info .gds-name {
+        font-size: 13px;
+      }
+    }
+
+    .count {
+      font-size: 12px;
+    }
+
+    .ob {
+      .ob-btn {
+        font-size: 12px;
       }
     }
   }
@@ -1121,11 +1290,8 @@ html.dark {
     background: #161b22;
   }
   .order-item {
-    border-color: #30363d;
-    .order-header {
-      background: #1c2333;
-      border-color: #30363d;
-    }
+    background: #161b22;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
   }
   .favorite-card {
     border-color: #30363d;

@@ -734,7 +734,7 @@ onBeforeRouteLeave(() => {
 .shop-home {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--home-gap);
 }
 
 /* ==================== 通用 ==================== */
@@ -801,7 +801,7 @@ onBeforeRouteLeave(() => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  padding: 12px;
+  padding: var(--home-pad);
   background: var(--el-bg-color);
   border-radius: 12px;
 
@@ -837,7 +837,7 @@ onBeforeRouteLeave(() => {
 /* 横滑容器 */
 .m-scroll {
   display: flex;
-  gap: 10px;
+  gap: var(--home-gap);
   padding-bottom: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -969,7 +969,7 @@ onBeforeRouteLeave(() => {
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 8px 12px;
+  padding: var(--home-pad) 12px;
   background: var(--el-bg-color);
   border-radius: 10px;
 
@@ -1000,7 +1000,7 @@ onBeforeRouteLeave(() => {
 .m-product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: var(--home-gap);
   min-height: 200px;
 
   .m-product-card {
@@ -1099,7 +1099,7 @@ onBeforeRouteLeave(() => {
 /* 顶部：左侧分类栏 + 欢迎面板 */
 .top-row {
   display: flex;
-  gap: 14px;
+  gap: var(--home-gap);
   min-height: 300px;
 }
 
@@ -1109,7 +1109,7 @@ onBeforeRouteLeave(() => {
   z-index: 50;
   flex-shrink: 0;
   width: 180px;
-  padding: 8px 0;
+  padding: var(--home-pad) 0;
   overflow: visible;
   background: var(--el-bg-color);
   border-radius: 10px;
@@ -1282,7 +1282,7 @@ onBeforeRouteLeave(() => {
   .hot-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: var(--home-gap);
   }
 
   .hot-card {
@@ -1381,7 +1381,7 @@ onBeforeRouteLeave(() => {
   .store-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: var(--home-gap);
   }
 
   .store-card {
@@ -1436,7 +1436,7 @@ onBeforeRouteLeave(() => {
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 10px 14px;
+  padding: var(--home-pad) 14px;
   background: var(--el-bg-color);
   border-radius: 10px;
 
@@ -1470,7 +1470,7 @@ onBeforeRouteLeave(() => {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--home-gap);
   min-height: 300px;
 }
 
@@ -1520,7 +1520,7 @@ onBeforeRouteLeave(() => {
     display: flex;
     gap: 2px;
     width: 100%;
-    padding: 6px 10px;
+    padding: var(--home-pad) 10px;
     overflow-x: auto;
 
     .cat-side-item {

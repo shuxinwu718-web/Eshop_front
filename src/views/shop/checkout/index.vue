@@ -230,13 +230,20 @@ const totalAmount = computed(() => {
 
 const fetchCart = async () => {
   const res = await CartAPI.list();
-  cartList.value = res;
+  // 支持「只结算勾选项」：购物车页跳转时携带 ids 参数，否则按购物车全量
+  const idsParam = router.currentRoute.value.query.ids as string | undefined;
+  if (idsParam) {
+    const idSet = new Set(idsParam.split(",").map((s) => Number(s)));
+    cartList.value = res.filter((item) => idSet.has(item.productId));
+  } else {
+    cartList.value = res;
+  }
   if (cartList.value.length === 0) {
-    ElMessage.warning("购物车为空，即将返回购物车");
+    ElMessage.warning("未选择结算商品，即将返回购物车");
     router.push("/shop/cart");
     return;
   }
-  // 购物车有数据后，获取可用优惠券
+  // 结算商品确定后，获取可用优惠券
   await fetchUsableCoupons();
 };
 
@@ -311,8 +318,18 @@ const submitOrder = async () => {
       payMethod: paymentType.value, // 支付方式落库（1微信 2支付宝），收银台据此预选
     });
     ElMessage.success("订单创建成功，即将跳转到订单列表");
-    await CartAPI.clear();
-    cartStore.reset(); // 下单后购物车已清空，同步顶栏徽标
+    // 部分结算（携带 ids）时，只移除本次结算的购物车项，避免误删未勾选商品；
+    // 全量结算时维持原有清空逻辑
+    const idsParam = router.currentRoute.value.query.ids as string | undefined;
+    if (idsParam) {
+      for (const item of items) {
+        await CartAPI.remove(item.productId, item.skuId).catch(() => undefined);
+      }
+      cartStore.count = Math.max(0, cartStore.count - items.length);
+    } else {
+      await CartAPI.clear();
+      cartStore.reset(); // 下单后购物车已清空，同步顶栏徽标
+    }
     router.push("/shop/order");
   } catch {
     // 错误已由请求拦截器统一提示

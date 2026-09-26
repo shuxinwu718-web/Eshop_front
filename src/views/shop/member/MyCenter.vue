@@ -102,7 +102,15 @@
         <span class="cell-label">个人资料</span>
         <el-icon class="arrow"><ArrowRight /></el-icon>
       </div>
+      <div class="cell" @click="openSettings">
+        <span class="cell-icon" style="background: #eef3ff">🎨</span>
+        <span class="cell-label">个性化设置</span>
+        <el-icon class="arrow"><ArrowRight /></el-icon>
+      </div>
     </div>
+
+    <!-- ===== 个性化设置抽屉 ===== -->
+    <ShopSettingsDrawer />
 
     <!-- ===== 申请成为商家（普通用户） ===== -->
     <div v-if="role === 'USER'" class="card list-card">
@@ -137,18 +145,24 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import { ArrowRight, Box, CircleCheck, Van, Wallet } from "@element-plus/icons-vue";
-import { useUserStore } from "@/store";
+import { useUserStore, useSettingsStore } from "@/store";
 import { getFullImageUrl } from "@/utils/url";
+import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 
 // 与路由 name 一致，供 keep-alive 缓存识别
 defineOptions({ name: "MemberMy" });
 
 const router = useRouter();
 const userStore = useUserStore();
+const settingsStore = useSettingsStore();
 
 const isLoggedIn = computed(() => userStore.isLoggedIn());
 const userInfo = computed(() => userStore.userInfo);
 const role = computed(() => userStore.role);
+
+function openSettings() {
+  settingsStore.settingsVisible = true;
+}
 
 function go(path: string) {
   // 未登录访问需登录页面时，路由守卫会弹窗引导登录

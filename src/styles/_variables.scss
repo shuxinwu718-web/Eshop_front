@@ -73,6 +73,17 @@ $tags-view-height: 34px;
   // 页面背景（浅色模式下浅蓝灰，与 Element Plus 页面色保持一致）
   --page-bg: var(--el-bg-color-page);
 
+  // 商城背景（页面背景 + 卡片底色，可由个性化设置覆盖）
+  --shop-bg: #f5f6f8;
+  --shop-card-bg: #ffffff;
+
+  // 字体大小档位（覆盖 Element Plus 基础字号）
+  --font-size-base: 14px;
+
+  // 首页布局密度（卡片间距 + 区块内边距）
+  --home-gap: 10px;
+  --home-pad: 14px;
+
   // 通用过渡时长
   --transition-duration: 0.25s;
   --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -137,6 +148,10 @@ html.dark {
 
   // 页面背景
   --page-bg: var(--el-bg-color-page);
+
+  // 商城背景（暗黑模式回退到 Element 页面/内容色，忽略浅色预设）
+  --shop-bg: var(--el-bg-color-page);
+  --shop-card-bg: var(--el-bg-color);
 
   // Element Plus 表格选中行背景色
   .el-table {

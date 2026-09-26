@@ -4,19 +4,20 @@
       <template #header>
         <div class="header">
           <span>我的订单</span>
-          <el-radio-group v-model="statusFilter" @change="handleStatusChange">
-            <el-radio-button label="">全部</el-radio-button>
-            <el-radio-button label="0">待付款</el-radio-button>
-            <el-radio-button label="1">已付款</el-radio-button>
-            <el-radio-button label="2">已发货</el-radio-button>
-            <el-radio-button label="3">已完成</el-radio-button>
-            <el-radio-button label="5">退款中</el-radio-button>
-            <el-radio-button label="6">已退款</el-radio-button>
-            <el-radio-button label="4">已取消</el-radio-button>
-          </el-radio-group>
           <el-button type="primary" size="small" class="cs-btn" @click="goCustomerService">
             联系客服
           </el-button>
+        </div>
+        <div class="status-tabs">
+          <div
+            v-for="tab in statusTabs"
+            :key="tab.value"
+            class="status-tab"
+            :class="{ active: statusFilter === tab.value }"
+            @click="handleStatusChange(tab.value)"
+          >
+            {{ tab.label }}
+          </div>
         </div>
       </template>
 
@@ -94,6 +95,17 @@ const statusFilter = ref(
   typeof route.query.status === "string" && route.query.status !== "" ? route.query.status : ""
 );
 
+const statusTabs = [
+  { label: "全部", value: "" },
+  { label: "待付款", value: "0" },
+  { label: "已付款", value: "1" },
+  { label: "已发货", value: "2" },
+  { label: "已完成", value: "3" },
+  { label: "退款中", value: "5" },
+  { label: "已退款", value: "6" },
+  { label: "已取消", value: "4" },
+];
+
 // 进入 AI 客服页
 const goCustomerService = () => {
   router.push("/shop/customer-service");
@@ -130,7 +142,8 @@ const fetchOrders = async () => {
   }
 };
 
-const handleStatusChange = () => {
+const handleStatusChange = (value: string | number) => {
+  statusFilter.value = String(value);
   pageNum.value = 1;
   fetchOrders();
 };
@@ -260,6 +273,47 @@ onBeforeUnmount(() => {
 
   .cs-btn {
     flex-shrink: 0;
+  }
+}
+
+.status-tabs {
+  display: flex;
+  gap: 24px;
+  padding-bottom: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .status-tab {
+    position: relative;
+    flex-shrink: 0;
+    padding: 8px 2px 10px;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+
+    &.active {
+      font-weight: 700;
+      color: var(--el-color-primary);
+
+      &::after {
+        position: absolute;
+        right: 0;
+        bottom: -1px;
+        left: 0;
+        height: 3px;
+        content: "";
+        background: var(--el-color-primary);
+        border-radius: 2px;
+      }
+    }
   }
 }
 

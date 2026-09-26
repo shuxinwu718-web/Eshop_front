@@ -27,7 +27,7 @@
         </div>
 
         <!-- ========== 移动端信息卡片（桌面端隐藏） ========== -->
-        <!-- a) 价格卡 -->
+        <!-- a) 价格 + 标题合并卡（价格紧跟标题，消除分离留白） -->
         <div class="mb-card mb-price-card mb-only">
           <div class="mb-price-row">
             <span class="mb-price-big">¥{{ selectedSku?.price ?? product.price }}</span>
@@ -40,14 +40,10 @@
             </template>
             <template v-else>库存：{{ product.stock }}件</template>
           </div>
-        </div>
-
-        <!-- b) 商品名卡 -->
-        <div class="mb-card mb-name-card mb-only">
           <h1 class="mb-title">{{ product.name }}</h1>
         </div>
 
-        <!-- c) 规格行卡 -->
+        <!-- b) 规格行卡 -->
         <div
           v-if="parsedSpecs.length > 0"
           class="mb-card mb-spec-card mb-only"
@@ -569,14 +565,17 @@ watch(
 </script>
 
 <style lang="scss" scoped>
+/* ========== 全局基础布局（移动端 media 内另有覆盖） ========== */
 .product-detail {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 20px 0;
 
   .main {
     display: flex;
-    gap: 40px;
+    gap: 32px;
+    align-items: flex-start;
     padding: 24px;
     background: var(--el-bg-color);
     border-radius: 8px;
@@ -584,82 +583,175 @@ watch(
 
   .info {
     flex: 1;
+    min-width: 0;
+  }
+}
 
-    h1 {
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
+/* ========== 桌面端专属增强（min-width，与移动端彻底隔离） ========== */
+@media (min-width: 769px) {
+  .product-detail {
+    /* 桌面端：浅暖灰底，让主信息卡和商品介绍卡浮起来 */
+    background: var(--shop-bg, #f5f6f8);
 
-    .price {
-      margin-bottom: 16px;
-      font-size: 32px;
-      font-weight: bold;
-      color: var(--price-color);
-    }
+    .main {
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.3s ease;
 
-    .meta {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: var(--el-text-color-regular);
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin: 20px 0;
-
-      .gb-btn-icon {
-        margin-right: 4px;
+      &:hover {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
       }
     }
 
-    .description {
-      padding-top: 20px;
-      margin-top: 20px;
-      border-top: 1px solid var(--el-border-color-light);
-
-      h3 {
-        margin-bottom: 12px;
+    .info {
+      h1 {
+        margin-bottom: 16px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--el-text-color-primary);
       }
 
-      p {
-        line-height: 1.6;
+      /* 价格突出条：浅暖色背景，价格大字 + 已售小标 */
+      .price {
+        display: flex;
+        gap: 16px;
+        align-items: baseline;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--price-color);
+        background: var(--el-color-danger-light-9);
+        border-radius: 12px;
+
+        .sales {
+          font-size: 13px;
+          font-weight: 400;
+          color: var(--el-text-color-secondary);
+        }
+      }
+
+      .meta {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 20px;
+        font-size: 14px;
         color: var(--el-text-color-regular);
-      }
 
-      /* 富文本介绍内容 */
-      .description-content {
-        line-height: 1.8;
-        word-break: normal;
-        overflow-wrap: anywhere;
-        /* 允许选中复制富文本内容 */
-        -webkit-user-select: text;
-        user-select: text;
-
-        :deep(img) {
-          max-width: 100%;
-          height: auto;
-        }
-
-        :deep(video),
-        :deep(audio) {
-          max-width: 100%;
-        }
-
-        :deep(table) {
-          border-collapse: collapse;
-        }
-
-        :deep(td),
-        :deep(th) {
-          padding: 4px 8px;
-          border: 1px solid var(--el-border-color);
+        .stock,
+        .sales {
+          display: inline-flex;
+          gap: 4px;
+          align-items: center;
         }
       }
+
+      /* 桌面端 SKU 选择器卡片化 */
+      :deep(.sku-selector) {
+        padding: 16px;
+        margin-bottom: 16px;
+        background: var(--el-fill-color-light);
+        border-radius: 12px;
+      }
+
+      /* 操作按钮：分级——主购买最大渐变、加购主色、收藏/联系描边或图标化 */
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 20px 0;
+
+        .gb-btn-icon {
+          margin-right: 4px;
+        }
+      }
+
+      /* 商品介绍：独立白色卡片 */
+      .description {
+        padding: 20px 24px;
+        /* 与上方购买区拉开间距，区块边界更清晰 */
+        margin-top: 32px;
+        background: var(--el-bg-color);
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      }
+    }
+  }
+}
+
+/* ========== 商品介绍富文本通用样式（桌面端 + 移动端共用，含深色覆盖） ========== */
+.info .description {
+  h3 {
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+
+  p {
+    line-height: 1.8;
+    color: var(--el-text-color-regular);
+  }
+
+  /* 富文本介绍内容 */
+  .description-content {
+    /* PC 端信息栏很宽时内容限宽居中，避免窄图/文字靠左造成右侧大片留白 */
+    max-width: 960px;
+    margin: 0 auto;
+    line-height: 1.8;
+    color: var(--el-text-color-primary) !important;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    -webkit-user-select: text;
+    user-select: text;
+
+    :deep(p),
+    :deep(span),
+    :deep(div),
+    :deep(li),
+    :deep(blockquote) {
+      color: var(--el-text-color-regular) !important;
+    }
+
+    :deep(a) {
+      color: var(--el-color-primary) !important;
+    }
+
+    /* 统一商家富文本里的卖点标题（有的带图标、字号不一致，统一为 18px 深色加粗） */
+    :deep(h1),
+    :deep(h2),
+    :deep(h3),
+    :deep(h4) {
+      margin: 32px 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--el-text-color-primary) !important;
+    }
+
+    :deep(img) {
+      /* 详情长图惯例：整宽等比缩放，消除窄图靠左造成的留白 */
+      width: 100%;
+      height: auto;
+      /* 大图与下方文字留 40px 间距，呼吸感更强 */
+      margin-bottom: 40px;
+      border-radius: 8px;
+    }
+
+    :deep(video),
+    :deep(audio) {
+      max-width: 100%;
+    }
+
+    :deep(table) {
+      border-collapse: collapse;
+    }
+
+    :deep(td),
+    :deep(th) {
+      padding: 4px 8px;
+      border: 1px solid var(--el-border-color);
     }
   }
 }
@@ -678,11 +770,16 @@ watch(
   .product-detail {
     padding: 10px;
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    /* 移动端：浅暖灰底，让白色信息卡浮起来（桌面端保持原样） */
+    background: var(--shop-bg, #f5f6f8);
 
     .main {
       flex-direction: column;
-      gap: 20px;
-      padding: 12px;
+      gap: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     /* 桌面端块在移动端隐藏 */
@@ -698,7 +795,7 @@ watch(
     .info {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
 
       h1.desktop-only {
         display: none;
@@ -708,10 +805,11 @@ watch(
     .mb-card {
       padding: 14px 16px;
       background: #fff;
-      border-radius: 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
-    /* a) 价格卡 */
+    /* a) 价格 + 标题合并卡 */
     .mb-price-card {
       .mb-price-row {
         display: flex;
@@ -738,22 +836,19 @@ watch(
         font-size: 13px;
         color: var(--el-text-color-regular);
       }
-    }
 
-    /* b) 商品名卡（两行截断） */
-    .mb-name-card {
-      padding-top: 0;
-      padding-bottom: 0;
-
+      /* 标题紧跟价格，用分隔线强化「价格→商品」关联，压缩顶部间距 */
       .mb-title {
         display: -webkit-box;
-        margin: 14px 16px;
+        padding-top: 12px;
+        margin: 12px 0 0;
         overflow: hidden;
         -webkit-line-clamp: 2;
         font-size: 18px;
         font-weight: 600;
         line-height: 1.4;
         color: var(--el-text-color-primary);
+        border-top: 1px solid var(--el-border-color-lighter);
         -webkit-box-orient: vertical;
       }
     }
@@ -792,16 +887,50 @@ watch(
 
     /* d) 店铺入口行卡 */
     .store-entry-wrap {
-      padding: 6px;
-      background: #fff;
-      border-radius: 10px;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(90deg, var(--el-color-primary-light-8, #edf4ff) 0%, #fff 32%);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
       :deep(.store-entry) {
-        padding: 10px 12px;
+        padding: 12px 14px;
         margin: 0;
         background: transparent;
         border: none;
         box-shadow: none;
+      }
+    }
+
+    /* 商品介绍：移动端为白色卡片（桌面端保持原来的分隔线样式） */
+    .description {
+      padding: 16px;
+      margin: 2px 0 0;
+      background: #fff;
+      border-top: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+      h3 {
+        margin-bottom: 12px;
+      }
+
+      /* 富文本正文强制深色，覆盖商家编辑时残留的浅色内联 style（!important 压过 inline style） */
+      .description-content {
+        color: var(--el-text-color-primary) !important;
+
+        :deep(p),
+        :deep(span),
+        :deep(div),
+        :deep(li),
+        :deep(blockquote) {
+          color: var(--el-text-color-regular) !important;
+        }
+
+        :deep(a) {
+          color: var(--el-color-primary) !important;
+        }
       }
     }
 

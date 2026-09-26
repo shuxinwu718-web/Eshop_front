@@ -130,7 +130,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f6f8;
+  background-color: var(--shop-bg, #f5f6f8);
 }
 
 /* ========== 内容区（桌面 1190px 居中，电商标准宽度） ========== */

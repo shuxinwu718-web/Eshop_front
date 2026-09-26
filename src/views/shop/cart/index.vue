@@ -20,7 +20,17 @@
     <!-- 商品列表（桌面 / 移动端统一样式，响应式布局） -->
     <div v-if="cartList.length" v-loading="loading" class="cart-list">
       <transition-group name="cart-fade">
-        <div v-for="item in cartList" :key="item.id" class="cart-card">
+        <div
+          v-for="item in cartList"
+          :key="item.id"
+          class="cart-card"
+          :class="{ 'is-unselected': !item.selected }"
+        >
+          <el-checkbox
+            class="card-check"
+            :model-value="!!item.selected"
+            @change="(v) => toggleSelect(item, v)"
+          />
           <img
             :src="getFullImageUrl(item.productImage) || defaultImage"
             class="card-img"
@@ -69,6 +79,11 @@
 
     <!-- 底部结算栏 -->
     <div v-if="cartList.length" class="cart-footer">
+      <div class="footer-select">
+        <el-checkbox :model-value="allSelected" @change="toggleSelectAll">
+          <span class="select-all-label">全选</span>
+        </el-checkbox>
+      </div>
       <div class="footer-total">
         <span class="label">合计</span>
         <span class="amount">¥{{ totalPrice.toFixed(2) }}</span>
@@ -99,8 +114,45 @@ const defaultImage =
   "https://fastly.picsum.photos/id/20/300/300.jpg?hmac=jE4J8fivrZv_MA5Xu9iSoEgNxfc_ucYlC_m6BgcSNNo";
 
 const totalPrice = computed(() => {
-  return cartList.value.reduce((sum, item) => sum + (item.productPrice ?? 0) * item.quantity, 0);
+  return selectedItems.value.reduce(
+    (sum, item) => sum + (item.productPrice ?? 0) * item.quantity,
+    0
+  );
 });
+
+// 勾选项：加入购物车时后端 selected 默认 1；此处只统计勾选中的项
+const selectedItems = computed(() => cartList.value.filter((i) => i.selected));
+const allSelected = computed(
+  () => cartList.value.length > 0 && cartList.value.every((i) => i.selected)
+);
+
+const toggleSelect = async (item: CartItem, val: string | boolean | number) => {
+  // el-checkbox change 事件值为 boolean
+  const selected = val === true || val === "true" || val === 1 ? 1 : 0;
+  item.selected = selected;
+  try {
+    await CartAPI.update(item.productId, { selected, skuId: item.skuId });
+  } catch {
+    ElMessage.error("更新失败");
+    fetchCart();
+  }
+};
+
+const toggleSelectAll = async (val: string | boolean | number) => {
+  const selected = val === true || val === "true" || val === 1 ? 1 : 0;
+  cartList.value.forEach((item) => {
+    item.selected = selected;
+  });
+  try {
+    // 逐项同步后端选中态
+    for (const item of cartList.value) {
+      await CartAPI.update(item.productId, { selected, skuId: item.skuId });
+    }
+  } catch {
+    ElMessage.error("更新失败");
+    fetchCart();
+  }
+};
 
 // 规格在库里可能存成 JSON（{"容量":"512GB"}），展示给用户时转成"容量：512GB 尺寸：XXL"
 const formatSpecs = (specs?: string | null): string => {
@@ -187,11 +239,13 @@ const handleImageError = (event: Event) => {
 };
 
 const checkout = () => {
-  if (cartList.value.length === 0) {
-    ElMessage.warning("购物车为空");
+  if (selectedItems.value.length === 0) {
+    ElMessage.warning("请先勾选要结算的商品");
     return;
   }
-  router.push("/checkout");
+  // 携带勾选项的 productId 列表，checkout 页据此只结算选中项
+  const ids = selectedItems.value.map((i) => i.productId).join(",");
+  router.push({ path: "/checkout", query: { ids } });
 };
 
 onMounted(fetchCart);
@@ -288,6 +342,30 @@ onMounted(fetchCart);
       border-color: var(--el-color-primary-light-5);
       box-shadow: 0 8px 24px var(--el-box-shadow-light);
       transform: translateY(-2px);
+    }
+
+    // 未勾选项整体弱化，聚焦勾选中的商品
+    &.is-unselected {
+      opacity: 0.55;
+
+      .card-img,
+      .card-info,
+      .card-subtotal,
+      .card-quantity {
+        filter: grayscale(0.4);
+      }
+    }
+
+    .card-check {
+      flex-shrink: 0;
+
+      // 移动端绝对定位到卡片左上角
+      @media (max-width: 768px) {
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        z-index: 2;
+      }
     }
 
     .card-img {

@@ -161,7 +161,7 @@ const handleReceive = async (item: AvailableCouponItem) => {
   display: flex;
   min-height: 140px;
   overflow: hidden;
-  background: linear-gradient(135deg, #fff5f5 0%, #fff 40%);
+  background: linear-gradient(135deg, #fff5f5 0%, var(--shop-card-bg, #fff) 40%);
   border: 1px solid #ffe0e0;
   border-radius: 12px;
   transition: all 0.25s;
@@ -172,7 +172,7 @@ const handleReceive = async (item: AvailableCouponItem) => {
   }
 
   &.is-upcoming {
-    background: linear-gradient(135deg, #f0f9ff 0%, #fff 40%);
+    background: linear-gradient(135deg, #f0f9ff 0%, var(--shop-card-bg, #fff) 40%);
     border-color: #d0e8f7;
   }
 

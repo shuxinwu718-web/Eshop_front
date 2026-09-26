@@ -57,6 +57,10 @@ export const STORAGE_KEYS = {
   THEME_COLOR: `${APP_PREFIX}:ui:theme_color`,
   GRAY_MODE: `${APP_PREFIX}:ui:gray_mode`,
   COLOR_WEAK: `${APP_PREFIX}:ui:color_weak`,
+  SHOP_BG_COLOR: `${APP_PREFIX}:ui:shop_bg_color`,
+  FONT_SIZE: `${APP_PREFIX}:ui:font_size`,
+  LAYOUT_DENSITY: `${APP_PREFIX}:ui:layout_density`,
+  PRICE_COLOR: `${APP_PREFIX}:ui:price_color`,
 
   // ===== 应用状态 =====
   DEVICE: `${APP_PREFIX}:app:device`,

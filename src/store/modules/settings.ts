@@ -1,8 +1,23 @@
 import { SidebarColor, ThemeMode } from "@/enums";
 import type { LayoutMode } from "@/enums";
-import { applyTheme, generateThemeColors, toggleDarkMode, toggleSidebarColor } from "@/utils/theme";
+import {
+  applyTheme,
+  applyShopBg,
+  applyFontSize,
+  applyLayoutDensity,
+  applyPriceColor,
+  generateThemeColors,
+  toggleDarkMode,
+  toggleSidebarColor,
+} from "@/utils/theme";
 import { STORAGE_KEYS } from "@/constants";
-import { defaults } from "@/settings";
+import {
+  defaults,
+  findShopBgPreset,
+  findFontSizePreset,
+  findLayoutDensityPreset,
+  findPriceColorPreset,
+} from "@/settings";
 
 export const useSettingsStore = defineStore("setting", () => {
   // 界面显示
@@ -30,12 +45,62 @@ export const useSettingsStore = defineStore("setting", () => {
   const grayMode = useStorage(STORAGE_KEYS.GRAY_MODE, false);
   const colorWeak = useStorage(STORAGE_KEYS.COLOR_WEAK, false);
 
+  // 商城背景色
+  const shopBgColor = useStorage(STORAGE_KEYS.SHOP_BG_COLOR, defaults.shopBgColor);
+
+  // 字体大小档位
+  const fontSize = useStorage(STORAGE_KEYS.FONT_SIZE, defaults.fontSize);
+
+  // 首页布局密度
+  const layoutDensity = useStorage(STORAGE_KEYS.LAYOUT_DENSITY, defaults.layoutDensity);
+
+  // 价格强调色
+  const priceColor = useStorage(STORAGE_KEYS.PRICE_COLOR, defaults.priceColor);
+
+  // 商城背景色监听
+  watch(
+    shopBgColor,
+    (v) => {
+      applyShopBg(findShopBgPreset(v));
+    },
+    { immediate: true }
+  );
+
+  // 字体大小监听
+  watch(
+    fontSize,
+    (v) => {
+      applyFontSize(findFontSizePreset(v).size);
+    },
+    { immediate: true }
+  );
+
+  // 布局密度监听
+  watch(
+    layoutDensity,
+    (v) => {
+      applyLayoutDensity(findLayoutDensityPreset(v));
+    },
+    { immediate: true }
+  );
+
+  // 价格强调色监听
+  watch(
+    priceColor,
+    (v) => {
+      applyPriceColor(findPriceColorPreset(v));
+    },
+    { immediate: true }
+  );
+
   // 主题变化监听
   watch(
     [theme, themeColor],
     ([t, c]: [ThemeMode, string]) => {
       toggleDarkMode(t === ThemeMode.DARK);
       applyTheme(generateThemeColors(c, t));
+      // 暗色/主题切换时同步价格色极性与范围
+      applyPriceColor(findPriceColorPreset(priceColor.value));
     },
     { immediate: true }
   );
@@ -73,6 +138,10 @@ export const useSettingsStore = defineStore("setting", () => {
     layout.value = defaults.layout as LayoutMode;
     themeColor.value = defaults.themeColor;
     theme.value = defaults.theme;
+    shopBgColor.value = defaults.shopBgColor;
+    fontSize.value = defaults.fontSize;
+    layoutDensity.value = defaults.layoutDensity;
+    priceColor.value = defaults.priceColor;
   }
 
   return {
@@ -87,6 +156,10 @@ export const useSettingsStore = defineStore("setting", () => {
     layout,
     themeColor,
     theme,
+    shopBgColor,
+    fontSize,
+    layoutDensity,
+    priceColor,
     resetSettings,
   };
 });

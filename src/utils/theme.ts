@@ -110,3 +110,50 @@ export function toggleSidebarColor(isBuleSidebar: boolean) {
     document.documentElement.classList.remove("sidebar-color-blue");
   }
 }
+
+/**
+ * 应用商城背景色（页面背景 + 卡片底色）
+ * 通过 --shop-bg / --shop-card-bg 全局变量生效，暗色模式下由 CSS 覆盖回退 Element 变量
+ *
+ * @param preset 背景色预设（含 bg/card 色值）
+ */
+export function applyShopBg(preset: { bg: string; card: string }) {
+  const el = document.documentElement;
+  el.style.setProperty("--shop-bg", preset.bg);
+  el.style.setProperty("--shop-card-bg", preset.card);
+}
+
+/**
+ * 应用字体大小档位（影响 Element Plus 基础字号 --el-font-size-base，全局生效）
+ *
+ * @param size 基础字号（px），如 13/14/16/18
+ */
+export function applyFontSize(size: number) {
+  const el = document.documentElement;
+  el.style.setProperty("--el-font-size-base", `${size}px`);
+  el.style.setProperty("--font-size-base", `${size}px`);
+}
+
+/**
+ * 应用首页布局密度（卡片间距 + 区块内边距）
+ *
+ * @param preset 布局密度预设（含 gap/pad 像素值）
+ */
+export function applyLayoutDensity(preset: { gap: number; pad: number }) {
+  const el = document.documentElement;
+  el.style.setProperty("--home-gap", `${preset.gap}px`);
+  el.style.setProperty("--home-pad", `${preset.pad}px`);
+}
+
+/**
+ * 应用价格强调色（写 --price-color，控制价格/促销高亮色）
+ * 暗色模式通过匹配 prefers-color-scheme 写入对应色值
+ *
+ * @param preset 价格色预设（含 light/dark 色值）
+ */
+export function applyPriceColor(preset: { light: string; dark: string }) {
+  const el = document.documentElement;
+  const dark =
+    el.classList.contains("dark") || window.matchMedia("(prefers-color-scheme: dark)").matches;
+  el.style.setProperty("--price-color", dark ? preset.dark : preset.light);
+}
