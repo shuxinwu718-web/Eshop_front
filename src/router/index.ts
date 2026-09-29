@@ -363,6 +363,16 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
           },
           {
+            path: "shop/message",
+            name: "ShopMessage",
+            component: () => import("@/views/shop/message/index.vue"),
+            meta: {
+              title: "我的客服会话",
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              hidden: true,
+            },
+          },
+          {
             path: "coupon-center",
             name: "CouponCenter",
             component: () => import("@/views/shop/coupon/CouponCenter.vue"),
@@ -550,6 +560,12 @@ export const constantRoutes: RouteRecordRaw[] = [
             name: "MerchantMessages",
             component: () => import("@/views/merchant/Messages.vue"),
             meta: { title: "用户留言", icon: "el-icon-message" },
+          },
+          {
+            path: "conversations",
+            name: "MerchantConversations",
+            component: () => import("@/views/merchant/conversations/index.vue"),
+            meta: { title: "客服会话", icon: "el-icon-chat-dot-round" },
           },
           {
             path: "my-apply",

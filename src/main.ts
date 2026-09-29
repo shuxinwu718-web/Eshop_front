@@ -31,6 +31,9 @@ import { configureVxeTable } from "@/plugins/vxe-table";
 // ===== 路由守卫 =====
 import { setupPermissionGuard } from "@/router/guards/permission";
 
+// ===== SSE 服务（在线人数/通知实时推送，登录态无 token 时内部跳过） =====
+import { setupSse } from "@/composables";
+
 // 创建 Vue 应用实例
 const app = createApp(App);
 
@@ -39,6 +42,9 @@ setupDirective(app);
 setupRouter(app);
 setupStore(app);
 setupI18n(app);
+
+// 初始化全局 SSE 长连接（在线人数/通知；客服 IM 页面进入时也会通过 useImMessages 再ensure一次）
+setupSse();
 
 // 2️⃣ 全局组件（Element Plus 图标 + 富文本编辑器）
 Object.entries(ElementPlusIcons).forEach(([name, comp]) => app.component(name, comp));

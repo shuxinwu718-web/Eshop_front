@@ -167,6 +167,14 @@ function createSseConnection(options: UseSseOptions = {}) {
     eventSource.onerror = handleError;
     eventSource.onmessage = handleMessage;
 
+    // 重新绑定此前已订阅的自定义事件（修复：on() 在 connect() 之前调用时，
+    // 监听器绑定在 eventSource 上，而当时的 eventSource 为 null 导致事件静默丢失）
+    eventHandlers.forEach((_, eventName) => {
+      if (eventName !== "message") {
+        eventSource!.addEventListener(eventName, handleCustomEvent(eventName) as EventListener);
+      }
+    });
+
     log("正在建立 SSE 连接...");
   };
 

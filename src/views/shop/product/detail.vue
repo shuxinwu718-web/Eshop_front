@@ -91,7 +91,7 @@
           <el-button type="danger" size="large" :loading="favoriteLoading" @click="toggleFavorite">
             {{ isFavorited ? "已收藏" : "❤ 收藏" }}
           </el-button>
-          <el-button size="large" @click="contactDialogRef?.open()">联系商家</el-button>
+          <el-button size="large" @click="goToChat">联系商家</el-button>
         </div>
 
         <!-- 拼团面板（进行中团列表 + 倒计时 + 进度条） -->
@@ -190,7 +190,7 @@
         <el-icon v-else class="dock-icon"><Star /></el-icon>
         <span>{{ isFavorited ? "已收藏" : "收藏" }}</span>
       </button>
-      <button class="dock-icon-btn" @click="contactDialogRef?.open()">
+      <button class="dock-icon-btn" @click="goToChat">
         <el-icon class="dock-icon"><Service /></el-icon>
         <span>客服</span>
       </button>
@@ -249,6 +249,15 @@ const groupBuyPanelRef = ref<{
   hasGroupBuy: Ref<boolean>;
   groupBuySkuIds: Ref<number[]>;
 } | null>(null);
+
+/** 联系商家：跳转到客服会话页并预建/定位与该商家的会话 */
+const goToChat = () => {
+  if (!product.value.id) return;
+  router.push({
+    name: "ShopMessage",
+    query: { merchantId: product.value.merchantId, productId: product.value.id },
+  });
+};
 
 /** 联系商家弹窗组件引用 */
 const contactDialogRef = ref<{ open: () => void } | null>(null);
