@@ -486,5 +486,26 @@ onMounted(() => {
   .signin-calendar :deep(.el-calendar-table .el-calendar-day) {
     height: 52px;
   }
+
+  // 节日卡头部：窄屏下允许换行，图标/名称不收缩不拆字；
+  // 日期空间不足时整体落到第二行右对齐（margin-left:auto 换行后仍靠右）
+  .festival-list .festival-item .festival-item-header {
+    flex-wrap: wrap;
+    row-gap: 4px;
+
+    .festival-icon {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .festival-name {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .festival-date {
+      white-space: nowrap;
+    }
+  }
 }
 </style>

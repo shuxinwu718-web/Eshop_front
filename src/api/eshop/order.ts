@@ -147,10 +147,18 @@ const OrderAPI = {
     });
   },
 
-  /** 确认收货 */
+  /** 确认收货（订单维度：一键签收该订单下所有已发货单，用于订单列表） */
   confirmReceive(orderId: number) {
     return request({
       url: `${BASE_URL}/confirm-receive/${orderId}`,
+      method: "put",
+    });
+  },
+
+  /** 按发货单确认收货（多商家拆单时只签收指定发货单，用于订单详情） */
+  confirmReceiveShipment(shipmentId: number) {
+    return request({
+      url: `${BASE_URL}/confirm-receive/shipment/${shipmentId}`,
       method: "put",
     });
   },

@@ -79,7 +79,9 @@ Eshop
 - Node.js `^20.19.0 || >=22.12.0`
 - 包管理器 **pnpm**（项目通过 `only-allow` 强制使用 pnpm）
 
-### 安装与启动
+### 方式一：本地开发（配合本地后端）
+
+需先按后端仓库 README 起动后端（本机 `8080`；AI 客服在 `5000`，可选），再：
 
 ```bash
 # 1. 安装依赖
@@ -89,24 +91,43 @@ pnpm install
 pnpm dev
 ```
 
-启动后开发代理：
+开发代理（见 `.env.development` 与 `vite.config.ts`）：
 
-- `/dev-api` → `http://localhost:8080`（后端 E-Shop，见 `.env.development` 的 `VITE_APP_API_URL`）
-- `/ai` → `http://localhost:5000`（AI 客服 Python FastAPI 服务）
+| 前缀 | 转发到 | 说明 |
+|---|---|---|
+| `/dev-api` | `http://localhost:8080` | 后端，去前缀（`VITE_APP_API_URL`） |
+| `/ai` | `http://localhost:5000` | AI 客服 FastAPI |
+| `/uploads` | `http://localhost:8080` | 上传图片静态资源 |
 
-### 生产构建
+> 联调即「后端先起 + 前端 `pnpm dev`」，默认端口后端 8080 / 前端 3000 / AI 5000。
+
+### 方式二：Docker 部署（配合后端生产 compose）
+
+生产前端**不做独立部署**，而是把构建产物挂进后端 `docker-compose.prod.yml` 的 `frontend`（nginx）容器：
+
+1. **确认 `.env.production`**：
+
+| 变量 | 生产值 | 说明 |
+|---|---|---|
+| `VITE_APP_BASE_API` | `/prod-api` | nginx `/prod-api/` 转发后端并去前缀 |
+| `VITE_APP_TENANT_ENABLED` | `false` | 需与后端一致 |
+
+2. **构建并上传**：
 
 ```bash
-pnpm build      # 构建产物输出至 dist/
-pnpm preview    # 本地预览构建结果
+pnpm build
+# dist/ → 服务器 /opt/eshop/frontend/dist/
+# nginx.conf → 服务器 /opt/eshop/frontend/
 ```
 
-生产环境请修改 `.env.production`：
+3. **由后端 compose 统一启动**（详见后端 README「方式三」）：
 
-| 变量 | 说明 |
-| --- | --- |
-| `VITE_APP_BASE_API` | 代理前缀，如 `/prod-api`（需后端/Nginx 支持） |
-| `VITE_APP_TENANT_ENABLED` | 多租户开关，需与后端保持一致 |
+```bash
+cd /opt/eshop
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+访问 `http://<服务器IP>`（nginx :80；`/prod-api` → 后端、`/uploads` → 图片、`/ai` → AI 客服）。
 
 ## 常用脚本
 

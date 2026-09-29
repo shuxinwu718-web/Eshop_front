@@ -106,12 +106,16 @@
           </template>
         </div>
 
-        <!-- 确认收货按钮（该发货单已发货且订单未取消/退款） -->
+        <!-- 确认收货按钮（该发货单已发货且订单未取消/退款；仅真实发货单显示） -->
         <div
-          v-if="group.stepActive === 1 && order.status !== 4 && order.status !== 6"
+          v-if="
+            group.shipmentId && group.stepActive === 1 && order.status !== 4 && order.status !== 6
+          "
           class="shipment-confirm"
         >
-          <el-button type="success" @click="handleConfirmReceive(order.id)">确认收货</el-button>
+          <el-button type="success" @click="handleConfirmReceive(group.shipmentId)">
+            确认收货
+          </el-button>
         </div>
       </el-card>
 
@@ -254,10 +258,10 @@ const fetchDetail = async () => {
   }
 };
 
-const handleConfirmReceive = async (orderId: number) => {
+const handleConfirmReceive = async (shipmentId: number) => {
   try {
-    await ElMessageBox.confirm("确认已收到全部商品？", "提示");
-    await OrderAPI.confirmReceive(orderId);
+    await ElMessageBox.confirm("确认已收到该发货单的全部商品？", "确认收货");
+    await OrderAPI.confirmReceiveShipment(shipmentId);
     ElMessage.success("确认收货成功");
     fetchDetail();
   } catch {

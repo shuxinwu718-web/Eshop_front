@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onActivated, onDeactivated, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import OrderAPI, { type OrderVO } from "@/api/eshop/order";
@@ -82,6 +82,9 @@ import RefundApplyDialog from "./components/RefundApplyDialog/index.vue";
 import RefundProgressDialog from "./components/RefundProgressDialog/index.vue";
 import { toTimeStamp } from "@/utils/format";
 import SatisfactionDialog from "./components/SatisfactionDialog/index.vue";
+
+// 与路由 name 一致，供 keep-alive include 匹配
+defineOptions({ name: "ShopOrder" });
 
 const route = useRoute();
 const router = useRouter();
@@ -247,11 +250,64 @@ const onSatisfactionSubmitted = () => {
   }
 };
 
-// ==================== 初始化 ====================
+// ==================== 初始化与 keep-alive ====================
 
-onMounted(() => {
-  fetchOrders();
+// 滚动位置随 sessionStorage 持久化（同首页/秒杀页惯例），详情返回时恢复到点击前位置
+const SCROLL_KEY = "shop-order:scroll";
+let isFirstActivation = true;
+
+const saveScroll = () => {
+  sessionStorage.setItem(SCROLL_KEY, String(window.scrollY || document.documentElement.scrollTop));
+};
+
+const restoreScroll = () => {
+  const y = Number(sessionStorage.getItem(SCROLL_KEY) || 0);
+  if (y > 0) {
+    // 缓存 DOM 激活后即可定位；数据刷新后再校正一次，防止列表高度变化
+    nextTick(() => window.scrollTo(0, y));
+  }
+};
+
+onMounted(async () => {
+  await fetchOrders();
+  restoreScroll();
   startTimer();
+});
+
+onActivated(async () => {
+  // 从「我的」页状态快捷入口进入（?status=0）：缓存仍在时也要同步切换 Tab
+  const queryStatus =
+    typeof route.query.status === "string" && route.query.status !== "" ? route.query.status : "";
+  const tabChanged = queryStatus !== statusFilter.value;
+  if (tabChanged) {
+    statusFilter.value = queryStatus;
+    pageNum.value = 1;
+    sessionStorage.removeItem(SCROLL_KEY);
+  }
+
+  startTimer();
+  if (isFirstActivation) {
+    // 首次激活与 onMounted 同时触发，数据拉取/滚动恢复已由 onMounted 处理，跳过避免重复请求
+    isFirstActivation = false;
+    return;
+  }
+  // 从订单详情（确认收货/支付）返回：刷新数据，但保留当前 Tab 与页码
+  await fetchOrders();
+  if (tabChanged) {
+    window.scrollTo(0, 0);
+  } else {
+    // 数据渲染后恢复到点击详情前的位置
+    restoreScroll();
+  }
+});
+
+onDeactivated(() => {
+  // 离开列表（如进详情）：保存滚动位置并暂停倒计时，避免后台空跑
+  saveScroll();
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
 });
 
 onBeforeUnmount(() => {

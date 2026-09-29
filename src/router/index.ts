@@ -346,6 +346,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: {
               title: "我的订单",
               icon: "list",
+              keepAlive: true,
               roles: ["USER", "MERCHANT", "ADMIN"],
               hidden: true,
             },

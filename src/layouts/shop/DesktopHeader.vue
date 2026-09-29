@@ -18,6 +18,10 @@
 
       <!-- 右侧操作 -->
       <div class="header-actions">
+        <!-- 个性化设置：全局生效，未登录也可调 -->
+        <el-icon class="action-icon" title="个性化设置" @click="openSettings">
+          <MagicStick />
+        </el-icon>
         <!-- 购物车：常驻入口 + 数量徽标，未登录点击由路由守卫引导登录 -->
         <el-badge :value="cartStore.count" :hidden="cartStore.count === 0" :max="99">
           <el-icon class="action-icon" title="购物车" @click="router.push('/shop/cart')">
@@ -91,15 +95,20 @@
         </div>
       </div>
     </nav>
+
+    <!-- 个性化设置抽屉（顶栏入口触发，PC 全局可用） -->
+    <ShopSettingsDrawer />
   </header>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bell, Search, ShoppingCart } from "@element-plus/icons-vue";
+import { Bell, MagicStick, Search, ShoppingCart } from "@element-plus/icons-vue";
 import { ElMessageBox } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { useCartStore, useUserStore } from "@/store";
+import { useSettingsStore } from "@/store/modules/settings";
+import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import { getFullImageUrl } from "@/utils/url";
 
 defineOptions({ name: "DesktopHeader" });
@@ -117,6 +126,7 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const cartStore = useCartStore();
+const settingsStore = useSettingsStore();
 
 const keyword = ref("");
 const isLoggedIn = computed(() => userStore.isLoggedIn());
@@ -126,6 +136,11 @@ const role = computed(() => userStore.role);
 
 function isActive(path: string) {
   return route.path === path;
+}
+
+// 打开个性化设置抽屉（PC 顶栏快捷入口）
+function openSettings() {
+  settingsStore.settingsVisible = true;
 }
 
 function handleSearch() {
