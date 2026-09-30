@@ -81,6 +81,29 @@
         @current-change="handleQuery"
       />
     </div>
+
+    <!-- 详情弹窗 -->
+    <el-dialog
+      v-model="noticeDialogVisible"
+      :title="noticeDetail?.title || '通知详情'"
+      width="90%"
+      top="5vh"
+      class="notice-detail-dialog"
+    >
+      <div v-if="noticeDetail" class="notice-detail__wrapper">
+        <div class="notice-detail__meta">
+          <span>
+            <el-icon><User /></el-icon>
+            {{ noticeDetail.publisherName || "系统" }}
+          </span>
+          <span>
+            <el-icon><Timer /></el-icon>
+            {{ formatDate(noticeDetail.publishTime) }}
+          </span>
+        </div>
+        <div class="notice-detail__content" v-html="noticeDetail.content"></div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -90,7 +113,7 @@ import { useRouter } from "vue-router";
 import { Search, User, Timer } from "@element-plus/icons-vue";
 import NoticeAPI from "@/api/system/notice";
 import { formatTimeMinute } from "@/utils/format";
-import type { NoticeItem, NoticeQueryParams } from "@/types/api";
+import type { NoticeItem, NoticeDetail, NoticeQueryParams } from "@/types/api";
 import type { TagType } from "@/api/eshop/order";
 
 defineOptions({ name: "MerchantNotifications" });
@@ -105,6 +128,10 @@ const queryParams = reactive<NoticeQueryParams>({
 const pageData = ref<NoticeItem[]>([]);
 const total = ref(0);
 const loading = ref(false);
+
+// 详情弹窗
+const noticeDialogVisible = ref(false);
+const noticeDetail = ref<NoticeDetail | null>(null);
 
 const bizTypeMap: Record<string, { text: string; tag: TagType }> = {
   new_order: { text: "新订单", tag: "primary" },
@@ -145,10 +172,26 @@ function handleResetQuery() {
 }
 
 async function handleRead(item: NoticeItem) {
-  if (item.isRead === 0) {
+  if (item.bizType && item.bizId) {
+    // 业务通知：标记已读并跳转对应业务页
+    if (item.isRead === 0) {
+      try {
+        await NoticeAPI.getDetail(item.id);
+        item.isRead = 1;
+      } catch {
+        /* ignore */
+      }
+    }
+    goBizDetail(item);
+  } else {
+    // 系统通知：弹窗查看完整详情
     try {
-      await NoticeAPI.getDetail(item.id);
-      item.isRead = 1;
+      const detail = await NoticeAPI.getDetail(item.id);
+      noticeDetail.value = detail;
+      noticeDialogVisible.value = true;
+      if (item.isRead === 0) {
+        item.isRead = 1;
+      }
     } catch {
       /* ignore */
     }
@@ -164,7 +207,7 @@ function goBizDetail(item: NoticeItem) {
       router.push(`/merchant/order/${item.bizId}`);
       break;
     case "new_message":
-      router.push("/merchant/messages");
+      router.push("/merchant/conversations");
       break;
     default:
       break;
@@ -292,6 +335,41 @@ onMounted(() => {
   margin-top: 20px;
 }
 
+.notice-detail-dialog {
+  :deep(.el-dialog__body) {
+    padding-top: 0;
+  }
+
+  .notice-detail__wrapper {
+    padding: 0 4px;
+  }
+
+  .notice-detail__meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+
+    span {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+  }
+
+  .notice-detail__content {
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+}
+
 /* 移动端优化 */
 @media (max-width: 768px) {
   .merchant-notifications {
@@ -310,6 +388,10 @@ onMounted(() => {
     flex-direction: column;
     gap: 4px;
     align-items: flex-start;
+  }
+
+  .notice-detail-dialog {
+    width: 95% !important;
   }
 }
 </style>

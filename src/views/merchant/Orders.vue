@@ -38,7 +38,7 @@
         </el-table-column>
 
         <!-- 买家信息 -->
-        <el-table-column label="买家" width="130">
+        <el-table-column v-if="!isMobile" label="买家" width="130">
           <template #default="{ row }">
             <div>{{ row.userNickname || row.userMobile }}</div>
             <div class="text-muted">{{ row.userMobile }}</div>
@@ -86,7 +86,7 @@
         </el-table-column>
 
         <!-- 物流信息 -->
-        <el-table-column label="物流" width="130">
+        <el-table-column v-if="!isMobile" label="物流" width="130">
           <template #default="{ row }">
             <div v-if="row.shippingName" class="logistics-info">
               <div>{{ row.shippingName }}</div>
@@ -164,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import MerchantAPI from "@/api/eshop/merchant";
@@ -173,6 +173,10 @@ import type { TagType } from "@/api/eshop/order";
 import { useExport } from "@/composables/useExport";
 
 const router = useRouter();
+const isMobile = ref(false);
+const updateMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
 const loading = ref(false);
 const shipping = ref(false);
 const shipmentList = ref<MerchantShipment[]>([]);
@@ -281,6 +285,12 @@ const confirmShip = async () => {
 
 onMounted(() => {
   loadShipments();
+  updateMobile();
+  window.addEventListener("resize", updateMobile);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateMobile);
 });
 </script>
 
@@ -473,6 +483,25 @@ onMounted(() => {
 
   .ship-form {
     margin-top: 16px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+
+    .page-header {
+      flex-wrap: wrap;
+      gap: 10px;
+
+      h2 {
+        font-size: 18px;
+      }
+    }
+
+    :deep(.el-pagination) {
+      flex-wrap: wrap;
+      row-gap: 6px;
+      justify-content: flex-end;
+    }
   }
 }
 

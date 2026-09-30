@@ -128,14 +128,6 @@
       :is-logged-in="userStore.isLoggedIn()"
     />
 
-    <!-- 联系商家对话框 -->
-    <ContactDialog
-      v-if="product.id"
-      ref="contactDialogRef"
-      :product-id="product.id"
-      :merchant-id="product.merchantId"
-    />
-
     <!-- 移动端：规格选择抽屉（btt） -->
     <el-drawer
       v-model="skuDrawerVisible"
@@ -231,7 +223,6 @@ import StoreEntry from "./components/StoreEntry/index.vue";
 import SizeChartTable from "./components/SizeChartTable/index.vue";
 import RecommendSection from "./components/RecommendSection/index.vue";
 import CommentSection from "./components/CommentSection/index.vue";
-import ContactDialog from "./components/ContactDialog/index.vue";
 import GroupBuyPanel from "./components/GroupBuyPanel/index.vue";
 
 const route = useRoute();
@@ -258,9 +249,6 @@ const goToChat = () => {
     query: { merchantId: product.value.merchantId, productId: product.value.id },
   });
 };
-
-/** 联系商家弹窗组件引用 */
-const contactDialogRef = ref<{ open: () => void } | null>(null);
 
 // ============ 移动端：规格抽屉 + 底部 Dock ============
 /** 规格选择抽屉开关 */

@@ -32,13 +32,21 @@
           </el-badge>
           <span>消息通知</span>
         </el-menu-item>
-        <el-menu-item index="/merchant/messages">
-          <el-icon><ChatDotSquare /></el-icon>
-          <span>用户留言</span>
+        <el-menu-item index="/merchant/conversations">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>客服会话</span>
         </el-menu-item>
         <el-menu-item index="/merchant/store-design">
           <el-icon><Brush /></el-icon>
           <span>小店设计</span>
+        </el-menu-item>
+        <el-menu-item index="/merchant/group-buy">
+          <el-icon><ShoppingBag /></el-icon>
+          <span>拼团管理</span>
+        </el-menu-item>
+        <el-menu-item index="/merchant/my-apply">
+          <el-icon><Postcard /></el-icon>
+          <span>我的入驻</span>
         </el-menu-item>
         <el-menu-item index="/merchant/refund">
           <el-icon><WarningFilled /></el-icon>
@@ -49,6 +57,15 @@
 
     <!-- 右侧内容区域 -->
     <div class="merchant-content">
+      <!-- 移动端 + 重操作页：提示引导到电脑端（避免手机上误操作复杂表单） -->
+      <el-alert
+        v-if="isMobile && isHeavyPage"
+        type="warning"
+        :closable="false"
+        show-icon
+        class="mobile-heavy-tip"
+        title="此页面功能较复杂，建议在电脑端完成操作，以获得完整体验"
+      />
       <router-view v-slot="{ Component }">
         <transition name="fade-transform" mode="out-in">
           <keep-alive :include="cachedViews">
@@ -69,8 +86,10 @@ import {
   DataLine,
   List,
   Bell,
-  ChatDotSquare,
+  ChatDotRound,
   Brush,
+  ShoppingBag,
+  Postcard,
   WarningFilled,
 } from "@element-plus/icons-vue";
 import { useUserStore, useTagsViewStore } from "@/store";
@@ -83,6 +102,22 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const userInfo = ref(userStore.userInfo);
+
+// 移动端检测：与全局 768px 断点保持一致
+const isMobile = ref(false);
+const updateMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+// 重操作页：复杂表单/拖拽在手机上体验差，移动端访问时提示到电脑端
+const HEAVY_PATHS = [
+  "/merchant/product/create", // 发布商品（富文本+规格+图片）
+  "/merchant/product/edit", // 编辑商品
+  "/merchant/store-design", // 小店设计（拖拽）
+  "/merchant/refund", // 退款审核（多表单）
+  "/merchant/my-apply", // 我的入驻信息（表单）
+];
+const isHeavyPage = computed(() => HEAVY_PATHS.some((p) => route.path.startsWith(p)));
 
 // 商家端无 TagsView，需自行注册 keepAlive 缓存（如"我的小店"商品列表），
 // 复用 tagsView 的缓存名单，与管理端/商城端 keep-alive 行为一致
@@ -114,8 +149,10 @@ const activeMenu = computed(() => {
   if (path.startsWith("/merchant/statistics")) return "/merchant/statistics";
   if (path.startsWith("/merchant/orders")) return "/merchant/orders";
   if (path.startsWith("/merchant/notifications")) return "/merchant/notifications";
-  if (path.startsWith("/merchant/messages")) return "/merchant/messages";
+  if (path.startsWith("/merchant/conversations")) return "/merchant/conversations";
   if (path.startsWith("/merchant/store-design")) return "/merchant/store-design";
+  if (path.startsWith("/merchant/group-buy")) return "/merchant/group-buy";
+  if (path.startsWith("/merchant/my-apply")) return "/merchant/my-apply";
   if (path.startsWith("/merchant/refund")) return "/merchant/refund";
   return "/merchant/products";
 });
@@ -144,10 +181,13 @@ onMounted(() => {
   }
   fetchUnreadCount();
   pollingTimer = setInterval(fetchUnreadCount, 30000);
+  updateMobile();
+  window.addEventListener("resize", updateMobile);
 });
 
 onUnmounted(() => {
   if (pollingTimer) clearInterval(pollingTimer);
+  window.removeEventListener("resize", updateMobile);
 });
 </script>
 
@@ -270,6 +310,9 @@ onUnmounted(() => {
 
   .merchant-content {
     padding: 16px;
+    .mobile-heavy-tip {
+      margin-bottom: 12px;
+    }
   }
 }
 </style>

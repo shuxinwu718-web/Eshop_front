@@ -82,11 +82,6 @@
         <span class="cell-label">收货地址</span>
         <el-icon class="arrow"><ArrowRight /></el-icon>
       </div>
-      <div class="cell" @click="go('/member/center?tab=messages')">
-        <span class="cell-icon" style="background: #fdf6ec">💬</span>
-        <span class="cell-label">我的留言</span>
-        <el-icon class="arrow"><ArrowRight /></el-icon>
-      </div>
       <div class="cell" @click="go('/shop/group-buy')">
         <span class="cell-icon" style="background: #f3e8ff">👥</span>
         <span class="cell-label">我的拼团</span>

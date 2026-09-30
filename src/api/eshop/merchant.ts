@@ -14,6 +14,8 @@ export interface MerchantProduct {
   categoryName?: string;
   price: number;
   stock: number;
+  /** 销量（商家列表展示，识别热销/滞销） */
+  sales?: number;
   status: 0 | 1; // 0下架 1上架
   mainImage: string;
   description?: string;

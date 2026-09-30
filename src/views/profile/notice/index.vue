@@ -272,7 +272,7 @@ function goBizDetail(bizType: string, bizId: number | string) {
       router.push(`/merchant/order/${bizId}`);
       break;
     case "new_message":
-      router.push("/merchant/messages");
+      router.push("/merchant/conversations");
       break;
     case "reply_message":
       router.push("/member/center");

@@ -556,12 +556,6 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: { title: "消息通知", icon: "bell" },
           },
           {
-            path: "messages",
-            name: "MerchantMessages",
-            component: () => import("@/views/merchant/Messages.vue"),
-            meta: { title: "用户留言", icon: "el-icon-message" },
-          },
-          {
             path: "conversations",
             name: "MerchantConversations",
             component: () => import("@/views/merchant/conversations/index.vue"),

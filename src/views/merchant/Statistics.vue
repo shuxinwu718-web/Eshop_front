@@ -2,13 +2,13 @@
 <template>
   <div class="merchant-statistics">
     <el-row :gutter="20">
-      <el-col :span="12">
+      <el-col :span="isMobile ? 24 : 12">
         <el-card>
           <template #header>总销售额</template>
           <div class="stat-number">¥{{ statistics.totalSales }}</div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="isMobile ? 24 : 12">
         <el-card>
           <template #header>总订单数</template>
           <div class="stat-number">{{ statistics.totalOrders }}</div>
@@ -17,7 +17,7 @@
     </el-row>
     <el-card style="margin-top: 20px">
       <template #header>近30天销售趋势</template>
-      <div ref="chartRef" style="height: 400px"></div>
+      <div ref="chartRef" :style="{ height: isMobile ? '280px' : '400px' }"></div>
     </el-card>
     <el-card style="margin-top: 20px">
       <template #header>
@@ -37,10 +37,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="productName" label="商品名称" min-width="180" />
-        <el-table-column label="单价" width="120">
+        <el-table-column v-if="!isMobile" label="单价" width="120">
           <template #default="{ row }">¥{{ row.price }}</template>
         </el-table-column>
-        <el-table-column prop="stock" label="库存" width="80" />
+        <el-table-column v-if="!isMobile" prop="stock" label="库存" width="80" />
         <el-table-column prop="sales" label="销量" width="80" />
         <el-table-column label="销售额" width="140">
           <template #default="{ row }">¥{{ row.totalAmount }}</template>
@@ -100,6 +100,10 @@ import { getFullImageUrl } from "@/utils/url";
 import { useExport } from "@/composables/useExport";
 
 const router = useRouter();
+const isMobile = ref(false);
+const updateMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
 const statistics = ref<SalesStatistics>({ totalSales: 0, totalOrders: 0, dailyStats: [] });
 const chartRef = ref<HTMLDivElement>();
 let chart: echarts.ECharts | null = null;
@@ -209,13 +213,18 @@ const renderChart = () => {
   });
 };
 
+const handleWindowResize = () => {
+  updateMobile();
+  chart?.resize();
+};
+
 onMounted(() => {
   loadStatistics();
   loadProductSales();
-  window.addEventListener("resize", () => chart?.resize());
+  window.addEventListener("resize", handleWindowResize);
 });
 onUnmounted(() => {
-  window.removeEventListener("resize", () => chart?.resize());
+  window.removeEventListener("resize", handleWindowResize);
   chart?.dispose();
 });
 </script>
@@ -250,6 +259,29 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   text-align: right;
+}
+
+@media (max-width: 768px) {
+  .merchant-statistics {
+    padding: 12px;
+
+    .stat-number {
+      font-size: 24px;
+    }
+
+    .card-header-flex {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    :deep(.el-row) {
+      row-gap: 16px;
+    }
+
+    :deep(.el-dialog) {
+      width: 92%;
+    }
+  }
 }
 
 /* 暗黑模式适配 */
