@@ -113,6 +113,15 @@
                   查看详情
                 </el-button>
                 <el-button
+                  v-if="order.status === 3"
+                  size="small"
+                  type="primary"
+                  class="ob-btn ob-btn--primary"
+                  @click="goComment(order)"
+                >
+                  去评价
+                </el-button>
+                <el-button
                   v-if="order.status === 0"
                   size="small"
                   class="ob-btn"
@@ -560,6 +569,16 @@ const goOrderList = () => {
 
 const viewOrderDetail = (orderId: number) => {
   router.push(`/order/detail/${orderId}`);
+};
+
+/** 去评价：跳转商品详情页并定位到评论区（?comment=1&orderId=xxx 自动聚焦评价输入框） */
+const goComment = (order: OrderVO) => {
+  if (!order.items?.length) return;
+  const item = order.items[0];
+  router.push({
+    path: `/product/${item.productId}`,
+    query: { comment: "1", orderId: String(order.id) },
+  });
 };
 
 const payDialogVisible = ref(false);

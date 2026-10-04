@@ -32,13 +32,19 @@ export interface AiHistoryItem {
  * 发送消息给 AI 客服
  * @param message 用户提问内容
  * @param history 可选，最近的多轮对话历史（最多传最近 10 条）
+ * @param token 可选，登录用户的 JWT（用于 AI 查询我的订单/物流/退款）
  */
 export const sendAiChat = async (
   message: string,
-  history?: AiHistoryItem[]
+  history?: AiHistoryItem[],
+  token?: string
 ): Promise<AiChatResponse> => {
   try {
-    const { data } = await aiHttp.post<AiChatResponse>("/chat", { message, history });
+    const { data } = await aiHttp.post<AiChatResponse>("/chat", {
+      message,
+      history,
+      token: token || "",
+    });
     return data;
   } catch (err) {
     // 服务不可用（未启动/超时）或返回非 2xx 时，统一抛出差错信息，由页面展示明确提示

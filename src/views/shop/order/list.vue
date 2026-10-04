@@ -34,6 +34,7 @@
           @progress="viewRefundProgress(order.refundId)"
           @satisfaction="openSatisfactionDialog(order)"
           @detail="viewDetail(order.id)"
+          @comment="goComment(order)"
         />
 
         <el-empty v-if="!loading && orderList.length === 0" description="暂无订单" />
@@ -175,6 +176,16 @@ const confirmReceive = async (orderId: number) => {
 
 const viewDetail = (orderId: number) => {
   router.push(`/order/detail/${orderId}`);
+};
+
+// 去评价：跳转商品详情页评论区（自动聚焦+滚动定位）
+const goComment = (order: OrderVO) => {
+  if (!order.items?.length) return;
+  const item = order.items[0];
+  router.push({
+    path: `/product/${item.productId}`,
+    query: { comment: "1", orderId: String(order.id) },
+  });
 };
 
 // ==================== 倒计时 ====================

@@ -106,6 +106,11 @@
           </template>
         </div>
 
+        <!-- 查看物流入口（模拟物流轨迹：已发货/已签收时可见） -->
+        <div v-if="group.shipmentId && group.stepActive >= 1" class="shipment-track-link">
+          <el-button link type="primary" @click="goTrack(group.shipmentId)">查看物流</el-button>
+        </div>
+
         <!-- 确认收货按钮（该发货单已发货且订单未取消/退款；仅真实发货单显示） -->
         <div
           v-if="
@@ -127,7 +132,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import OrderAPI, {
   type OrderVO,
   type ShipmentInfo,
@@ -140,6 +145,7 @@ import { getFullImageUrl } from "@/utils/url";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const route = useRoute();
+const router = useRouter();
 const loading = ref(false);
 const order = ref<OrderVO | null>(null);
 const defaultImage =
@@ -246,6 +252,11 @@ const shipmentGroups = computed<ShipmentGroup[]>(() => {
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = defaultImage;
+};
+
+/** 跳转物流跟踪页（模拟物流轨迹） */
+const goTrack = (shipmentId: number) => {
+  router.push(`/order/track/${shipmentId}`);
 };
 
 const fetchDetail = async () => {

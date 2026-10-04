@@ -327,6 +327,18 @@ export const constantRoutes: RouteRecordRaw[] = [
             meta: { title: "订单详情", hidden: true, roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
+            path: "order/track/:shipmentId",
+            name: "OrderTrack",
+            component: () => import("@/views/shop/order/track.vue"),
+            meta: {
+              title: "物流跟踪",
+              hidden: true,
+              roles: ["USER", "MERCHANT", "ADMIN"],
+              // 物流跟踪页使用独立返回，隐藏商城移动端 TabBar
+              hideMobileTabbar: true,
+            },
+          },
+          {
             path: "member/center",
             name: "MemberCenter",
             component: () => import("@/views/shop/center/index.vue"),

@@ -43,6 +43,16 @@
           <h1 class="mb-title">{{ product.name }}</h1>
         </div>
 
+        <!-- c) 领券中心入口（移动端） -->
+        <div class="mb-card mb-coupon-card mb-only" @click="goCouponCenter">
+          <span class="mb-coupon-icon">🎫</span>
+          <div class="mb-coupon-text">
+            <span class="mb-coupon-title">领券中心</span>
+            <span class="mb-coupon-desc">领券下单更优惠</span>
+          </div>
+          <el-icon class="mb-coupon-arrow"><ArrowRight /></el-icon>
+        </div>
+
         <!-- b) 规格行卡 -->
         <div
           v-if="parsedSpecs.length > 0"
@@ -103,11 +113,23 @@
           :has-sku="!!(product.skus && product.skus.length)"
           :all-specs-selected="allSpecsSelected"
         />
-        <div v-if="product.description" class="description">
-          <h3>商品介绍</h3>
-          <div class="description-content" v-html="resolveRichContent(product.description)"></div>
-        </div>
       </div>
+    </div>
+
+    <!-- 评论区（紧跟主信息区、位于商品介绍之前，预览模式只展示前 3 条） -->
+    <CommentSection
+      v-if="product.id"
+      :product-id="product.id"
+      :is-logged-in="userStore.isLoggedIn()"
+      preview
+      :auto-focus="route.query.comment === '1'"
+      :order-id="orderIdFromQuery"
+    />
+
+    <!-- 商品介绍 -->
+    <div v-if="product.description" class="description">
+      <h3>商品介绍</h3>
+      <div class="description-content" v-html="resolveRichContent(product.description)"></div>
     </div>
 
     <!-- 尺寸表展示 -->
@@ -120,13 +142,6 @@
 
     <!-- 关联推荐（同类相似 + 同店热销） -->
     <RecommendSection v-if="product.id" :product-id="product.id" />
-
-    <!-- 评论区 -->
-    <CommentSection
-      v-if="product.id"
-      :product-id="product.id"
-      :is-logged-in="userStore.isLoggedIn()"
-    />
 
     <!-- 移动端：规格选择抽屉（btt） -->
     <el-drawer
@@ -234,6 +249,12 @@ const product = ref<ProductItem>({} as ProductItem);
 const images = ref<ProductImageItem[]>([]);
 const quantity = ref(1);
 
+// 订单页「去评价」入口传入的订单ID（用于评价-订单关联）
+const orderIdFromQuery = computed(() => {
+  const q = route.query.orderId;
+  return typeof q === "string" && q ? Number(q) : undefined;
+});
+
 /** 拼团面板组件引用（「发起拼团」按钮委托其处理开团流程） */
 const groupBuyPanelRef = ref<{
   startCurrent: () => Promise<void>;
@@ -248,6 +269,11 @@ const goToChat = () => {
     name: "ShopMessage",
     query: { merchantId: product.value.merchantId, productId: product.value.id },
   });
+};
+
+/** 领券中心入口（移动端详情页） */
+const goCouponCenter = () => {
+  router.push("/coupon-center");
 };
 
 // ============ 移动端：规格抽屉 + 底部 Dock ============
@@ -664,23 +690,29 @@ watch(
           margin-right: 4px;
         }
       }
-
-      /* 商品介绍：独立白色卡片 */
-      .description {
-        padding: 20px 24px;
-        /* 与上方购买区拉开间距，区块边界更清晰 */
-        margin-top: 32px;
-        background: var(--el-bg-color);
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-      }
     }
+  }
+
+  /* 评论区：PC 端白卡浮起，与主信息卡观感一致 */
+  .comment-section {
+    padding: 28px;
+    margin-top: 0;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  /* 商品介绍：独立白色卡片（已移出右栏独立成卡，位于评论区之后） */
+  .description {
+    padding: 20px 24px;
+    background: var(--el-bg-color);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   }
 }
 
 /* ========== 商品介绍富文本通用样式（桌面端 + 移动端共用，含深色覆盖） ========== */
-.info .description {
+.description {
   h3 {
     margin-bottom: 12px;
     font-size: 18px;
@@ -773,6 +805,10 @@ watch(
     .main {
       flex-direction: column;
       gap: 10px;
+      /* 关键修复：基类 .main 是 align-items: flex-start，
+         移动端改 column 布局后必须覆盖为 stretch，否则 .info 收缩为内容宽度、
+         价格/规格/店铺卡片右侧出现大面积留白 */
+      align-items: stretch;
       padding: 0;
       background: transparent;
       border-radius: 0;
@@ -882,6 +918,46 @@ watch(
       }
     }
 
+    /* c) 领券中心入口卡：暖色渐变条突出「领券」，点击跳转领券中心 */
+    .mb-coupon-card {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--el-color-danger-light-9, #fff3f0) 0%, #fff 48%);
+
+      .mb-coupon-icon {
+        flex-shrink: 0;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .mb-coupon-text {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+
+        .mb-coupon-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--el-text-color-primary);
+        }
+
+        .mb-coupon-desc {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+        }
+      }
+
+      .mb-coupon-arrow {
+        flex-shrink: 0;
+        font-size: 16px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+
     /* d) 店铺入口行卡 */
     .store-entry-wrap {
       padding: 0;
@@ -900,10 +976,17 @@ watch(
       }
     }
 
+    /* 移动端：评论区与商品介绍统一左右留白，与上方价格/规格/店铺卡片对齐（10px 与 .product-detail 内边距一致） */
+    .comment-section,
+    .description {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+
     /* 商品介绍：移动端为白色卡片（桌面端保持原来的分隔线样式） */
     .description {
       padding: 16px;
-      margin: 2px 0 0;
+      margin-top: 2px;
       background: #fff;
       border-top: none;
       border-radius: 12px;

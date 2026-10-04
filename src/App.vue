@@ -8,6 +8,8 @@
       class="wh-full"
     >
       <router-view />
+      <!-- 演示欢迎弹窗（游客可见，内容维护见 src/config/welcome.ts） -->
+      <WelcomeDialog />
     </el-watermark>
   </el-config-provider>
 </template>
@@ -17,6 +19,7 @@ import { useAppStore, useSettingsStore } from "@/store";
 import { appConfig } from "@/settings";
 import { ThemeMode, ComponentSize } from "@/enums";
 import { computed } from "vue";
+import WelcomeDialog from "@/components/WelcomeDialog/index.vue";
 const appStore = useAppStore();
 const settingsStore = useSettingsStore();
 const locale = computed(() => appStore.locale);

@@ -107,7 +107,16 @@
         确认收货
       </el-button>
 
-      <!-- 已完成: 申请退款 -->
+      <!-- 已完成: 去评价 / 申请退款 -->
+      <el-button
+        v-if="order.status === 3"
+        class="ob-btn ob-btn--comment"
+        type="primary"
+        size="small"
+        @click="emit('comment')"
+      >
+        去评价
+      </el-button>
       <el-button
         v-if="order.status === 3"
         class="ob-btn"
@@ -167,6 +176,7 @@ const emit = defineEmits<{
   (e: "progress"): void;
   (e: "satisfaction"): void;
   (e: "detail"): void;
+  (e: "comment"): void;
 }>();
 
 // ==================== 订单状态映射 ====================
@@ -401,6 +411,13 @@ const formatRemaining = (seconds: number): string => {
 
     .ob-btn--primary {
       font-weight: 600;
+    }
+
+    .ob-btn--comment {
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #f40, #ff7a45);
+      border: none;
     }
 
     .ob-btn--ghost {

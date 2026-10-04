@@ -114,6 +114,25 @@ export interface OrderVO {
   evaluated?: boolean;
 }
 
+/** 物流轨迹节点（模拟物流） */
+export interface ShipmentTrackItem {
+  status: number; // 1已揽收 2运输中 3派送中 4已签收
+  title: string;
+  description?: string;
+  time: string;
+}
+
+/** 发货单物流轨迹视图（模拟物流） */
+export interface ShipmentTrackVO {
+  shipmentId: number;
+  orderId: number;
+  shippingName?: string;
+  shippingNo?: string;
+  deliveryStatus?: number; // 0待发货 1已发货 2已签收
+  latestTrackStatus?: number;
+  tracks: ShipmentTrackItem[];
+}
+
 const OrderAPI = {
   create(data: CreateOrderDTO) {
     return request<any, { orderNo: string; id: number }>({
@@ -160,6 +179,22 @@ const OrderAPI = {
     return request({
       url: `${BASE_URL}/confirm-receive/shipment/${shipmentId}`,
       method: "put",
+    });
+  },
+
+  /** 查询单个发货单的物流轨迹（模拟物流） */
+  getShipmentTrack(shipmentId: number) {
+    return request<any, ShipmentTrackVO>({
+      url: `${BASE_URL}/track/shipment/${shipmentId}`,
+      method: "get",
+    });
+  },
+
+  /** 查询订单下所有发货单的物流轨迹组（模拟物流） */
+  getOrderTracks(orderId: number) {
+    return request<any, ShipmentTrackVO[]>({
+      url: `${BASE_URL}/track/order/${orderId}`,
+      method: "get",
     });
   },
 

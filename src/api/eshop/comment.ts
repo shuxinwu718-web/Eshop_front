@@ -1,7 +1,14 @@
 import request from "@/utils/request";
-import type { PageResult } from "@/types/api";
 
 const BASE_URL = "/api/comments";
+
+// 后端 MyBatis-Plus Page 分页结构（records/total/current/size）
+export interface CommentPageResult<T> {
+  records: T[];
+  total: number;
+  current: number;
+  size: number;
+}
 
 export interface CommentItem {
   id: number;
@@ -47,6 +54,28 @@ export interface CommentVO {
   replyContent?: string;
   createTime: string;
   children?: CommentVO[];
+  purchased?: boolean; // 评论人是否已购买该商品
+  liked?: boolean; // 当前用户是否已点赞
+  merchantReply?: boolean; // 子评论是否为商家回复
+}
+
+// 商品评价聚合统计（顶部评分卡）
+export interface CommentStats {
+  total: number;
+  avgRating: number;
+  goodRate: number;
+  imageCount: number;
+  dist: Record<number, number>; // 5~1 星分布
+  recentImages: string[];
+}
+
+// 分页查询参数：type 0全部 1好评 2中评 3差评；sortBy 0时间 1热度
+export interface CommentPageParams {
+  pageNum: number;
+  pageSize: number;
+  type?: number;
+  onlyImage?: boolean;
+  sortBy?: number;
 }
 
 const CommentAPI = {
@@ -67,12 +96,52 @@ const CommentAPI = {
     });
   },
 
+  // 分页获取商品评论（带已购/点赞状态，支持筛选排序）
+  getProductCommentsPage(productId: number, params: CommentPageParams) {
+    return request<any, CommentPageResult<CommentVO>>({
+      url: `${BASE_URL}/product/${productId}/page`,
+      method: "get",
+      params,
+    });
+  },
+
+  // 商品评价聚合统计（评分卡）
+  getCommentStats(productId: number) {
+    return request<any, CommentStats>({
+      url: `${BASE_URL}/product/${productId}/stats`,
+      method: "get",
+    });
+  },
+
+  // 点赞/取消点赞
+  toggleLike(commentId: number) {
+    return request<any, { liked: boolean; likeCount: number }>({
+      url: `${BASE_URL}/${commentId}/like`,
+      method: "post",
+    });
+  },
+
   // 用户发表评论
-  add(data: { productId: number; rating: number; content: string; images?: string[] }) {
+  add(data: {
+    productId: number;
+    rating: number;
+    content: string;
+    images?: string[];
+    orderId?: number;
+  }) {
     return request({
       url: BASE_URL,
       method: "post",
       data,
+    });
+  },
+
+  // 查询当前用户是否已对某商品发表过评价（订单列表"去评价"按钮状态用）
+  existsUserComment(productId: number, orderId?: number) {
+    return request<any, boolean>({
+      url: `${BASE_URL}/exists`,
+      method: "get",
+      params: { productId, orderId },
     });
   },
 

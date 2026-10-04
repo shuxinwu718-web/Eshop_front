@@ -174,8 +174,9 @@ const captchaImage = ref("");
 const captchaKey = ref("");
 
 const loginFormData = ref<LoginRequest>({
-  username: "admin",
-  password: "",
+  // 欢迎弹窗「一键去登录」携带 ?username=&password= 时自动预填
+  username: (route.query.username as string) || "admin",
+  password: (route.query.password as string) || "",
   rememberMe,
   captchaKey: "",
   captchaCode: "",
@@ -348,6 +349,10 @@ function redirectAfterLogin() {
 
 onMounted(() => {
   fetchCaptcha();
+  // 预填完成后清除 URL 上的账号密码参数，避免残留在地址栏与浏览历史
+  if (route.query.username || route.query.password) {
+    router.replace({ path: "/login", query: { redirect: route.query.redirect } });
+  }
 });
 </script>
 

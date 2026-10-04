@@ -149,10 +149,16 @@
       </div>
       <el-form :model="shipForm" label-width="100px" class="ship-form">
         <el-form-item label="快递公司">
-          <el-input v-model="shipForm.shippingName" placeholder="如：顺丰快递" />
+          <el-select
+            v-model="shipForm.shippingName"
+            placeholder="请选择快递公司"
+            style="width: 100%"
+          >
+            <el-option v-for="c in expressCompanies" :key="c" :label="c" :value="c" />
+          </el-select>
         </el-form-item>
         <el-form-item label="快递单号">
-          <el-input v-model="shipForm.shippingNo" placeholder="请输入快递单号" />
+          <el-input v-model="shipForm.shippingNo" placeholder="已自动生成，可手动修改" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -164,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { ref, reactive, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import MerchantAPI from "@/api/eshop/merchant";
@@ -233,6 +239,34 @@ const { handleExport } = useExport(
 const shipDialogVisible = ref(false);
 const currentShipment = ref<MerchantShipment | null>(null);
 const shipForm = reactive({ shippingName: "", shippingNo: "" });
+
+// ===== 模拟物流：快递公司下拉 + 自动生成运单号 =====
+const expressCompanies = ["顺丰速运", "圆通速递", "中通快递", "韵达快递", "中国邮政EMS"];
+
+const expressPrefix: Record<string, string> = {
+  顺丰速运: "SF",
+  圆通速递: "YT",
+  中通快递: "ZT",
+  韵达快递: "YD",
+  中国邮政EMS: "EMS",
+};
+
+function generateTrackingNo(name: string) {
+  const prefix = expressPrefix[name] || "EX";
+  const ts = String(Date.now()).slice(5);
+  const rand = Math.floor(Math.random() * 9000) + 1000;
+  return `${prefix}${ts}${rand}`;
+}
+
+// 选择快递公司后自动生成模拟运单号（可手动修改）
+watch(
+  () => shipForm.shippingName,
+  (name) => {
+    if (name) {
+      shipForm.shippingNo = generateTrackingNo(name);
+    }
+  }
+);
 
 const loadShipments = async () => {
   loading.value = true;

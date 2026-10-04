@@ -82,6 +82,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { ChatDotRound, MagicStick, Service, User } from "@element-plus/icons-vue";
 import AiAPI, { type AiHistoryItem } from "@/api/ai/chat";
 import { useUserStore } from "@/store/modules/user";
+import { AuthStorage } from "@/utils/auth";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -270,7 +271,7 @@ const send = async () => {
       .slice(-10)
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({ role: m.role, content: m.content }));
-    const res = await AiAPI.sendAiChat(text, history);
+    const res = await AiAPI.sendAiChat(text, history, AuthStorage.getAccessToken());
     if (res.success && res.reply) {
       pushMessage("assistant", res.reply);
     } else {
