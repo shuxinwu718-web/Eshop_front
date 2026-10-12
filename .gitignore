@@ -62,6 +62,9 @@ _resume_*.png
 _upscale.cjs
 _upscale.js
 _chrome_profile/
+# 构建产物压缩包 / 本地工具目录（勿提交）
+dist-*.zip
+.trae/
 # UI 设计草图与本地截图
 design/
 md/*.png

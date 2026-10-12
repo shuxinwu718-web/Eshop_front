@@ -19,10 +19,27 @@ const http = axios.create({
 // 加载状态
 let loadingInstance: ReturnType<typeof ElLoading.service> | null = null;
 let requestCount = 0;
+/** 全屏 Loading 超时兜底时长：单次 Loading 展示超过该时长仍未结束即强制关闭 */
+const LOADING_TIMEOUT = 10_000;
+let loadingTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** 强制关闭全屏 Loading 并重置计数，防止任一请求挂起导致整站假死 */
+const forceCloseLoading = () => {
+  loadingTimer = null;
+  if (loadingInstance) {
+    loadingInstance.close();
+    loadingInstance = null;
+  }
+  // 异常态下计数已与真实请求失联，直接归零；
+  // 后续响应回调 hideLoading 有 requestCount > 0 防御不会变负，新请求也能正常重新开 loading
+  requestCount = 0;
+  console.warn("[request] 全局 Loading 超时兜底：已强制关闭加载遮罩");
+};
 
 const showLoading = () => {
   if (requestCount === 0) {
     loadingInstance = ElLoading.service({ fullscreen: true, text: "加载中..." });
+    loadingTimer = setTimeout(forceCloseLoading, LOADING_TIMEOUT);
   }
   requestCount++;
 };
@@ -32,9 +49,15 @@ const hideLoading = () => {
   if (requestCount > 0) {
     requestCount--;
   }
-  if (requestCount === 0 && loadingInstance) {
-    loadingInstance.close();
-    loadingInstance = null;
+  if (requestCount === 0) {
+    if (loadingInstance) {
+      loadingInstance.close();
+      loadingInstance = null;
+    }
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+      loadingTimer = null;
+    }
   }
 };
 

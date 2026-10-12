@@ -268,6 +268,17 @@ export const constantRoutes: RouteRecordRaw[] = [
                 meta: { title: "通知管理", icon: "bell", keepAlive: true, roles: ["ADMIN"] },
               },
               {
+                path: "/management/release-log",
+                name: "ReleaseLogManage",
+                component: () => import("@/views/system/releaseLog/index.vue"),
+                meta: {
+                  title: "版本公告",
+                  icon: "document",
+                  keepAlive: true,
+                  roles: ["ADMIN"],
+                },
+              },
+              {
                 path: "/management/system-monitor",
                 name: "SystemMonitor",
                 component: () => import("@/views/eshop/monitor/index.vue"),
@@ -485,6 +496,12 @@ export const constantRoutes: RouteRecordRaw[] = [
             name: "MyNotice",
             component: () => import("@/views/profile/notice/index.vue"),
             meta: { title: "我的通知", icon: "message", roles: ["USER", "MERCHANT", "ADMIN"] },
+          },
+          {
+            path: "my-release-log",
+            name: "ReleaseLogList",
+            component: () => import("@/views/profile/release/index.vue"),
+            meta: { title: "版本更新日志", icon: "document", roles: ["USER", "MERCHANT", "ADMIN"] },
           },
           {
             path: "shop/group-buy",

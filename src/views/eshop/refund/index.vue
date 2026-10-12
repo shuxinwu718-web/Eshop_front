@@ -54,7 +54,7 @@
               v-if="row.status === 0 || row.status === 1"
               type="success"
               size="small"
-              @click="auditApprove(row)"
+              @click="auditApprove(row as RefundRecord)"
             >
               通过
             </el-button>
@@ -62,7 +62,7 @@
               v-if="row.status === 0 || row.status === 1"
               type="danger"
               size="small"
-              @click="openRejectDialog(row)"
+              @click="openRejectDialog(row as RefundRecord)"
             >
               拒绝
             </el-button>
@@ -71,11 +71,11 @@
               v-if="row.status === 2"
               type="warning"
               size="small"
-              @click="executeRefund(row)"
+              @click="executeRefund(row as RefundRecord)"
             >
               执行退款
             </el-button>
-            <el-button size="small" @click="viewDetail(row)">详情</el-button>
+            <el-button size="small" @click="viewDetail(row as RefundRecord)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -15,130 +15,140 @@
       </template>
 
       <div v-loading="loading" class="seckill-grid">
-        <div
-          v-for="item in filteredList"
-          :key="item.id"
-          class="seckill-card"
-          :class="[
-            item.status === 1 ? 'is-active' : 'is-upcoming',
-            item.seckillType === 1 ? 'is-product' : 'is-coupon',
-          ]"
-        >
-          <!-- 左侧：券信息 / 商品信息 -->
-          <div class="card-left">
-            <div class="card-badge">
-              <el-tag v-if="item.status === 1" type="danger" effect="dark" size="small">
-                抢购中
-              </el-tag>
-              <el-tag v-else type="info" effect="dark" size="small">即将开始</el-tag>
-            </div>
+        <template v-for="section in sections" :key="section.key">
+          <div class="section-title">
+            <span class="section-dot" :class="section.cls" />
+            <span class="section-name">{{ section.title }}</span>
+            <span class="section-count">{{ section.items.length }} 场</span>
+          </div>
+          <div
+            v-for="item in section.items"
+            :key="item.id"
+            class="seckill-card"
+            :class="[section.cardCls, item.seckillType === 1 ? 'is-product' : 'is-coupon']"
+          >
+            <!-- 左侧：券信息 / 商品信息 -->
+            <div class="card-left">
+              <div class="card-badge">
+                <el-tag v-if="item.status === 1" type="danger" effect="dark" size="small">
+                  抢购中
+                </el-tag>
+                <el-tag v-else type="info" effect="dark" size="small">即将开始</el-tag>
+              </div>
 
-            <!-- 秒杀商品模式 -->
-            <template v-if="item.seckillType === 1">
-              <div class="card-product">
-                <el-image
-                  v-if="item.coverImage"
-                  :src="getFullImageUrl(item.coverImage)"
-                  fit="cover"
-                  class="card-product-img"
-                />
-                <div v-else class="card-product-img card-product-img--placeholder">
-                  <el-icon :size="24"><Picture /></el-icon>
-                </div>
-                <div class="card-product-info">
-                  <div class="card-product-name">{{ item.productName }}</div>
-                  <div class="card-price-row">
-                    <span class="card-seckill-price">¥{{ item.seckillPrice }}</span>
-                    <span v-if="item.originalPrice" class="card-origin-price">
-                      ¥{{ item.originalPrice }}
-                    </span>
+              <!-- 秒杀商品模式 -->
+              <template v-if="item.seckillType === 1">
+                <div class="card-product">
+                  <el-image
+                    v-if="item.coverImage"
+                    :src="getFullImageUrl(item.coverImage)"
+                    fit="cover"
+                    class="card-product-img"
+                  />
+                  <div v-else class="card-product-img card-product-img--placeholder">
+                    <el-icon :size="24"><Picture /></el-icon>
+                  </div>
+                  <div class="card-product-info">
+                    <div class="card-product-name">{{ item.productName }}</div>
+                    <div class="card-price-row">
+                      <span class="card-seckill-price">¥{{ item.seckillPrice }}</span>
+                      <span v-if="item.originalPrice" class="card-origin-price">
+                        ¥{{ item.originalPrice }}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </template>
-
-            <!-- 秒杀优惠券模式 -->
-            <template v-else>
-              <div class="card-coupon-name">{{ item.couponName || "优惠券" }}</div>
-            </template>
-
-            <div class="card-session-name">{{ item.sessionName }}</div>
-          </div>
-
-          <!-- 中间：倒计时 + 库存进度 -->
-          <div class="card-center">
-            <div class="card-time">
-              <template v-if="item.status === 1">
-                <div class="time-label">距离结束</div>
-                <div class="time-display">
-                  <span class="time-num">{{ padZero(remainTime(item).h) }}</span>
-                  <span class="time-colon">:</span>
-                  <span class="time-num">{{ padZero(remainTime(item).m) }}</span>
-                  <span class="time-colon">:</span>
-                  <span class="time-num">{{ padZero(remainTime(item).s) }}</span>
-                </div>
               </template>
+
+              <!-- 秒杀优惠券模式 -->
               <template v-else>
-                <div class="time-label">距离开始</div>
-                <div class="time-display">
-                  <span v-if="remainTime(item).d > 0" class="time-num">
-                    {{ remainTime(item).d }}
-                  </span>
-                  <span v-if="remainTime(item).d > 0" class="time-unit">天</span>
-                  <span class="time-num">{{ padZero(remainTime(item).h) }}</span>
-                  <span class="time-colon">:</span>
-                  <span class="time-num">{{ padZero(remainTime(item).m) }}</span>
-                  <span class="time-colon">:</span>
-                  <span class="time-num">{{ padZero(remainTime(item).s) }}</span>
-                </div>
+                <div class="card-coupon-name">{{ item.couponName || "优惠券" }}</div>
               </template>
+
+              <div class="card-session-name">{{ item.sessionName }}</div>
             </div>
-            <div class="card-stock">
-              <span>
-                已抢
-                <b class="stock-sold">{{ stockSold(item) }}</b>
-                件
-              </span>
-              <span class="stock-bar">
-                <span class="stock-bar-inner" :style="{ width: stockPercent(item) + '%' }" />
-              </span>
-              <span>
-                剩余
-                <b class="stock-remain">{{ item.remainStock ?? item.seckillStock }}</b>
-                件
-              </span>
+
+            <!-- 中间：倒计时 + 库存进度 -->
+            <div class="card-center">
+              <div class="card-time">
+                <template v-if="item.status === 1">
+                  <div class="time-label">距离结束</div>
+                  <div class="time-display">
+                    <span class="time-num">{{ padZero(remainTime(item).h) }}</span>
+                    <span class="time-colon">:</span>
+                    <span class="time-num">{{ padZero(remainTime(item).m) }}</span>
+                    <span class="time-colon">:</span>
+                    <span class="time-num">{{ padZero(remainTime(item).s) }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="time-label">距离开始</div>
+                  <div class="time-display">
+                    <span v-if="remainTime(item).d > 0" class="time-num">
+                      {{ remainTime(item).d }}
+                    </span>
+                    <span v-if="remainTime(item).d > 0" class="time-unit">天</span>
+                    <span class="time-num">{{ padZero(remainTime(item).h) }}</span>
+                    <span class="time-colon">:</span>
+                    <span class="time-num">{{ padZero(remainTime(item).m) }}</span>
+                    <span class="time-colon">:</span>
+                    <span class="time-num">{{ padZero(remainTime(item).s) }}</span>
+                  </div>
+                </template>
+              </div>
+              <div class="card-stock">
+                <span>
+                  已抢
+                  <b class="stock-sold">{{ stockSold(item) }}</b>
+                  件
+                </span>
+                <span class="stock-bar">
+                  <span class="stock-bar-inner" :style="{ width: stockPercent(item) + '%' }" />
+                </span>
+                <span>
+                  剩余
+                  <b class="stock-remain">{{ item.remainStock ?? item.seckillStock }}</b>
+                  件
+                </span>
+              </div>
+            </div>
+
+            <!-- 右侧：操作 -->
+            <div class="card-action">
+              <!-- 已抢购/已领取 -->
+              <el-button
+                v-if="item.status === 1 && item.isSeckilled"
+                type="success"
+                size="large"
+                round
+                disabled
+              >
+                {{ item.seckillType === 1 ? "秒杀成功" : "已领取" }}
+              </el-button>
+              <!-- 可抢购 -->
+              <el-button
+                v-else-if="item.status === 1"
+                type="danger"
+                size="large"
+                round
+                :disabled="!item.remainStock || item.remainStock <= 0 || seckillingId === item.id"
+                :loading="seckillingId === item.id"
+                @click="handleSeckill(item)"
+              >
+                {{ item.remainStock > 0 ? "立即秒杀" : "已抢完" }}
+              </el-button>
+              <el-button v-else type="info" size="large" round disabled>即将开始</el-button>
             </div>
           </div>
+        </template>
+        <el-empty v-if="!loading && list.length === 0" description="暂无秒杀活动" />
+      </div>
 
-          <!-- 右侧：操作 -->
-          <div class="card-action">
-            <!-- 已抢购/已领取 -->
-            <el-button
-              v-if="item.status === 1 && item.isSeckilled"
-              type="success"
-              size="large"
-              round
-              disabled
-            >
-              {{ item.seckillType === 1 ? "秒杀成功" : "已领取" }}
-            </el-button>
-            <!-- 可抢购 -->
-            <el-button
-              v-else-if="item.status === 1"
-              type="danger"
-              size="large"
-              round
-              :disabled="!item.remainStock || item.remainStock <= 0 || seckillingId === item.id"
-              :loading="seckillingId === item.id"
-              @click="handleSeckill(item)"
-            >
-              {{ item.remainStock > 0 ? "立即秒杀" : "已抢完" }}
-            </el-button>
-            <el-button v-else type="info" size="large" round disabled>即将开始</el-button>
-          </div>
-        </div>
-
-        <el-empty v-if="!loading && filteredList.length === 0" description="暂无秒杀活动" />
+      <!-- 加载更多（分页） -->
+      <div v-if="!loading && !finished && list.length > 0" class="load-more">
+        <el-button round :loading="loadingMore" @click="loadMore">
+          加载更多（{{ list.length }}/{{ total }}）
+        </el-button>
       </div>
 
       <!-- 秒杀商品收银台：抢购成功后弹出选择支付方式 -->
@@ -167,25 +177,52 @@ import { useUserStore } from "@/store";
 const route = useRoute();
 const userStore = useUserStore();
 const loading = ref(false);
+const loadingMore = ref(false);
 const list = ref<UserSeckillSessionItem[]>([]);
+const total = ref(0);
+const page = ref(1);
+const pageSize = 10;
+/** 是否已加载完全部数据 */
+const finished = computed(() => list.value.length >= total.value);
 const seckillingId = ref<number | null>(null);
 const now = ref(Date.now());
 /** 分区 Tab：all=全部 product=秒杀商品 coupon=优惠券 */
 const activeTab = ref<"all" | "product" | "coupon">("all");
-/** 按所选分区过滤场次列表 */
-const filteredList = computed(() => {
-  if (activeTab.value === "all") return list.value;
-  const isProduct = activeTab.value === "product";
-  return list.value.filter((i) => (i.seckillType === 1) === isProduct);
-});
+/** 传给后端的类型过滤：all 不传，product=1，coupon=0（DB 中 null 视为券） */
+const typeParam = computed<number | undefined>(() =>
+  activeTab.value === "all" ? undefined : activeTab.value === "product" ? 1 : 0
+);
+/** 服务端排序已保证：进行中在前、待开始在后。按状态分组渲染两个分区 */
+const activeItems = computed(() => list.value.filter((i) => i.status === 1));
+const upcomingItems = computed(() => list.value.filter((i) => i.status === 0));
+const sections = computed(() =>
+  [
+    {
+      key: "active",
+      title: "正在疯抢",
+      cls: "is-active",
+      cardCls: "is-active",
+      items: activeItems.value,
+    },
+    {
+      key: "upcoming",
+      title: "即将开始",
+      cls: "is-upcoming",
+      cardCls: "is-upcoming",
+      items: upcomingItems.value,
+    },
+  ].filter((s) => s.items.length > 0)
+);
 /** 秒杀商品收银台状态 */
 const payOrder = ref<OrderVO | null>(null);
 const payVisible = ref(false);
 let timer: ReturnType<typeof setInterval> | null = null;
 let fetchTimer: ReturnType<typeof setInterval> | null = null;
 
-/** 切换分区后重拉一次数据，保证所看分区库存/状态是最新的 */
+/** 切换分区：重置到第一页并从服务端重新拉取 */
 const handleTabChange = () => {
+  page.value = 1;
+  total.value = 0;
   fetchData();
 };
 
@@ -212,14 +249,57 @@ const stockPercent = (item: UserSeckillSessionItem) => {
   return Math.min(100, (sold / total) * 100);
 };
 
-const fetchData = async () => {
-  loading.value = true;
+/**
+ * 拉取秒杀列表（第 1 页）。silent=true 用于轮询刷新，不触发全屏 loading。
+ * 若用户此前已加载更多页，刷新时按已加载页数补齐，避免列表回缩/闪动。
+ */
+const fetchData = async (silent = false) => {
+  if (!silent) loading.value = true;
   try {
-    list.value = await SeckillAPI.getUserSessions();
+    const keepPages = page.value;
+    const data = await SeckillAPI.getUserSessions({
+      page: 1,
+      size: pageSize,
+      type: typeParam.value,
+    });
+    total.value = data.total;
+    let merged = [...data.records];
+    if (keepPages > 1) {
+      for (let p = 2; p <= keepPages; p++) {
+        const d = await SeckillAPI.getUserSessions({
+          page: p,
+          size: pageSize,
+          type: typeParam.value,
+        });
+        merged = merged.concat(d.records);
+      }
+    }
+    list.value = merged;
   } catch {
     // 错误已由请求拦截器统一提示
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
+  }
+};
+
+/** 加载下一页并追加到列表尾部 */
+const loadMore = async () => {
+  if (loadingMore.value || finished.value) return;
+  loadingMore.value = true;
+  try {
+    const next = page.value + 1;
+    const data = await SeckillAPI.getUserSessions({
+      page: next,
+      size: pageSize,
+      type: typeParam.value,
+    });
+    total.value = data.total;
+    list.value.push(...data.records);
+    page.value = next;
+  } catch {
+    // 错误已由请求拦截器统一提示
+  } finally {
+    loadingMore.value = false;
   }
 };
 const handleSeckill = async (item: UserSeckillSessionItem) => {
@@ -281,7 +361,7 @@ function startTimers() {
   timer = setInterval(() => {
     now.value = Date.now();
   }, 1000);
-  fetchTimer = setInterval(fetchData, 10000);
+  fetchTimer = setInterval(() => fetchData(true), 10000);
 }
 
 function stopTimers() {
@@ -358,6 +438,43 @@ onBeforeRouteLeave(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  /* 分区标题：正在疯抢 / 即将开始 */
+  .section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 2px 0;
+
+    .section-dot {
+      width: 6px;
+      height: 18px;
+      border-radius: 3px;
+
+      &.is-active {
+        background: #f56c6c;
+      }
+      &.is-upcoming {
+        background: var(--el-color-primary);
+      }
+    }
+    .section-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--el-text-color-primary);
+    }
+    .section-count {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  /* 加载更多按钮 */
+  .load-more {
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
   }
 
   .seckill-card {

@@ -15,6 +15,7 @@ export * from "./config";
 export * from "./log";
 export * from "./statistics";
 export * from "./notice";
+export * from "./releaseLog";
 export * from "./tenant";
 export * from "./tenant-plan";
 

@@ -103,9 +103,14 @@ const SeckillAPI = {
 
   // ==================== 用户端 ====================
 
-  /** 用户端：获取秒杀场次列表 */
-  getUserSessions() {
-    return request.get<UserSeckillSessionItem[]>("/api/seckill/sessions");
+  /**
+   * 用户端：获取秒杀场次分页列表（进行中在前，待开始在后；type 传 null/0/1 过滤券/商品）
+   */
+  getUserSessions(params?: { page?: number; size?: number; type?: number }) {
+    return request.get<{ records: UserSeckillSessionItem[]; total: number }>(
+      "/api/seckill/sessions",
+      { params }
+    );
   },
 
   /** 用户端：参与秒杀（秒杀商品模式需传 addressId） */

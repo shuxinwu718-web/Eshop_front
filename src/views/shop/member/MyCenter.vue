@@ -72,6 +72,12 @@
 
     <!-- ===== 功能列表 ===== -->
     <div class="card list-card">
+      <div class="cell" @click="go('/shop/message')">
+        <span class="cell-icon" style="background: #e8f0fe">💬</span>
+        <span class="cell-label">客服会话</span>
+        <el-badge v-if="chatUnread > 0" :value="chatUnread" :max="99" class="cell-badge" />
+        <el-icon class="arrow"><ArrowRight /></el-icon>
+      </div>
       <div class="cell" @click="go('/member/center?tab=history')">
         <span class="cell-icon" style="background: #f0f4ff">🕐</span>
         <span class="cell-label">浏览历史</span>
@@ -90,6 +96,12 @@
       <div class="cell" @click="go('/my-notice')">
         <span class="cell-icon" style="background: #fff0f0">🔔</span>
         <span class="cell-label">我的通知</span>
+        <el-icon class="arrow"><ArrowRight /></el-icon>
+      </div>
+      <div class="cell" @click="go('/my-release-log')">
+        <span class="cell-icon" style="background: #e9f7ef">📋</span>
+        <span class="cell-label">版本更新日志</span>
+        <el-badge v-if="releaseHasNew" is-dot class="cell-badge" />
         <el-icon class="arrow"><ArrowRight /></el-icon>
       </div>
       <div class="cell" @click="go('/profile')">
@@ -136,13 +148,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onActivated, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import { ArrowRight, Box, CircleCheck, Van, Wallet } from "@element-plus/icons-vue";
 import { useUserStore, useSettingsStore } from "@/store";
 import { getFullImageUrl } from "@/utils/url";
 import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
+import ChatAPI from "@/api/chat";
+import { useImMessages } from "@/composables/sse/useImMessages";
+import { useReleaseLog } from "@/composables/sse/useReleaseLog";
 
 // 与路由 name 一致，供 keep-alive 缓存识别
 defineOptions({ name: "MemberMy" });
@@ -154,6 +169,36 @@ const settingsStore = useSettingsStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn());
 const userInfo = computed(() => userStore.userInfo);
 const role = computed(() => userStore.role);
+
+/** 客服会话未读数（买家视角），功能列表入口角标 */
+const chatUnread = ref(0);
+const im = useImMessages();
+let imUnsub: (() => void) | null = null;
+
+/** 版本公告未读红点（新版本上线时点亮，进入更新日志页后熄灭） */
+const release = useReleaseLog();
+const releaseHasNew = release.hasNew;
+
+const refreshChatUnread = async () => {
+  if (!isLoggedIn.value) return;
+  try {
+    chatUnread.value = await ChatAPI.unreadTotal();
+  } catch {
+    // 静默，下次刷新重试
+  }
+};
+
+onMounted(() => {
+  refreshChatUnread();
+  imUnsub = im.subscribe((msg) => {
+    // 商家发来的消息立刻 +1，最终以轮询刷新值为准
+    if (msg.senderType === 2) chatUnread.value += 1;
+  });
+});
+
+// keep-alive 重新激活时刷新未读数（读完消息/离开会话页回来后角标需同步）
+onActivated(() => refreshChatUnread());
+onUnmounted(() => imUnsub?.());
 
 function openSettings() {
   settingsStore.settingsVisible = true;

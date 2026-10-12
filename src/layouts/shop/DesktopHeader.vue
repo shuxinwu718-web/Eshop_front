@@ -29,6 +29,11 @@
           </el-icon>
         </el-badge>
         <template v-if="isLoggedIn">
+          <el-badge :value="chatUnread" :hidden="chatUnread === 0" :max="99">
+            <el-icon class="action-icon" title="客服消息" @click="router.push('/shop/message')">
+              <ChatDotRound />
+            </el-icon>
+          </el-badge>
           <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
             <el-icon class="action-icon" title="我的通知" @click="router.push('/my-notice')">
               <Bell />
@@ -102,14 +107,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { Bell, MagicStick, Search, ShoppingCart } from "@element-plus/icons-vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { Bell, ChatDotRound, MagicStick, Search, ShoppingCart } from "@element-plus/icons-vue";
 import { ElMessageBox } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { useCartStore, useUserStore } from "@/store";
 import { useSettingsStore } from "@/store/modules/settings";
 import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import { getFullImageUrl } from "@/utils/url";
+import ChatAPI from "@/api/chat";
+import { useImMessages } from "@/composables/sse/useImMessages";
 
 defineOptions({ name: "DesktopHeader" });
 
@@ -133,6 +140,63 @@ const isLoggedIn = computed(() => userStore.isLoggedIn());
 const userInfo = computed(() => userStore.userInfo);
 // 当前角色：商家显示"商家中心"入口，管理员显示"管理后台"入口
 const role = computed(() => userStore.role);
+
+/** 客服会话未读数（买家视角），顶栏消息图标徽标 */
+const chatUnread = ref(0);
+const im = useImMessages();
+let chatTimer: ReturnType<typeof setInterval> | null = null;
+let imUnsub: (() => void) | null = null;
+
+const refreshChatUnread = async () => {
+  if (!isLoggedIn.value) {
+    chatUnread.value = 0;
+    return;
+  }
+  try {
+    chatUnread.value = await ChatAPI.unreadTotal();
+  } catch {
+    // 轮询失败静默，下个周期重试
+  }
+};
+
+const startChatPolling = () => {
+  refreshChatUnread();
+  if (chatTimer) return;
+  chatTimer = setInterval(refreshChatUnread, 10000);
+  // 订阅 SSE 实时增量：商家发来的消息立刻 +1（最终以轮询的服务端值为准）
+  if (!imUnsub) {
+    imUnsub = im.subscribe((msg) => {
+      if (msg.senderType === 2) chatUnread.value += 1;
+    });
+  }
+};
+
+onMounted(() => {
+  if (isLoggedIn.value) startChatPolling();
+});
+
+onUnmounted(() => {
+  if (chatTimer) {
+    clearInterval(chatTimer);
+    chatTimer = null;
+  }
+  imUnsub?.();
+});
+
+// 登录/登出时启停轮询与订阅
+watch(isLoggedIn, (logged) => {
+  if (logged) {
+    startChatPolling();
+  } else {
+    chatUnread.value = 0;
+    if (chatTimer) {
+      clearInterval(chatTimer);
+      chatTimer = null;
+    }
+    imUnsub?.();
+    imUnsub = null;
+  }
+});
 
 function isActive(path: string) {
   return route.path === path;

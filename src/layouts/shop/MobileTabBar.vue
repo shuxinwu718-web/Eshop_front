@@ -56,6 +56,7 @@ const tabs: TabItem[] = [
       "/shop/order",
       "/my-coupon",
       "/my-notice",
+      "/my-release-log",
       "/signin",
       "/favorites",
       "/shop/address",

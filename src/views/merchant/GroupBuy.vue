@@ -239,7 +239,7 @@
             start-placeholder="开始时间"
             end-placeholder="结束时间"
             style="width: 100%"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
           />
         </el-form-item>
 
@@ -268,7 +268,6 @@ import GroupBuyAPI, {
 import ProductAPI, { type ProductSku } from "@/api/eshop/product";
 import MerchantAPI from "@/api/eshop/merchant";
 import { getFullImageUrl } from "@/utils/url";
-import { formatTimeMinute, toTimeStamp } from "@/utils/format";
 
 const loading = ref(false);
 const list = ref<GroupBuyActivityItem[]>([]);
@@ -537,7 +536,7 @@ const changeStatus = async (row: GroupBuyActivityItem, status: number) => {
   }
 };
 
-const formatTime = (t?: string) => formatTimeMinute(t);
+const formatTime = (t?: string) => (t ? t.replace("T", " ").slice(0, 16) : "-");
 
 const formatCountdown = (seconds: number) => {
   const s = Math.max(0, seconds);

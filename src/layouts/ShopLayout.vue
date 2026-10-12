@@ -10,6 +10,9 @@
     <MobileHeader v-if="isMobile" :unread-count="unreadCount" />
     <DesktopHeader v-else :unread-count="unreadCount" @logout="handleLogout" />
 
+    <!-- 版本公告横幅：最新版本上线时全站展示（该版本已关闭则不显示） -->
+    <ReleaseBanner />
+
     <!-- 内容区：router-view 与 keep-alive 固定在此，不随布局切换重建，缓存状态不丢失 -->
     <main class="shop-main">
       <router-view v-slot="{ Component }">
@@ -37,6 +40,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CustomerServiceFab from "@/components/CustomerServiceFab/index.vue";
+import ReleaseBanner from "@/components/ReleaseBanner/index.vue";
 import NoticeAPI from "@/api/system/notice";
 import { useCartStore, useTagsViewStore, useUserStore } from "@/store";
 import DesktopHeader from "@/layouts/shop/DesktopHeader.vue";

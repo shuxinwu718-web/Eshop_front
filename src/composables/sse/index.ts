@@ -9,6 +9,7 @@
 
 import { useDictSync } from "./useDictSync";
 import { useOnlineCount } from "./useOnlineCount";
+import { useReleaseLog, cleanupReleaseLog } from "./useReleaseLog";
 import { cleanupSse } from "./useSse";
 
 /**
@@ -30,6 +31,9 @@ export function setupSse() {
   // 初始化在线用户统计服务
   const onlineCount = useOnlineCount();
   onlineCount.initialize();
+
+  // 初始化版本公告服务（订阅新版本推送 + 刷新未读红点）
+  useReleaseLog().initialize();
 }
 
 /**
@@ -52,6 +56,9 @@ export function cleanupSseServices() {
   const onlineCount = useOnlineCount();
   onlineCount.cleanup();
 
+  // 清理版本公告服务（注销 SSE 订阅、重置红点）
+  cleanupReleaseLog();
+
   // 清理全局 SSE 实例
   cleanupSse();
 }
@@ -59,5 +66,6 @@ export function cleanupSseServices() {
 // 导出所有 SSE 相关的 composables
 export { useDictSync } from "./useDictSync";
 export { useOnlineCount } from "./useOnlineCount";
+export { useReleaseLog, cleanupReleaseLog } from "./useReleaseLog";
 export { useSse, cleanupSse, SseConnectionState } from "./useSse";
 export type { DictMessage, DictChangeMessage, DictChangeCallback } from "./useDictSync";
