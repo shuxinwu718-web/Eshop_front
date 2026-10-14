@@ -21,7 +21,7 @@ export const welcomeConfig = {
   /** 总开关 */
   enabled: true,
   /** 内容版本号：改内容后 +1，强制重新展示 */
-  version: 3,
+  version: 4,
   /** 弹窗主标题 */
   title: "欢迎体验电商平台",
   /** 副标题（技术栈/项目定位） */

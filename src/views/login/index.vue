@@ -1,11 +1,5 @@
 <template>
   <div class="auth-view">
-    <!-- 动态光效背景层 -->
-    <div class="bg-glow bg-glow--1" />
-    <div class="bg-glow bg-glow--2" />
-    <div class="bg-glow bg-glow--3" />
-    <div class="bg-grid" />
-
     <div class="auth-view__toolbar">
       <el-tooltip :content="t('login.themeToggle')" placement="bottom">
         <div class="toolbar-item">
@@ -24,7 +18,7 @@
         <!-- 左：品牌展示区 -->
         <aside class="brand-side">
           <div class="brand-side__logo">
-            <el-icon :size="32" color="#fff"><Shop /></el-icon>
+            <el-icon :size="34" color="#ff5c33"><Shop /></el-icon>
           </div>
           <h1 class="brand-side__title">电商平台</h1>
           <p class="brand-side__slogan">
@@ -96,71 +90,8 @@ const formComponents = {
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-  // 深空蓝底色，衬托光斑
-  background: linear-gradient(135deg, #070b26 0%, #101a45 48%, #0a0f2e 100%);
-}
-
-// ---------- 动态光效背景 ----------
-.bg-glow {
-  position: fixed;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: 50%;
-  opacity: 0.55;
-  filter: blur(90px);
-  animation: glowFloat 16s ease-in-out infinite;
-
-  &--1 {
-    top: -12%;
-    left: -8%;
-    width: 520px;
-    height: 520px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.55), transparent 70%);
-  }
-
-  &--2 {
-    right: -6%;
-    bottom: -15%;
-    width: 560px;
-    height: 560px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 70%);
-    animation-delay: -5s;
-  }
-
-  &--3 {
-    top: 40%;
-    left: 45%;
-    width: 420px;
-    height: 420px;
-    background: radial-gradient(circle, rgba(6, 182, 212, 0.35), transparent 70%);
-    animation-delay: -9s;
-  }
-}
-
-// 网格纹理
-.bg-grid {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
-}
-
-@keyframes glowFloat {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: translate(0, 0) scale(1);
-  }
-
-  50% {
-    opacity: 0.75;
-    transform: translate(40px, -30px) scale(1.12);
-  }
+  // 浅色实底，衬托白色登录卡
+  background: var(--page-bg, #f5f8fd);
 }
 
 // ---------- 顶部工具条 ----------
@@ -172,16 +103,9 @@ const formComponents = {
   display: inline-flex;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.28);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
+  background-color: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--radius-pill);
 
   .toolbar-item {
     display: flex;
@@ -189,11 +113,11 @@ const formComponents = {
     justify-content: center;
     padding: 0.4rem;
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     transition: background 0.2s;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.12);
+      background-color: var(--el-fill-color);
     }
   }
 }
@@ -216,8 +140,9 @@ const formComponents = {
   min-height: 560px;
   overflow: hidden;
   background: var(--el-bg-color);
-  border-radius: 28px;
-  box-shadow: 0 40px 80px -20px rgba(0, 0, 10, 0.6);
+  border: 1px solid var(--card-border-color, var(--el-border-color-lighter));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
   animation: panelLift 0.5s ease;
 }
 
@@ -228,19 +153,20 @@ const formComponents = {
   flex-direction: column;
   padding: 3rem 2.6rem;
   color: #fff;
-  background: linear-gradient(160deg, #1d2f9e 0%, #4f46e5 52%, #7c3aed 100%);
+  background: #ff5c33;
 
   &__logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     margin-bottom: 1.6rem;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    border-radius: 18px;
-    backdrop-filter: blur(6px);
+    // P1-3：白色实底圆 + 珊瑚橙购物袋，作为可记忆的品牌符号
+    // （纯色对比，无渐变/毛玻璃/光晕；柔和投影为地面感，非辉光）
+    background: #fff;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 8px 20px rgba(214, 51, 0, 0.28);
   }
 
   &__title {
@@ -254,7 +180,7 @@ const formComponents = {
     margin: 0 0 2.4rem;
     font-size: 0.95rem;
     line-height: 1.7;
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.88);
   }
 
   &__features {
@@ -279,7 +205,7 @@ const formComponents = {
       .feature-desc {
         margin: 0.2rem 0 0;
         font-size: 0.82rem;
-        color: rgba(255, 255, 255, 0.68);
+        color: rgba(255, 255, 255, 0.82);
       }
     }
   }
@@ -312,7 +238,7 @@ const formComponents = {
 
   :deep(.el-input__wrapper) {
     background-color: var(--el-bg-color);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     box-shadow: 0 0 0 1px var(--el-border-color) inset;
     transition: all 0.2s;
 
@@ -322,8 +248,8 @@ const formComponents = {
 
     &.is-focus {
       box-shadow:
-        0 0 0 2px rgba(64, 158, 255, 0.3),
-        0 0 0 1px #409eff inset;
+        0 0 0 2px rgba(255, 92, 51, 0.22),
+        0 0 0 1px #ff5c33 inset;
     }
   }
 
@@ -341,20 +267,16 @@ const formComponents = {
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    background: linear-gradient(105deg, #409eff, #2c8df0);
+    background: #ff5c33;
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 8px 18px rgba(64, 158, 255, 0.35);
-    transition: all 0.25s;
+    border-radius: var(--radius-md);
 
     &:hover {
-      background: linear-gradient(105deg, #5cb0ff, #409eff);
-      box-shadow: 0 12px 24px rgba(64, 158, 255, 0.45);
-      transform: translateY(-2px);
+      background: #ff734f;
     }
 
     &:active {
-      transform: translateY(1px);
+      background: #e64524;
     }
   }
 }

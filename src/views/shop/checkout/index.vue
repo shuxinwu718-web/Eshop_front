@@ -488,8 +488,8 @@ onMounted(() => {
       justify-content: center;
       width: 72px;
       height: 72px;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-      border-radius: 10px;
+      background: var(--brand-primary);
+      border-radius: var(--radius-md);
 
       .coupon-selected-value {
         font-size: 20px;
@@ -527,7 +527,7 @@ onMounted(() => {
       color: #e6a23c;
       white-space: nowrap;
       background: var(--el-color-warning-light-9);
-      border-radius: 20px;
+      border-radius: var(--radius-pill);
     }
   }
 }
@@ -584,7 +584,7 @@ onMounted(() => {
     margin: 0 12px 8px;
     cursor: pointer;
     border: 1px solid var(--el-border-color-light);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     transition: all 0.2s;
 
     &:hover {
@@ -603,8 +603,8 @@ onMounted(() => {
         justify-content: center;
         width: 60px;
         height: 60px;
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-        border-radius: 8px;
+        background: var(--brand-primary);
+        border-radius: var(--radius-md);
 
         .coupon-item-value {
           font-size: 16px;

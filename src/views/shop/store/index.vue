@@ -4,8 +4,7 @@
     <div
       class="store-header"
       :style="{
-        background:
-          storeInfo?.backgroundColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: storeInfo?.backgroundColor || 'var(--brand-primary)',
       }"
     >
       <div class="store-header-inner">
@@ -67,7 +66,15 @@
         </div>
       </div>
 
-      <el-empty v-else description="该店铺暂无商品" />
+      <EmptyState
+        v-else-if="!loading"
+        title="该店铺暂无商品"
+        description="商家正在上新中，稍后再来看看吧"
+      >
+        <template #action>
+          <el-button type="primary" round @click="router.push('/home')">去首页逛逛</el-button>
+        </template>
+      </EmptyState>
 
       <div class="pagination-wrap">
         <el-pagination
@@ -93,6 +100,7 @@ import ProductAPI, {
 import StoreLayout from "./components/StoreLayout.vue";
 import { getFullImageUrl } from "@/utils/url";
 import { ElMessage } from "element-plus";
+import EmptyState from "@/components/EmptyState/index.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -263,14 +271,11 @@ onMounted(() => {
     overflow: hidden;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 8px;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
+    border-radius: var(--radius-md);
+    transition: box-shadow 0.2s;
 
     &:hover {
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .product-img {

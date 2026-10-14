@@ -148,9 +148,6 @@
         <!-- 收银台弹窗（复用 PayDialog：支付宝走真实沙箱，微信为模拟支付） -->
         <PayDialog v-model:visible="payDialogVisible" :order="payingOrder" @payed="fetchOrders" />
 
-        <!-- 个性化设置抽屉 -->
-        <ShopSettingsDrawer />
-
         <!-- 商品收藏 -->
         <div v-show="activeMenu === 'favorite'" class="favorite-section">
           <div class="section-header">
@@ -362,7 +359,6 @@ import HistoryAPI from "@/api/eshop/history";
 import type { ProductItem } from "@/api/eshop/product";
 import PayDialog from "@/views/shop/order/components/PayDialog/index.vue";
 import AddressPicker from "@/components/AddressPicker/index.vue";
-import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import { findAreaCodes, findAreaNames } from "@/utils/area";
 import type { UserInfo } from "@/types/api/user";
 const router = useRouter();
@@ -792,8 +788,8 @@ onMounted(async () => {
   padding: 14px 14px 12px;
   margin-bottom: 14px;
   background: var(--el-bg-color);
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   /* 顶部行 */
   .oc-h {
@@ -957,7 +953,7 @@ onMounted(async () => {
 
     .ob-btn {
       margin-left: 0;
-      border-radius: 20px;
+      border-radius: var(--radius-pill);
     }
 
     .ob-btn--primary {
@@ -981,12 +977,12 @@ onMounted(async () => {
     padding: 12px;
     cursor: pointer;
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    transition: transform 0.2s;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
 
     &:hover {
-      box-shadow: var(--el-box-shadow-light);
-      transform: translateY(-4px);
+      border-color: var(--el-border-color-darker);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .favorite-img {
@@ -1071,12 +1067,12 @@ onMounted(async () => {
     padding: 12px;
     cursor: pointer;
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 8px;
-    transition: transform 0.2s;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
 
     &:hover {
-      box-shadow: var(--el-box-shadow-light);
-      transform: translateY(-4px);
+      border-color: var(--el-border-color-darker);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .history-img {

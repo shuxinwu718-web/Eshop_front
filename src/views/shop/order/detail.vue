@@ -384,7 +384,7 @@ onMounted(() => {
       width: 64px;
       height: 64px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
     }
 
     .item-info {

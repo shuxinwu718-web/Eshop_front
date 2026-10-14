@@ -376,7 +376,7 @@ onBeforeUnmount(stopCountdown);
         padding: 10px 12px;
         margin-top: 8px;
         background: var(--el-bg-color);
-        border-radius: 10px;
+        border-radius: var(--radius-md);
         transition: box-shadow 0.2s;
 
         &:hover {

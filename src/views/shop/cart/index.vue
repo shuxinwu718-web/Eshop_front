@@ -17,8 +17,13 @@
       </el-button>
     </div>
 
+    <!-- 加载骨架屏 -->
+    <div v-if="loading && !cartList.length" class="cart-skeleton">
+      <el-skeleton :rows="4" animated />
+    </div>
+
     <!-- 商品列表（桌面 / 移动端统一样式，响应式布局） -->
-    <div v-if="cartList.length" v-loading="loading" class="cart-list">
+    <div v-else-if="cartList.length" v-loading="loading" class="cart-list">
       <transition-group name="cart-fade">
         <div
           v-for="item in cartList"
@@ -67,14 +72,16 @@
       </transition-group>
     </div>
 
-    <!-- 空购物车 -->
+    <!-- 空购物车（统一空状态组件） -->
     <div v-else-if="!loading" class="cart-empty">
-      <el-empty description="购物车空空如也，去挑选心仪的商品吧">
-        <el-button type="primary" round @click="router.push('/home')">
-          <el-icon class="empty-icon"><ShoppingCart /></el-icon>
-          去逛逛
-        </el-button>
-      </el-empty>
+      <EmptyState title="购物车空空如也" description="去挑选心仪的商品吧">
+        <template #action>
+          <el-button type="primary" round @click="router.push('/home')">
+            <el-icon class="empty-icon"><ShoppingCart /></el-icon>
+            去逛逛
+          </el-button>
+        </template>
+      </EmptyState>
     </div>
 
     <!-- 底部结算栏 -->
@@ -105,6 +112,7 @@ import { ArrowRight, Delete, ShoppingCart } from "@element-plus/icons-vue";
 import CartAPI, { type CartItem } from "@/api/eshop/cart";
 import { useCartStore } from "@/store/modules/cart";
 import { getFullImageUrl } from "@/utils/url";
+import EmptyState from "@/components/EmptyState/index.vue";
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -277,13 +285,9 @@ onMounted(fetchCart);
         height: 46px;
         font-size: 22px;
         color: #fff;
-        background: linear-gradient(
-          135deg,
-          var(--el-color-primary),
-          var(--el-color-primary-light-3)
-        );
-        border-radius: 14px;
-        box-shadow: 0 6px 16px var(--el-color-primary-light-5);
+        background: var(--brand-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--card-shadow);
       }
 
       .title-text {
@@ -332,16 +336,14 @@ onMounted(fetchCart);
     padding: 16px;
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     transition:
       box-shadow 0.25s ease,
-      transform 0.25s ease,
       border-color 0.25s ease;
 
     &:hover {
-      border-color: var(--el-color-primary-light-5);
-      box-shadow: 0 8px 24px var(--el-box-shadow-light);
-      transform: translateY(-2px);
+      border-color: var(--el-border-color-darker);
+      box-shadow: var(--card-shadow-hover);
     }
 
     // 未勾选项整体弱化，聚焦勾选中的商品
@@ -374,7 +376,7 @@ onMounted(fetchCart);
       height: 96px;
       cursor: pointer;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
       transition: transform 0.25s ease;
 
       &:hover {
@@ -409,7 +411,7 @@ onMounted(fetchCart);
         font-size: 12px;
         color: var(--el-text-color-secondary);
         background: var(--el-fill-color-light);
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
       }
 
       .product-price {
@@ -476,7 +478,7 @@ onMounted(fetchCart);
     padding: 60px 0;
     background: var(--el-bg-color);
     border: 1px dashed var(--el-border-color);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
 
     .empty-icon {
       margin-right: 4px;
@@ -499,7 +501,6 @@ onMounted(fetchCart);
     background: var(--el-bg-color);
     border-top: 1px solid var(--el-border-color-lighter);
     box-shadow: 0 -6px 20px var(--el-box-shadow-light);
-    backdrop-filter: blur(8px);
 
     .footer-total {
       display: flex;
@@ -528,17 +529,20 @@ onMounted(fetchCart);
       height: 44px;
       font-size: 15px;
       font-weight: 600;
-      background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
+      background: var(--brand-primary);
       border: none;
-      border-radius: 22px;
-      box-shadow: 0 6px 16px var(--el-color-primary-light-5);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--card-shadow);
       transition:
-        transform 0.2s ease,
+        background 0.2s ease,
         box-shadow 0.2s ease;
 
       &:hover {
-        box-shadow: 0 10px 22px var(--el-color-primary-light-5);
-        transform: translateY(-2px);
+        background: var(--brand-primary-hover);
+      }
+
+      &:active {
+        background: var(--brand-primary-active);
       }
 
       .checkout-icon {

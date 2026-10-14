@@ -450,7 +450,7 @@ onBeforeRouteLeave(() => {
     .section-dot {
       width: 6px;
       height: 18px;
-      border-radius: 3px;
+      border-radius: var(--radius-sm);
 
       &.is-active {
         background: #f56c6c;
@@ -481,19 +481,18 @@ onBeforeRouteLeave(() => {
     display: flex;
     align-items: center;
     padding: 20px 24px;
-    background: linear-gradient(135deg, #fff5f5 0%, var(--shop-card-bg, #fff) 40%);
+    background: #fff5f5;
     border: 1px solid #ffe0e0;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     transition: all 0.25s;
 
     &.is-upcoming {
-      background: linear-gradient(135deg, #f0f9ff 0%, var(--shop-card-bg, #fff) 40%);
+      background: #f0f9ff;
       border-color: #d0e8f7;
     }
 
     &:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .card-left {
@@ -526,7 +525,7 @@ onBeforeRouteLeave(() => {
           height: 56px;
           overflow: hidden;
           background: var(--el-fill-color-light);
-          border-radius: 8px;
+          border-radius: var(--radius-md);
 
           &--placeholder {
             display: flex;
@@ -593,7 +592,7 @@ onBeforeRouteLeave(() => {
             font-weight: bold;
             color: var(--el-bg-color);
             background: var(--el-text-color-primary);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
           }
           .time-colon {
             margin: 0 4px;
@@ -629,13 +628,13 @@ onBeforeRouteLeave(() => {
           height: 8px;
           overflow: hidden;
           background: var(--el-fill-color);
-          border-radius: 4px;
+          border-radius: var(--radius-sm);
 
           .stock-bar-inner {
             display: block;
             height: 100%;
-            background: linear-gradient(90deg, #f56c6c, #e6a23c);
-            border-radius: 4px;
+            background: var(--brand-primary);
+            border-radius: var(--radius-sm);
             transition: width 0.5s;
           }
         }
@@ -671,7 +670,7 @@ onBeforeRouteLeave(() => {
       gap: 10px;
       align-items: stretch;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
 
       .card-left,
       .card-center,
@@ -718,14 +717,14 @@ onBeforeRouteLeave(() => {
   }
 }
 
-/* 深色模式：硬编码的浅色渐变/边框需显式覆盖 */
+/* 深色模式：硬编码的浅色背景需显式覆盖 */
 html.dark {
   .seckill-page .seckill-card {
-    background: linear-gradient(135deg, #2b1d22 0%, #161b22 45%);
+    background: var(--el-bg-color-overlay);
     border-color: rgb(255 255 255 / 8%);
 
     &.is-upcoming {
-      background: linear-gradient(135deg, #17222e 0%, #161b22 45%);
+      background: var(--el-bg-color-overlay);
     }
   }
 }

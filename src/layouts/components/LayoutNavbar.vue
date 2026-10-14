@@ -29,10 +29,22 @@ function toggleSideBar() {
 
 <style lang="scss" scoped>
 .navbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: $navbar-height;
+
+  // P1-2：顶部 2px 珊瑚橙品牌细条，与 C 端形成品牌呼应
+  &::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    content: "";
+    background: #ff5c33;
+  }
 
   &__actions {
     display: flex;

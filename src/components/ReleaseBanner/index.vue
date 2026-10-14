@@ -82,35 +82,35 @@ onBeforeUnmount(() => unsub?.());
   font-size: 13px;
   color: #7a2e0e;
   cursor: pointer;
-  background: linear-gradient(90deg, #fff4e2 0%, #ffe9c9 100%);
+  background: #fff4e2;
   border: 1px solid #ffd9a8;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   &--t1 {
     /* 新增功能 */
     color: #1f4e3d;
-    background: linear-gradient(90deg, #e2f7ee 0%, #c9eddc 100%);
+    background: #e2f7ee;
     border-color: #a8dfc7;
   }
 
   &--t2 {
     /* 优化体验 */
     color: #1f3d5e;
-    background: linear-gradient(90deg, #e6f1fc 0%, #cbe2fa 100%);
+    background: #e6f1fc;
     border-color: #a9c9ea;
   }
 
   &--t3 {
     /* 修复缺陷 */
     color: #5c3a1e;
-    background: linear-gradient(90deg, #fbf0e2 0%, #f3dab4 100%);
+    background: #fbf0e2;
     border-color: #e8c18a;
   }
 
   &--t4 {
     /* 安全加固 */
     color: #5e2833;
-    background: linear-gradient(90deg, #fdecef 0%, #f6cdd5 100%);
+    background: #fdecef;
     border-color: #edaebc;
   }
 
@@ -129,7 +129,7 @@ onBeforeUnmount(() => unsub?.());
     font-weight: 700;
     color: #fff;
     background: var(--el-color-primary);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
   }
 
   &__version {
@@ -169,7 +169,7 @@ onBeforeUnmount(() => unsub?.());
     cursor: pointer;
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     opacity: 0.7;
     transform: translateY(-50%);
 

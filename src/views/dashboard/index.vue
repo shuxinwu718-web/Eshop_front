@@ -13,9 +13,14 @@
             />
           </div>
           <div class="ml-5">
-            <p class="text-base font-semibold text-[--el-text-color-primary] leading-tight">
-              {{ greetings }}
-            </p>
+            <div class="flex items-center gap-2">
+              <div class="brand-mark">
+                <el-icon :size="18"><Shop /></el-icon>
+              </div>
+              <p class="text-base font-semibold text-[--el-text-color-primary] leading-tight">
+                {{ greetings }}
+              </p>
+            </div>
             <p class="text-sm text-gray">欢迎回到 E-Shop 管理中心，祝您工作顺利！</p>
           </div>
         </div>
@@ -179,26 +184,26 @@
         <div class="stat-group-title">销售概览</div>
         <el-row :gutter="16" class="mb-4">
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-sales">
+            <div class="stat-card-item">
               <div class="stat-label">总销售额</div>
               <div class="stat-value">{{ formatMoney(dashboardStats.totalSales) }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-sales">
+            <div class="stat-card-item">
               <div class="stat-label">今日销售额</div>
               <div class="stat-value">{{ formatMoney(dashboardStats.todaySales) }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-order">
+            <div class="stat-card-item">
               <div class="stat-label">订单总数</div>
               <div class="stat-value">{{ dashboardStats.orderCount }}</div>
               <div class="stat-sub">今日 +{{ dashboardStats.todayOrderCount }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-order">
+            <div class="stat-card-item">
               <div class="stat-label">订单状态</div>
               <div class="flex items-center gap-3 mt-1">
                 <span class="stat-sub text-[--el-color-warning]">
@@ -220,32 +225,32 @@
         <div class="stat-group-title">商家 & 商品</div>
         <el-row :gutter="16" class="mb-4">
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-merchant">
+            <div class="stat-card-item">
               <div class="stat-label">商家数量</div>
               <div class="stat-value">{{ dashboardStats.merchantCount }}</div>
               <div class="stat-sub">今日新增 {{ dashboardStats.newMerchantCount }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-pending">
+            <div class="stat-card-item">
               <div class="stat-label">待审核入驻</div>
               <div class="stat-value">{{ dashboardStats.pendingMerchantCount }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-order">
+            <div class="stat-card-item">
               <div class="stat-label">商品数量</div>
               <div class="stat-value">{{ dashboardStats.productCount }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-order">
+            <div class="stat-card-item">
               <div class="stat-label">分类数量</div>
               <div class="stat-value">{{ dashboardStats.categoryCount }}</div>
             </div>
           </el-col>
           <el-col :xs="12" :sm="6" :md="4" class="mb-3">
-            <div class="stat-card-item stat-color-user">
+            <div class="stat-card-item">
               <div class="stat-label">用户数量</div>
               <div class="stat-value">{{ dashboardStats.userCount }}</div>
               <div class="stat-sub">今日新增 {{ dashboardStats.newUserCount }}</div>
@@ -417,7 +422,7 @@ import { useSettingsStore } from "@/store";
 import { ThemeMode } from "@/enums";
 import { formatGrowthRate } from "@/utils";
 import { useTransition, useDateFormat } from "@vueuse/core";
-import { CircleCheck, CircleClose, Loading, Clock, Menu } from "@element-plus/icons-vue";
+import { CircleCheck, CircleClose, Loading, Clock, Menu, Shop } from "@element-plus/icons-vue";
 import { useOnlineCount, useRecentMenus } from "@/composables";
 import { getFullImageUrl } from "@/utils/url";
 import UserAPI from "@/api/system/user";
@@ -883,4 +888,17 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 /* 所有通用样式已迁移至 src/styles/index.scss */
+/* P1-2：仪表盘珊瑚橙品牌标记（白色圆底上放品牌色购物袋，与 C 端登录页品牌区呼应） */
+.brand-mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: #fff;
+  background: #ff5c33;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(255, 92, 51, 0.3);
+}
 </style>

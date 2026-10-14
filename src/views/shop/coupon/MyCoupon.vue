@@ -117,12 +117,11 @@ onMounted(() => {
     overflow: hidden;
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     transition: all 0.2s;
 
     &:hover {
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     &--usable {

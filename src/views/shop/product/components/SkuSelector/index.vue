@@ -96,7 +96,7 @@ const selectSpecValue = (specName: string, value: string) => {
         vertical-align: 1px;
         color: var(--el-color-white);
         background: var(--el-color-danger);
-        border-radius: 3px;
+        border-radius: var(--radius-sm);
       }
 
       &:hover {

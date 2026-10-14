@@ -7,7 +7,12 @@
       :z-index="9999"
       class="wh-full"
     >
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <!-- P2：页面切换克制动效（120ms 淡入，尊重 prefers-reduced-motion） -->
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
       <!-- 演示欢迎弹窗（游客可见，内容维护见 src/config/welcome.ts） -->
       <WelcomeDialog />
     </el-watermark>

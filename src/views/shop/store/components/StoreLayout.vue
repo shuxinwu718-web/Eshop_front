@@ -223,8 +223,8 @@ onMounted(() => {
   align-items: center;
   padding: 12px 16px;
   color: #fff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 8px;
+  background: var(--brand-primary);
+  border-radius: var(--radius-md);
 
   .notice-icon {
     font-size: 18px;
@@ -257,7 +257,7 @@ onMounted(() => {
       vertical-align: -3px;
       content: "";
       background: var(--el-color-primary);
-      border-radius: 2px;
+      border-radius: var(--radius-sm);
     }
   }
 }
@@ -279,14 +279,11 @@ onMounted(() => {
     overflow: hidden;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 8px;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
+    border-radius: var(--radius-md);
+    transition: box-shadow 0.2s;
 
     &:hover {
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .goods-img {
@@ -343,11 +340,11 @@ onMounted(() => {
     overflow: hidden;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 8px;
-    transition: transform 0.2s;
+    border-radius: var(--radius-md);
+    transition: box-shadow 0.2s;
 
     &:hover {
-      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .coupon-left {
@@ -358,7 +355,7 @@ onMounted(() => {
       padding: 14px 16px;
       color: #fff;
       text-align: center;
-      background: linear-gradient(135deg, #f56c6c 0%, #e8443a 100%);
+      background: var(--brand-primary);
 
       .coupon-value {
         font-size: 22px;

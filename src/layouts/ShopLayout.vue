@@ -14,11 +14,14 @@
     <ReleaseBanner />
 
     <!-- 内容区：router-view 与 keep-alive 固定在此，不随布局切换重建，缓存状态不丢失 -->
+    <!-- P2：页面切换克制动效（120ms 淡入，keep-alive 缓存不受影响） -->
     <main class="shop-main">
       <router-view v-slot="{ Component }">
-        <keep-alive :include="cachedViews">
-          <component :is="Component" />
-        </keep-alive>
+        <transition name="page-fade" mode="out-in">
+          <keep-alive :include="cachedViews">
+            <component :is="Component" />
+          </keep-alive>
+        </transition>
       </router-view>
     </main>
 
@@ -28,6 +31,8 @@
 
     <!-- AI 客服悬浮球 -->
     <CustomerServiceFab />
+    <!-- 个性化设置抽屉（全商城统一挂载，顶部/我的页入口共用，避免重复弹窗） -->
+    <ShopSettingsDrawer />
     <!-- 返回顶部（跟随窗口滚动，移动端避开底部 Tab 栏） -->
     <el-backtop
       :right="isMobile ? 14 : 30"
@@ -40,6 +45,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CustomerServiceFab from "@/components/CustomerServiceFab/index.vue";
+import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import ReleaseBanner from "@/components/ReleaseBanner/index.vue";
 import NoticeAPI from "@/api/system/notice";
 import { useCartStore, useTagsViewStore, useUserStore } from "@/store";

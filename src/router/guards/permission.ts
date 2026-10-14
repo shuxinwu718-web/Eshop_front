@@ -32,8 +32,10 @@ export function setupPermissionGuard() {
         // 重置标志，以便下次登录后重新请求
         _profileLoaded = false;
         _profilePromise = null;
-        // 根路径：游客直接进商城首页（Home 是公开页）
-        if (to.path === "/") {
+        // 根路径/空 hash：游客直接进商城首页（Home 是公开页）。
+        // 直接访问域名（无 hash）时 Vue Router 可能把路径解析为空字符串，
+        // 若只判 "/" 会让游客落入下方"需登录"弹窗分支，被强制跳登录页
+        if (to.path === "/" || to.path === "") {
           return "/home";
         }
         // 游客可访问公开页面（meta.public 路由或白名单）
@@ -64,6 +66,7 @@ export function setupPermissionGuard() {
         if (!_profilePromise) {
           _profilePromise = userStore.getUserInfo();
         }
+
         try {
           await _profilePromise;
           _profileLoaded = true;
@@ -71,6 +74,11 @@ export function setupPermissionGuard() {
           _profilePromise = null;
           _profileLoaded = false;
           await userStore.resetAllState();
+          // P0-1：token 失效/过期时，若目标是公开页（首页/商品详情等），
+          // 降级为游客放行、不阻断浏览；结算/收藏时再由业务逻辑弹登录引导
+          if (to.meta?.public || to.path === "/" || to.path === "") {
+            return to.path === "/" || to.path === "" ? "/home" : true;
+          }
           return `/login?redirect=${encodeURIComponent(to.fullPath)}`;
         } finally {
           _profilePromise = null;

@@ -113,9 +113,16 @@ http.interceptors.response.use(
     const { msg } = response.data as ApiResponse;
 
     if (status === 401 || status === 403) {
-      // 后端对未认证访问默认返回 403（与 401 同属「需登录」类）：
-      // 游客在公开页面访问需登录接口时（如未登录点收藏/领取），仅提示，不强制跳登录
-      if (router.currentRoute.value.meta?.public) {
+      // P0-1：游客（无凭证）访问需登录接口时仅提示、不强制跳登录。
+      // 此前用 currentRoute.meta.public 判断，但全局初始化请求（如版本公告未读）
+      // 在路由切换时序下 currentRoute 可能是 "/"（public 为空），导致游客被误踢登录页。
+      const hasToken = !!AuthStorage.getAccessToken();
+      const isPublicRoute =
+        router.currentRoute.value.meta?.public ||
+        router.currentRoute.value.matched.some((r) => r.meta?.public);
+      if (!hasToken || isPublicRoute) {
+        // 后端对未认证访问默认返回 403（与 401 同属「需登录」类）：
+        // 游客在公开页面访问需登录接口时（如未登录点收藏/领取），仅提示，不强制跳登录
         ElMessage.warning(msg || "请先登录后操作");
         return Promise.reject(new Error(msg || "请先登录后操作"));
       }

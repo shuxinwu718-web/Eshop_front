@@ -79,7 +79,17 @@ svg {
 }
 
 // ============================================
-// 3. 全局滚动条
+// 3. 全局交互反馈（按压态，实色体系下克制的微交互）
+// ============================================
+
+/* 按钮按压：轻微下沉反馈，替代旧版的 hover 浮起 */
+.el-button:not(.is-disabled):not(.is-loading):active,
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+// ============================================
+// 4. 全局滚动条
 // ============================================
 
 ::-webkit-scrollbar {
@@ -117,18 +127,18 @@ html.dark {
 
 .el-card:not(.is-never-shadow) {
   border: 1px solid var(--card-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--card-shadow);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s;
 
   &:hover {
-    box-shadow: var(--card-shadow-hover);
+    border-color: var(--el-border-color-darker);
   }
 }
 
 .el-card.is-never-shadow {
   border: 1px solid var(--card-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
 }
 
 // ============================================
@@ -152,7 +162,7 @@ html.dark {
 
 .el-table {
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 
   th.el-table__cell {
     font-weight: 600;
@@ -172,18 +182,12 @@ html.dark {
 .el-input,
 .el-select,
 .el-date-editor {
-  --el-input-border-radius: 6px;
+  --el-input-border-radius: var(--radius-md);
 }
 
 .el-button {
   font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover:not(:disabled) {
-    box-shadow: var(--button-hover-shadow);
-    transform: translateY(-1px);
-  }
+  border-radius: var(--radius-md);
 }
 
 .el-button--primary {
@@ -221,26 +225,14 @@ html.dark {
   position: relative;
   padding: 16px 14px;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+  background: var(--shop-card-bg, #fff);
   border: 1px solid var(--card-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--card-shadow);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &::before {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    content: "";
-    border-radius: 3px 0 0 3px;
-    transition: height 0.3s;
-  }
+  transition: border-color 0.2s;
 
   &:hover {
-    box-shadow: var(--card-shadow-hover);
-    transform: translateY(-3px);
+    border-color: var(--el-border-color-darker);
   }
 
   .stat-label {
@@ -272,7 +264,7 @@ html.dark {
 
 .el-tag {
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 // ============================================
@@ -288,7 +280,7 @@ html.dark {
   color: var(--el-text-color-placeholder);
   background: var(--el-bg-color, #fff);
   border: 1px dashed var(--el-border-color-lighter, #e4e7ed);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   transition: all 0.25s;
 
   .empty-icon {
@@ -332,28 +324,7 @@ html.dark {
   &:hover {
     background: var(--recent-menu-hover-bg);
     border-color: var(--recent-menu-hover-border-color);
-    transform: translateX(3px);
   }
-}
-
-// ============================================
-// 12. 统计卡片左侧色条变体
-// ============================================
-
-.stat-color-sales::before {
-  background: var(--stat-sales-color) !important;
-}
-.stat-color-order::before {
-  background: var(--stat-order-color) !important;
-}
-.stat-color-merchant::before {
-  background: var(--stat-merchant-color) !important;
-}
-.stat-color-user::before {
-  background: var(--stat-user-color) !important;
-}
-.stat-color-pending::before {
-  background: var(--stat-pending-color) !important;
 }
 
 // ============================================
@@ -366,4 +337,64 @@ html.dark {
   font-size: var(--stat-group-title-size);
   font-weight: 500;
   color: var(--stat-group-title-color);
+}
+
+// ============================================
+// 16. 横向滚动渐隐（P0-2，配合 v-scroll-fade 指令）
+// ============================================
+// 容器可向右滚动且未滑到底时显示右侧渐隐遮罩（CSS mask，不遮挡点击）；
+// 滑到底后指令移除 data-fade，渐隐自然消失。
+[data-fade="right"] {
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+
+// ============================================
+// 17. P2 克制动效
+// ============================================
+// 17.1 页面切换过渡（配合 App.vue 的 page-fade transition）
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+// 17.2 商品卡入场淡入关键帧（配合页面商品网格 stagger）
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// 17.3 抽屉滑入提速：克制动效（120-200ms），替代 Element Plus 默认 300ms
+.el-drawer {
+  --el-transition-duration: 0.2s;
+}
+
+// 17.4 尊重系统减弱动效偏好：动画/过渡压缩到可忽略时长
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

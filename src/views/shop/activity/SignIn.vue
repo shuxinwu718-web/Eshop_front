@@ -359,7 +359,7 @@ onMounted(() => {
     align-items: center;
     padding: 14px 16px;
     border: 1px solid var(--el-border-color-light);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     transition: all 0.2s;
 
     &.milestone-locked {
@@ -414,7 +414,7 @@ onMounted(() => {
     padding: 16px;
     background: var(--el-fill-color-light);
     border: 1px solid var(--el-border-color-light);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
 
     .festival-item-header {
       display: flex;

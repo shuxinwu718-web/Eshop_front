@@ -7,6 +7,7 @@ import { ref, readonly, onMounted, getCurrentInstance } from "vue";
 import { ElNotification } from "element-plus";
 import { useSse } from "./useSse";
 import ReleaseLogAPI from "@/api/system/releaseLog";
+import { AuthStorage } from "@/utils/auth";
 
 /** SSE 事件名：与后端 RELEASE_EVENT="release" 对应 */
 const RELEASE_EVENT = "release";
@@ -29,6 +30,12 @@ function createReleaseLogComposable() {
 
   /** 拉取最新未读状态（进入页面/登出后重置时用） */
   async function refreshHasNew() {
+    // P0-1：游客不查询未读红点（该接口需登录，避免全局初始化请求
+    // 在路由切换时序下被 401/403 误踢登录页）
+    if (!AuthStorage.getAccessToken()) {
+      hasNew.value = false;
+      return;
+    }
     try {
       hasNew.value = await ReleaseLogAPI.hasNew();
     } catch {

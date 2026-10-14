@@ -179,8 +179,8 @@ onBeforeRouteLeave(() => {
   .page-banner {
     padding: 20px 20px;
     color: #fff;
-    background: linear-gradient(120deg, #ff8a3d 0%, #ff5e7d 100%);
-    border-radius: 12px;
+    background: var(--brand-primary);
+    border-radius: var(--radius-lg);
 
     h2 {
       margin: 0;
@@ -202,9 +202,9 @@ onBeforeRouteLeave(() => {
 
   .activity-card {
     padding: 16px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgb(0 0 0 / 6%);
+    background: var(--el-bg-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
 
     .activity-head {
       display: flex;
@@ -257,7 +257,7 @@ onBeforeRouteLeave(() => {
         gap: 12px;
         padding: 14px 14px;
         background: #f7f8fa;
-        border-radius: 10px;
+        border-radius: var(--radius-md);
       }
 
       .task-info {

@@ -26,7 +26,7 @@
 
     <!-- 筛选 + 排序 -->
     <div class="filter-bar">
-      <div class="tabs">
+      <div v-scroll-fade class="tabs">
         <span
           class="tab"
           :class="{ on: activeType === 0 && !onlyImage }"
@@ -72,7 +72,7 @@
         全部晒图
         <span>（{{ stats.imageCount }} 张）</span>
       </div>
-      <div class="wall-thumbs">
+      <div v-scroll-fade class="wall-thumbs">
         <img
           v-for="(img, i) in stats.recentImages"
           :key="i"
@@ -586,9 +586,10 @@ const submitReply = async (comment: CommentVO) => {
     .tabs {
       display: flex;
       flex: 1;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 8px;
-      min-width: 0;
+      /* 不设 min-width:0，避免 flex 容器塌陷把 tab 裁掉；nowrap 保证一行 */
+      min-width: max-content;
 
       .tab {
         flex-shrink: 0;
@@ -653,7 +654,7 @@ const submitReply = async (comment: CommentVO) => {
         height: 72px;
         cursor: zoom-in;
         object-fit: cover;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
       }
     }
   }
@@ -766,7 +767,7 @@ const submitReply = async (comment: CommentVO) => {
             height: 80px;
             cursor: zoom-in;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
           }
         }
 
@@ -803,7 +804,7 @@ const submitReply = async (comment: CommentVO) => {
           padding: 10px 12px;
           margin-top: 10px;
           background: var(--el-fill-color-light);
-          border-radius: 6px;
+          border-radius: var(--radius-sm);
 
           .reply-item {
             font-size: 13px;
@@ -889,6 +890,18 @@ const submitReply = async (comment: CommentVO) => {
   .filter-bar {
     flex-direction: column;
     align-items: stretch !important;
+
+    /* 移动端窄屏：解除 PC 的 max-content 撑宽，改为横向滑动浏览，避免「有图」被挤出屏幕 */
+    .tabs {
+      min-width: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
 
     .sort-select {
       width: 100% !important;

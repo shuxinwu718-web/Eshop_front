@@ -45,7 +45,7 @@
       <!-- 热销商品排行（横滑卡片） -->
       <div v-if="hotProducts.length" class="m-section">
         <div class="m-section-title">🔥 热销商品排行</div>
-        <div class="m-scroll">
+        <div v-scroll-fade class="m-scroll">
           <div
             v-for="(item, idx) in hotProducts"
             :key="item.id"
@@ -76,7 +76,7 @@
       <!-- 推荐店铺（横滑卡片） -->
       <div v-if="recommendStores.length" class="m-section">
         <div class="m-section-title">🏪 推荐店铺</div>
-        <div class="m-scroll">
+        <div v-scroll-fade class="m-scroll">
           <div
             v-for="store in recommendStores"
             :key="store.merchantId"
@@ -122,8 +122,19 @@
         <span class="m-sort-item" @click="resetAll">重置</span>
       </div>
 
-      <!-- 双列商品瀑布流 -->
-      <div v-loading="loading" class="m-product-grid">
+      <!-- 双列商品瀑布流（骨架屏 + 列表） -->
+      <div v-if="loading && !productList.length" class="m-product-grid">
+        <el-skeleton v-for="n in 6" :key="n" animated class="m-skel-card">
+          <template #template>
+            <el-skeleton-item variant="image" class="m-skel-img" />
+            <div class="m-skel-info">
+              <el-skeleton-item variant="text" class="m-skel-line" />
+              <el-skeleton-item variant="text" class="m-skel-line short" />
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+      <div v-else v-loading="loading" class="m-product-grid">
         <div
           v-for="item in productList"
           :key="item.id"
@@ -211,7 +222,7 @@
     <template v-else>
       <!-- 顶部：左侧分类栏 + 欢迎面板 -->
       <div class="top-row">
-        <aside class="cat-sidebar">
+        <aside v-scroll-fade class="cat-sidebar">
           <div
             v-for="cat in topCategories"
             :key="cat.id"
@@ -295,7 +306,7 @@
       <!-- 热销商品排行（4列卡片） -->
       <div v-if="hotProducts.length" class="hot-section">
         <div class="section-title">
-          <el-icon color="#f56c6c"><TrendCharts /></el-icon>
+          <el-icon color="var(--brand-primary)"><TrendCharts /></el-icon>
           <span>热销商品排行</span>
         </div>
         <div class="hot-grid">
@@ -329,7 +340,7 @@
       <!-- 推荐店铺 -->
       <div v-if="recommendStores.length" class="store-section">
         <div class="section-title">
-          <el-icon color="#409eff"><Shop /></el-icon>
+          <el-icon color="var(--brand-primary)"><Shop /></el-icon>
           <span>推荐店铺</span>
         </div>
         <div class="store-grid">
@@ -339,7 +350,10 @@
             class="store-card"
             @click="goStore(store.merchantId)"
           >
-            <div class="store-banner" :style="{ background: store.backgroundColor || '#667eea' }">
+            <div
+              class="store-banner"
+              :style="{ background: store.backgroundColor || 'var(--brand-primary)' }"
+            >
               <el-avatar :size="52" :src="getFullImageUrl(store.avatar)" class="store-logo">
                 {{ store.shopName?.charAt(0) || "店" }}
               </el-avatar>
@@ -386,12 +400,23 @@
         </div>
       </div>
 
-      <!-- 商品列表网格 -->
-      <div v-loading="loading" class="product-grid">
+      <!-- 商品列表网格（骨架屏 + 列表） -->
+      <div v-if="loading && !productList.length" class="product-grid">
+        <el-skeleton v-for="n in 8" :key="n" animated class="p-skel-card">
+          <template #template>
+            <el-skeleton-item variant="image" class="p-skel-img" />
+            <div class="p-skel-info">
+              <el-skeleton-item variant="text" class="p-skel-line" />
+              <el-skeleton-item variant="text" class="p-skel-line short" />
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+      <div v-else v-loading="loading" class="product-grid">
         <el-card
           v-for="item in productList"
           :key="item.id"
-          shadow="hover"
+          shadow="never"
           class="product-card"
           @click="goDetail(item.id)"
         >
@@ -401,7 +426,10 @@
             @error="handleImageError"
           />
           <div class="product-name">{{ item.name }}</div>
-          <div class="product-price">¥{{ item.price }}</div>
+          <div class="product-meta">
+            <span class="product-price">¥{{ item.price }}</span>
+            <span class="product-sales">已售 {{ item.sales }}</span>
+          </div>
         </el-card>
       </div>
 
@@ -744,12 +772,27 @@ onBeforeRouteLeave(() => {
 }
 
 .section-title {
+  position: relative;
   display: flex;
   gap: 8px;
   align-items: center;
+  padding-left: 10px;
   margin-bottom: 14px;
   font-size: 18px;
   font-weight: 600;
+
+  /* 珊瑚橙竖条：电商风格区块标题 */
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 16px;
+    content: "";
+    background: var(--brand-primary);
+    border-radius: 2px;
+    transform: translateY(-50%);
+  }
 }
 
 /* 过渡动画 */
@@ -785,7 +828,7 @@ onBeforeRouteLeave(() => {
     white-space: nowrap;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     transition: all 0.2s;
 
     &.active {
@@ -803,7 +846,7 @@ onBeforeRouteLeave(() => {
   gap: 8px;
   padding: var(--home-pad);
   background: var(--el-bg-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 
   .m-quick-item {
     display: flex;
@@ -821,7 +864,7 @@ onBeforeRouteLeave(() => {
       width: 44px;
       height: 44px;
       font-size: 22px;
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
     }
   }
 }
@@ -856,8 +899,8 @@ onBeforeRouteLeave(() => {
   padding: 8px;
   cursor: pointer;
   background: var(--el-bg-color);
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   .m-hot-img-wrap {
     position: relative;
@@ -877,7 +920,7 @@ onBeforeRouteLeave(() => {
     font-weight: 700;
     color: #fff;
     background: #b9c3d6;
-    border-radius: 10px 0;
+    border-radius: var(--radius-md) 0;
 
     &.rank-1 {
       background: #ff4757;
@@ -896,7 +939,7 @@ onBeforeRouteLeave(() => {
     width: 100%;
     height: 112px;
     object-fit: cover;
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
   }
 
   .m-hot-name {
@@ -925,7 +968,7 @@ onBeforeRouteLeave(() => {
 }
 
 .m-price {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--price-color);
 }
@@ -946,8 +989,8 @@ onBeforeRouteLeave(() => {
   padding: 12px 8px;
   cursor: pointer;
   background: var(--el-bg-color);
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   .m-store-name {
     max-width: 100%;
@@ -971,7 +1014,7 @@ onBeforeRouteLeave(() => {
   align-items: center;
   padding: var(--home-pad) 12px;
   background: var(--el-bg-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   .m-sort-item {
     flex: 1;
@@ -1007,8 +1050,16 @@ onBeforeRouteLeave(() => {
     overflow: hidden;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 10px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
+    // P2：入场淡入（克制动效，120-200ms，配合 stagger）
+    animation: card-fade-in 0.2s ease-out both;
+
+    @for $i from 1 through 12 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 30}ms;
+      }
+    }
 
     .m-product-img {
       width: 100%;
@@ -1047,6 +1098,55 @@ onBeforeRouteLeave(() => {
   text-align: center;
 }
 
+/* P2：商品网格骨架屏（移动端瀑布流卡片） */
+.m-skel-card {
+  overflow: hidden;
+  background: var(--el-bg-color);
+  border-radius: var(--radius-md);
+
+  .m-skel-img {
+    width: 100%;
+    height: 170px;
+  }
+
+  .m-skel-info {
+    padding: 8px 10px 10px;
+
+    .m-skel-line {
+      width: 100%;
+      height: 16px;
+      margin-bottom: 8px;
+    }
+
+    .short {
+      width: 60%;
+    }
+  }
+}
+
+/* P2：商品网格骨架屏（桌面端 4 列卡片） */
+.p-skel-card {
+  .p-skel-img {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius-md);
+  }
+
+  .p-skel-info {
+    margin-top: 12px;
+
+    .p-skel-line {
+      width: 100%;
+      height: 16px;
+      margin-bottom: 8px;
+    }
+
+    .short {
+      width: 60%;
+    }
+  }
+}
+
 /* 筛选抽屉 */
 .m-filter-group {
   margin-bottom: 18px;
@@ -1074,7 +1174,7 @@ onBeforeRouteLeave(() => {
       color: var(--el-text-color-primary);
       cursor: pointer;
       background: var(--el-fill-color-light);
-      border-radius: 15px;
+      border-radius: var(--radius-pill);
 
       &.active {
         font-weight: 600;
@@ -1112,8 +1212,8 @@ onBeforeRouteLeave(() => {
   padding: var(--home-pad) 0;
   overflow: visible;
   background: var(--el-bg-color);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   .cat-side-item {
     position: relative;
@@ -1166,8 +1266,8 @@ onBeforeRouteLeave(() => {
     min-width: 150px;
     padding: 8px 0;
     background: var(--el-bg-color-overlay);
-    border-radius: 0 10px 10px 0;
-    box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    box-shadow: var(--card-shadow-hover);
 
     .flyout-item {
       padding: 8px 20px;
@@ -1197,13 +1297,9 @@ onBeforeRouteLeave(() => {
   padding: 0 150px 0 28px;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(
-    120deg,
-    var(--el-color-primary) 0%,
-    var(--el-color-primary-dark-2) 100%
-  );
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  background: var(--brand-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   .promo {
     h3 {
@@ -1230,7 +1326,7 @@ onBeforeRouteLeave(() => {
         cursor: pointer;
         background: rgb(255 255 255 / 22%);
         border: 1px solid rgb(255 255 255 / 45%);
-        border-radius: 14px;
+        border-radius: var(--radius-pill);
         transition: background 0.2s;
 
         &:hover {
@@ -1253,7 +1349,7 @@ onBeforeRouteLeave(() => {
     color: var(--el-text-color-primary);
     text-align: center;
     background: rgb(255 255 255 / 95%);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     transform: translateY(-50%);
 
     .user-card-name {
@@ -1289,17 +1385,22 @@ onBeforeRouteLeave(() => {
     padding: 10px;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 10px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
     transition: all 0.25s;
 
     &:hover {
-      box-shadow: 0 6px 20px rgb(0 0 0 / 10%);
-      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
+
+      .hot-img {
+        transform: scale(1.03);
+      }
     }
 
     .hot-img-wrap {
       position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-sm);
     }
 
     .hot-rank {
@@ -1316,7 +1417,7 @@ onBeforeRouteLeave(() => {
       font-weight: 700;
       color: #fff;
       background: #b9c3d6;
-      border-radius: 12px 0;
+      border-radius: var(--radius-md) 0;
 
       &.rank-1 {
         background: #ff4757;
@@ -1335,7 +1436,8 @@ onBeforeRouteLeave(() => {
       width: 100%;
       height: 150px;
       object-fit: cover;
-      border-radius: 7px;
+      border-radius: var(--radius-sm);
+      transition: transform 0.25s;
     }
 
     .hot-name {
@@ -1364,7 +1466,7 @@ onBeforeRouteLeave(() => {
     }
 
     .hot-price {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--price-color);
     }
@@ -1388,13 +1490,12 @@ onBeforeRouteLeave(() => {
     overflow: hidden;
     cursor: pointer;
     background: var(--el-bg-color);
-    border-radius: 10px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
     transition: all 0.25s;
 
     &:hover {
-      box-shadow: 0 6px 20px rgb(0 0 0 / 10%);
-      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .store-banner {
@@ -1438,14 +1539,14 @@ onBeforeRouteLeave(() => {
   align-items: center;
   padding: var(--home-pad) 14px;
   background: var(--el-bg-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   .sort-item {
     padding: 4px 14px;
     font-size: 14px;
     color: var(--el-text-color-primary);
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
 
     &:hover {
       color: var(--el-color-primary);
@@ -1476,17 +1577,25 @@ onBeforeRouteLeave(() => {
 
 .product-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: border-color 0.2s;
+  // P2：入场淡入（克制动效，120-200ms，配合 stagger）
+  animation: card-fade-in 0.2s ease-out both;
+
+  @for $i from 1 through 12 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 30}ms;
+    }
+  }
 
   &:hover {
-    transform: translateY(-4px);
+    border-color: var(--el-border-color-darker);
   }
 
   .product-img {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   .product-name {
@@ -1497,10 +1606,22 @@ onBeforeRouteLeave(() => {
     white-space: nowrap;
   }
 
+  .product-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
   .product-price {
-    margin: 8px 0;
-    font-size: 18px;
+    font-size: 19px;
+    font-weight: 700;
     color: var(--price-color);
+  }
+
+  .product-sales {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 }
 
@@ -1530,7 +1651,7 @@ onBeforeRouteLeave(() => {
         padding: 5px 12px;
         font-size: 13px;
         background: var(--el-fill-color-light);
-        border-radius: 14px;
+        border-radius: var(--radius-pill);
       }
 
       .arrow {

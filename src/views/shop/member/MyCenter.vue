@@ -116,9 +116,6 @@
       </div>
     </div>
 
-    <!-- ===== 个性化设置抽屉 ===== -->
-    <ShopSettingsDrawer />
-
     <!-- ===== 申请成为商家（普通用户） ===== -->
     <div v-if="role === 'USER'" class="card list-card">
       <div class="cell" @click="go('/apply-merchant')">
@@ -154,7 +151,6 @@ import { ElMessageBox } from "element-plus";
 import { ArrowRight, Box, CircleCheck, Van, Wallet } from "@element-plus/icons-vue";
 import { useUserStore, useSettingsStore } from "@/store";
 import { getFullImageUrl } from "@/utils/url";
-import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import ChatAPI from "@/api/chat";
 import { useImMessages } from "@/composables/sse/useImMessages";
 import { useReleaseLog } from "@/composables/sse/useReleaseLog";
@@ -234,12 +230,8 @@ async function handleLogout() {
 /* ===== 用户卡片 ===== */
 .user-card {
   padding: 20px 16px;
-  background: linear-gradient(
-    120deg,
-    var(--el-color-primary) 0%,
-    var(--el-color-primary-dark-2) 100%
-  );
-  border-radius: 12px;
+  background: var(--brand-primary);
+  border-radius: var(--radius-lg);
 
   .user-row {
     display: flex;
@@ -282,8 +274,8 @@ async function handleLogout() {
 .card {
   overflow: hidden;
   background: var(--el-bg-color);
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 5%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
 
   .card-header {
     display: flex;
@@ -351,7 +343,7 @@ async function handleLogout() {
       width: 44px;
       height: 44px;
       font-size: 22px;
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
     }
   }
 }
@@ -380,7 +372,7 @@ async function handleLogout() {
       width: 34px;
       height: 34px;
       font-size: 17px;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
     }
 
     .cell-label {

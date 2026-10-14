@@ -362,13 +362,7 @@ const handleCloseDrawer = () => {
   & > .el-button {
     flex: 1;
     font-size: 14px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: translateY(-2px);
-    }
+    border-radius: var(--radius-md);
   }
 }
 /* 主题切换器优化 */
@@ -398,7 +392,7 @@ const handleCloseDrawer = () => {
       padding-left: 8px;
       margin: 0 -8px;
       background-color: var(--el-fill-color-light);
-      border-radius: 6px;
+      border-radius: var(--radius-md);
     }
   }
 }
@@ -421,24 +415,14 @@ const handleCloseDrawer = () => {
   height: 80px;
   overflow: hidden;
   cursor: pointer;
-  background: linear-gradient(145deg, var(--el-bg-color) 0%, var(--el-bg-color-page) 100%);
+  background: var(--el-bg-color);
   border: 2px solid var(--el-border-color);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.2s;
 
   &:hover {
-    background: linear-gradient(
-      145deg,
-      var(--el-bg-color) 0%,
-      var(--el-color-primary-light-9) 100%
-    );
     border-color: var(--el-color-primary-light-3);
-    transform: translateY(-4px) scale(1.05);
-  }
-
-  &:active {
-    transform: translateY(-2px) scale(1.02);
   }
 
   .layout-preview {
@@ -454,11 +438,7 @@ const handleCloseDrawer = () => {
     right: 4px;
     left: 4px;
     height: 8px;
-    background: linear-gradient(
-      90deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-primary-light-3) 100%
-    );
+    background: var(--el-color-primary);
     border-radius: 2px;
   }
 
@@ -466,17 +446,13 @@ const handleCloseDrawer = () => {
     position: absolute;
     left: 4px;
     width: 12px;
-    background: linear-gradient(
-      180deg,
-      var(--el-color-primary-dark-2) 0%,
-      var(--el-color-primary) 100%
-    );
+    background: var(--el-color-primary-dark-2);
     border-radius: 2px;
   }
 
   .layout-main {
     position: absolute;
-    background: linear-gradient(135deg, var(--el-fill-color-light) 0%, var(--el-fill-color) 100%);
+    background: var(--el-fill-color-light);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 2px;
   }
@@ -553,13 +529,8 @@ const handleCloseDrawer = () => {
   }
 
   &.is-active {
-    background: linear-gradient(
-      145deg,
-      var(--el-color-primary-light-9) 0%,
-      var(--el-color-primary-light-8) 100%
-    );
+    background: var(--el-color-primary-light-9);
     border-color: var(--el-color-primary);
-    transform: translateY(-2px) scale(1.08);
 
     .layout-name {
       font-weight: 600;

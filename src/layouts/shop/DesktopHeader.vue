@@ -100,9 +100,6 @@
         </div>
       </div>
     </nav>
-
-    <!-- 个性化设置抽屉（顶栏入口触发，PC 全局可用） -->
-    <ShopSettingsDrawer />
   </header>
 </template>
 
@@ -113,7 +110,6 @@ import { ElMessageBox } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { useCartStore, useUserStore } from "@/store";
 import { useSettingsStore } from "@/store/modules/settings";
-import ShopSettingsDrawer from "@/components/ShopSettingsDrawer/index.vue";
 import { getFullImageUrl } from "@/utils/url";
 import ChatAPI from "@/api/chat";
 import { useImMessages } from "@/composables/sse/useImMessages";
@@ -289,7 +285,7 @@ async function handleLogout() {
   max-width: 420px;
 
   :deep(.el-input__wrapper) {
-    border-radius: 18px;
+    border-radius: var(--radius-pill);
   }
 }
 

@@ -44,13 +44,13 @@ $border: 1px solid var(--el-border-color-light);
 /* el-dialog */
 .el-dialog {
   overflow: hidden;
-  border-radius: 12px !important;
+  border-radius: var(--radius-lg) !important;
   box-shadow: var(--dialog-shadow) !important;
 
   .el-dialog__header {
     padding: 16px 20px;
     margin: 0;
-    background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+    background: var(--el-bg-color);
     border-bottom: $border;
   }
 
@@ -68,13 +68,13 @@ $border: 1px solid var(--el-border-color-light);
 /* el-drawer */
 .el-drawer {
   overflow: hidden;
-  border-radius: 12px 0 0 12px !important;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg) !important;
 
   .el-drawer__header {
     padding: 16px 20px;
     margin: 0;
     color: inherit;
-    background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+    background: var(--el-bg-color);
     border-bottom: $border;
   }
 
@@ -98,30 +98,30 @@ $border: 1px solid var(--el-border-color-light);
 /* el-tag 圆角增强 */
 .el-tag {
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 /* el-alert */
 .el-alert {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 /* el-message-box */
 .el-message-box {
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 /* el-dropdown-menu */
 .el-dropdown-menu {
   padding: 4px;
   border: 1px solid var(--card-border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: var(--card-shadow-hover);
 
   .el-dropdown-menu__item {
     padding: 8px 16px;
     margin: 2px 0;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     transition: all 0.15s;
   }
 }
@@ -129,13 +129,13 @@ $border: 1px solid var(--el-border-color-light);
 /* el-notification */
 .el-notification {
   border: 1px solid var(--card-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--card-shadow-hover);
 }
 
 /* el-message */
 .el-message {
   border: 1px solid var(--card-border-color) !important;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: var(--card-shadow-hover) !important;
 }

@@ -114,11 +114,6 @@ watch(() => props.productId, fetchRelated, { immediate: true });
 
   .recommend-card {
     cursor: pointer;
-    transition: transform 0.2s;
-
-    &:hover {
-      transform: translateY(-4px);
-    }
 
     .recommend-img {
       width: 100%;

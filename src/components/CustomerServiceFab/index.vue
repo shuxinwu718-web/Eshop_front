@@ -143,18 +143,15 @@ onUnmounted(() => {
     height: 52px;
     color: var(--el-color-white);
     cursor: pointer;
-    background: linear-gradient(135deg, #4f6ef7, #7b5cff);
+    background: var(--brand-primary);
     border-radius: 50%;
-    box-shadow: 0 6px 18px rgb(79 110 247 / 45%);
+    box-shadow: var(--card-shadow);
     transition:
-      transform 0.2s,
+      background 0.2s,
       box-shadow 0.2s;
-    animation: fab-float 2.4s ease-in-out infinite;
 
     &:hover {
-      box-shadow: 0 8px 24px rgb(79 110 247 / 55%);
-      transform: scale(1.08);
-      animation-play-state: paused;
+      background: var(--brand-primary-hover);
     }
   }
 
@@ -166,9 +163,9 @@ onUnmounted(() => {
     padding: 12px 16px;
     color: #fff;
     cursor: pointer;
-    background: linear-gradient(135deg, #4f6ef7, #7b5cff);
-    border-radius: 16px 16px 4px 16px;
-    box-shadow: 0 10px 26px rgb(79 110 247 / 40%);
+    background: var(--brand-primary);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+    box-shadow: var(--card-shadow);
 
     /* 右侧小尾巴，指向小球 */
     &::after {
@@ -178,8 +175,8 @@ onUnmounted(() => {
       width: 12px;
       height: 12px;
       content: "";
-      background: #7b5cff;
-      border-radius: 2px;
+      background: var(--brand-primary);
+      border-radius: var(--radius-sm);
       transform: rotate(45deg);
     }
 
@@ -206,9 +203,9 @@ onUnmounted(() => {
     width: 260px;
     padding: 12px;
     background: var(--el-bg-color-overlay);
-    border: 1px solid rgb(79 110 247 / 10%);
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgb(31 45 90 / 16%);
+    border: 1px solid var(--el-border-color-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
 
     &-title {
       display: flex;
@@ -223,7 +220,7 @@ onUnmounted(() => {
         width: 6px;
         height: 6px;
         content: "";
-        background: linear-gradient(135deg, #4f6ef7, #7b5cff);
+        background: var(--brand-primary);
         border-radius: 50%;
       }
     }
@@ -233,10 +230,10 @@ onUnmounted(() => {
       font-size: 12px;
       color: var(--el-text-color-regular);
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
 
       &:hover {
-        color: #4f6ef7;
+        color: var(--brand-primary);
         background: var(--el-color-primary-light-9);
       }
     }
@@ -246,22 +243,11 @@ onUnmounted(() => {
       margin-top: 6px;
       font-size: 12px;
       font-weight: 600;
-      color: #4f6ef7;
+      color: var(--brand-primary);
       text-align: center;
       cursor: pointer;
       border-top: 1px solid var(--el-border-color-light);
     }
-  }
-}
-
-@keyframes fab-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-5px);
   }
 }
 

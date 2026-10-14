@@ -617,12 +617,12 @@ watch(
     background: var(--shop-bg, #f5f6f8);
 
     .main {
-      border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
       transition: box-shadow 0.3s ease;
 
       &:hover {
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+        box-shadow: var(--card-shadow-hover);
       }
     }
 
@@ -697,8 +697,8 @@ watch(
   .comment-section {
     padding: 28px;
     margin-top: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
   }
 
   /* 商品介绍：独立白色卡片（已移出右栏独立成卡，位于评论区之后） */
@@ -706,8 +706,8 @@ watch(
     padding: 20px 24px;
     background: var(--el-bg-color);
     border: none;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
   }
 }
 
@@ -924,7 +924,7 @@ watch(
       gap: 10px;
       align-items: center;
       cursor: pointer;
-      background: linear-gradient(90deg, var(--el-color-danger-light-9, #fff3f0) 0%, #fff 48%);
+      background: var(--el-color-danger-light-9, #fff3f0);
 
       .mb-coupon-icon {
         flex-shrink: 0;
@@ -962,10 +962,10 @@ watch(
     .store-entry-wrap {
       padding: 0;
       overflow: hidden;
-      background: linear-gradient(90deg, var(--el-color-primary-light-8, #edf4ff) 0%, #fff 32%);
+      background: var(--el-color-primary-light-8, #edf4ff);
       border: 1px solid var(--el-border-color-lighter);
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
 
       :deep(.store-entry) {
         padding: 12px 14px;

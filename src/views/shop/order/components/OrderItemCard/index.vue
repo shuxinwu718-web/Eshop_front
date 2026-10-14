@@ -214,8 +214,8 @@ const formatRemaining = (seconds: number): string => {
   padding: 14px 14px 12px;
   margin-bottom: 14px;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
 
   /* ---------- 顶部行 ---------- */
   .oc-h {
@@ -406,7 +406,7 @@ const formatRemaining = (seconds: number): string => {
 
     .ob-btn {
       margin-left: 0;
-      border-radius: 20px;
+      border-radius: var(--radius-pill);
     }
 
     .ob-btn--primary {
@@ -416,7 +416,7 @@ const formatRemaining = (seconds: number): string => {
     .ob-btn--comment {
       font-weight: 600;
       color: #fff;
-      background: linear-gradient(135deg, #f40, #ff7a45);
+      background: var(--brand-primary);
       border: none;
     }
 

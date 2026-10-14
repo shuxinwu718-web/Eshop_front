@@ -161,30 +161,29 @@ const handleReceive = async (item: AvailableCouponItem) => {
   display: flex;
   min-height: 140px;
   overflow: hidden;
-  background: linear-gradient(135deg, #fff5f5 0%, var(--shop-card-bg, #fff) 40%);
+  background: #fff5f5;
   border: 1px solid #ffe0e0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   transition: all 0.25s;
 
   &.type-discount {
-    background: linear-gradient(135deg, #fffaf0 0%, #fff 40%);
+    background: #fffaf0;
     border-color: #ffe8c8;
   }
 
   &.is-upcoming {
-    background: linear-gradient(135deg, #f0f9ff 0%, var(--shop-card-bg, #fff) 40%);
+    background: #f0f9ff;
     border-color: #d0e8f7;
   }
 
   &.is-expired {
-    background: linear-gradient(135deg, #f5f5f5 0%, #fff 40%);
+    background: #f5f5f5;
     border-color: #e8e8e8;
     opacity: 0.7;
   }
 
   &:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .coupon-decoration {

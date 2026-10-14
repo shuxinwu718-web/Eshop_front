@@ -223,9 +223,9 @@ html.sidebar-color-blue .layout-mix .layout__sidebar--left .el-menu {
 .filter-section {
   padding: 16px 16px 0;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, var(--card-gradient-from), var(--card-gradient-to));
+  background: var(--el-bg-color);
   border: 1px solid var(--card-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--card-shadow);
 
   .search-buttons {

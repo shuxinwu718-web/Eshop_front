@@ -21,7 +21,10 @@
         </div>
       </template>
 
-      <div v-loading="loading">
+      <div v-if="loading" class="order-skeleton">
+        <el-skeleton v-for="n in 3" :key="n" animated :rows="4" class="mb-4" />
+      </div>
+      <div v-else>
         <OrderItemCard
           v-for="order in orderList"
           :key="order.id"
@@ -37,7 +40,15 @@
           @comment="goComment(order)"
         />
 
-        <el-empty v-if="!loading && orderList.length === 0" description="暂无订单" />
+        <EmptyState
+          v-if="orderList.length === 0"
+          title="暂无订单"
+          description="下单后订单会显示在这里"
+        >
+          <template #action>
+            <el-button type="primary" round @click="router.push('/home')">去首页逛逛</el-button>
+          </template>
+        </EmptyState>
         <div class="pagination">
           <el-pagination
             v-model:current-page="pageNum"
@@ -83,6 +94,7 @@ import RefundApplyDialog from "./components/RefundApplyDialog/index.vue";
 import RefundProgressDialog from "./components/RefundProgressDialog/index.vue";
 import { toTimeStamp } from "@/utils/format";
 import SatisfactionDialog from "./components/SatisfactionDialog/index.vue";
+import EmptyState from "@/components/EmptyState/index.vue";
 
 // 与路由 name 一致，供 keep-alive include 匹配
 defineOptions({ name: "ShopOrder" });

@@ -9,6 +9,11 @@
       </el-input>
     </div>
 
+    <!-- 个性化设置 -->
+    <div class="icon-entry" @click="openSettings">
+      <el-icon :size="20"><Setting /></el-icon>
+    </div>
+
     <!-- 通知 -->
     <div class="icon-entry" @click="router.push('/my-notice')">
       <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
@@ -32,9 +37,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Bell, Search } from "@element-plus/icons-vue";
+import { Bell, Search, Setting } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store";
+import { useSettingsStore } from "@/store/modules/settings";
 import { getFullImageUrl } from "@/utils/url";
 
 defineOptions({ name: "MobileHeader" });
@@ -46,6 +52,7 @@ defineProps<{
 
 const router = useRouter();
 const userStore = useUserStore();
+const settingsStore = useSettingsStore();
 
 const keyword = ref("");
 const isLoggedIn = computed(() => userStore.isLoggedIn());
@@ -54,6 +61,11 @@ const userInfo = computed(() => userStore.userInfo);
 function handleSearch() {
   if (!keyword.value.trim()) return;
   router.push({ path: "/home", query: { keyword: keyword.value.trim() } });
+}
+
+// 打开个性化设置抽屉（由 ShopLayout 统一挂载）
+function openSettings() {
+  settingsStore.settingsVisible = true;
 }
 </script>
 
@@ -82,7 +94,7 @@ function handleSearch() {
     min-width: 0;
 
     :deep(.el-input__wrapper) {
-      border-radius: 18px;
+      border-radius: var(--radius-pill);
     }
   }
 

@@ -136,9 +136,9 @@ onActivated(() => {
 .festival-section {
   margin-bottom: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #fff5f0 0%, #fff8f5 40%, #fff 100%);
+  background: #fff5f0;
   border: 1px solid #fde2d0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 
   .festival-section-header {
     display: flex;
@@ -146,7 +146,7 @@ onActivated(() => {
     align-items: center;
     padding: 16px 20px;
     color: #fff;
-    background: linear-gradient(90deg, #ff6b35, #f56c6c);
+    background: var(--brand-primary);
 
     .festival-section-icon {
       font-size: 22px;
@@ -187,11 +187,11 @@ onActivated(() => {
     padding: 14px 16px;
     background: var(--el-bg-color);
     border: 1px solid #fde2d0;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     transition: box-shadow 0.2s;
 
     &:hover {
-      box-shadow: 0 2px 12px rgba(245, 108, 108, 0.08);
+      box-shadow: var(--card-shadow-hover);
     }
   }
 
