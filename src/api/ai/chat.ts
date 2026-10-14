@@ -58,6 +58,90 @@ export const sendAiChat = async (
   }
 };
 
+/** AI 流式对话回调 */
+export interface AiChatStreamHandlers {
+  /** 每收到一个增量片段（用于实时更新气泡） */
+  onDelta: (text: string) => void;
+  /** 全部流式输出结束（fullText 为累计完整文本） */
+  onDone?: (fullText: string) => void;
+  /** 请求失败（HTTP 错误/断流/网络异常） */
+  onError?: (msg: string) => void;
+}
+
+/**
+ * 发送消息给 AI 客服（SSE 流式）
+ * 后端 /ai/chat/stream 返回 text/event-stream：data: {"delta":"..."} 增量块 + data: {"done":true} 结束
+ * @param message 用户提问内容
+ * @param history 可选，最近的多轮对话历史
+ * @param token 可选，登录用户的 JWT
+ * @param handlers 流式回调
+ */
+export const sendAiChatStream = async (
+  message: string,
+  history: AiHistoryItem[] = [],
+  token: string = "",
+  handlers: AiChatStreamHandlers
+): Promise<string> => {
+  let fullText = "";
+  try {
+    const res = await fetch("/ai/chat/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json;charset=utf-8" },
+      body: JSON.stringify({ message, history, token: token || "" }),
+    });
+    if (!res.ok || !res.body) {
+      const msg = `AI 客服服务暂时不可用，请稍后再试。(${res.status})`;
+      throw new Error(msg);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // SSE 事件以空行 \n\n 分隔
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() ?? "";
+      for (const part of parts) {
+        const line = part.trim();
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (!data) continue;
+        try {
+          const obj = JSON.parse(data) as { delta?: string; done?: boolean; error?: string };
+          if (obj.done) continue;
+          if (typeof obj.delta === "string" && obj.delta) {
+            fullText += obj.delta;
+            handlers.onDelta(obj.delta);
+          }
+        } catch {
+          /* 忽略无法解析的分块 */
+        }
+      }
+    }
+    // 处理尾部未闭合的事件（一般不会出现）
+    const tail = buffer.trim();
+    if (tail.startsWith("data:")) {
+      try {
+        const obj = JSON.parse(tail.slice(5).trim()) as { delta?: string };
+        if (typeof obj.delta === "string" && obj.delta) {
+          fullText += obj.delta;
+          handlers.onDelta(obj.delta);
+        }
+      } catch {
+        /* 忽略 */
+      }
+    }
+    handlers.onDone?.(fullText);
+    return fullText;
+  } catch (err) {
+    const msg = (err instanceof Error && err.message) || "AI 客服服务暂时不可用，请稍后再试。";
+    handlers.onError?.(msg);
+    throw new Error(msg, { cause: err });
+  }
+};
+
 /** AI 商品描述生成参数 */
 export interface AiProductCopyParams {
   name: string;
@@ -142,6 +226,7 @@ export const analyzeComments = async (
 
 export default {
   sendAiChat,
+  sendAiChatStream,
   generateProductCopy,
   analyzeComments,
 };

@@ -33,7 +33,7 @@
           </div>
           <div class="bubble">{{ msg.content }}</div>
         </div>
-        <div v-if="loading" class="msg-row assistant">
+        <div v-if="loading && !streamingStarted" class="msg-row assistant">
           <div class="avatar assistant">
             <el-icon><ChatDotRound /></el-icon>
           </div>
@@ -100,6 +100,8 @@ const messages = ref<ChatMessage[]>([]);
 const loading = ref(false);
 const input = ref("");
 const chatBodyRef = ref<HTMLElement | null>(null);
+/** 流式输出是否已收到首个增量（用于区分"等待首 token"与"真实打字中"） */
+const streamingStarted = ref(false);
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -265,22 +267,36 @@ const send = async () => {
   input.value = "";
   recordRate();
   loading.value = true;
+  streamingStarted.value = false;
+  // 先插入一个空的 assistant 气泡，流式增量实时追加内容（真实打字机效果）
+  const streamingMsg: ChatMessage = { role: "assistant", content: "" };
+  messages.value.push(streamingMsg);
+  scrollToBottom();
+
+  // 多轮上下文：携带最近 10 条历史（排除刚插入的空气泡）
+  const history: AiHistoryItem[] = messages.value
+    .slice(-11, -1)
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => ({ role: m.role, content: m.content }));
   try {
-    // 多轮上下文：携带最近 10 条历史
-    const history: AiHistoryItem[] = messages.value
-      .slice(-10)
-      .filter((m) => m.role === "user" || m.role === "assistant")
-      .map((m) => ({ role: m.role, content: m.content }));
-    const res = await AiAPI.sendAiChat(text, history, AuthStorage.getAccessToken());
-    if (res.success && res.reply) {
-      pushMessage("assistant", res.reply);
-    } else {
-      pushMessage("assistant", res.error || "抱歉，AI 服务开小差了，请稍后再试。");
-    }
-  } catch (err) {
+    await AiAPI.sendAiChatStream(text, history, AuthStorage.getAccessToken(), {
+      onDelta: (delta) => {
+        streamingStarted.value = true;
+        streamingMsg.content += delta;
+        scrollToBottom();
+      },
+      onDone: (fullText) => {
+        if (!fullText) streamingMsg.content = "抱歉，AI 服务开小差了，请稍后再试。";
+      },
+      onError: (msg) => {
+        if (!streamingMsg.content) streamingMsg.content = msg;
+      },
+    });
+  } catch {
     // 明确区分：服务不可用 / 网络异常，避免游客得到含糊反馈
-    const detail = err instanceof Error ? err.message : "";
-    pushMessage("assistant", detail || "网络异常，暂时无法连接 AI 客服，请稍后再试。");
+    if (!streamingMsg.content) {
+      streamingMsg.content = "网络异常，暂时无法连接 AI 客服，请稍后再试。";
+    }
   } finally {
     loading.value = false;
   }
@@ -293,7 +309,7 @@ const send = async () => {
   height: calc(100vh - 120px);
   min-height: 480px;
   padding: 20px;
-  background: linear-gradient(160deg, #eef2ff 0%, #f5f7fb 45%, #f1f4ff 100%);
+  background: var(--shop-bg);
 }
 
 .chat-card {
@@ -304,9 +320,9 @@ const send = async () => {
   margin: 0 auto;
   overflow: hidden;
   background: var(--el-bg-color);
-  border: 1px solid rgb(79 110 247 / 10%);
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgb(79 110 247 / 14%);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
 }
 
 // ========== 头部 ==========
@@ -317,7 +333,7 @@ const send = async () => {
   justify-content: space-between;
   padding: 12px 16px;
   color: var(--el-color-white);
-  background: linear-gradient(120deg, #4f6ef7 0%, #7b5cff 100%);
+  background: var(--brand-primary);
 
   .header-left {
     display: flex;
@@ -357,10 +373,10 @@ const send = async () => {
     justify-content: center;
     width: 40px;
     height: 40px;
-    color: #4f6ef7;
+    color: var(--brand-primary);
     background: var(--el-bg-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 18%);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
   }
 
   .brand-title {
@@ -380,7 +396,7 @@ const send = async () => {
     font-weight: 600;
     color: var(--el-color-white);
     background: rgb(103 194 58 / 92%);
-    border-radius: 10px;
+    border-radius: var(--radius-pill);
 
     .online-dot {
       width: 5px;
@@ -415,15 +431,15 @@ const send = async () => {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  background: linear-gradient(180deg, #f7f9ff 0%, #f0f3fb 100%);
+  background: var(--el-fill-color-light);
 
   &::-webkit-scrollbar {
     width: 6px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d5daf0;
-    border-radius: 3px;
+    background: var(--el-border-color-darker);
+    border-radius: var(--radius-sm);
   }
 
   .msg-row {
@@ -444,13 +460,13 @@ const send = async () => {
       border-radius: 50%;
 
       &.assistant {
-        background: linear-gradient(135deg, #4f6ef7, #7b5cff);
-        box-shadow: 0 4px 10px rgb(79 110 247 / 30%);
+        background: var(--brand-primary);
+        box-shadow: var(--card-shadow);
       }
 
       &.user {
-        background: linear-gradient(135deg, #43b888, #2fa5e0);
-        box-shadow: 0 4px 10px rgb(67 184 136 / 30%);
+        background: var(--el-color-info);
+        box-shadow: var(--card-shadow);
       }
     }
 
@@ -463,9 +479,9 @@ const send = async () => {
       word-break: break-all;
       white-space: pre-wrap;
       background: var(--el-bg-color);
-      border-radius: 12px;
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 2px 8px rgb(31 45 90 / 6%);
+      border-radius: var(--radius-lg);
+      border-bottom-left-radius: var(--radius-sm);
+      box-shadow: var(--card-shadow);
     }
 
     &.user {
@@ -473,10 +489,10 @@ const send = async () => {
 
       .bubble {
         color: var(--el-color-white);
-        background: linear-gradient(120deg, #4f6ef7, #7b5cff);
-        border-radius: 12px;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 4px 14px rgb(79 110 247 / 30%);
+        background: var(--brand-primary);
+        border-radius: var(--radius-lg);
+        border-bottom-right-radius: var(--radius-sm);
+        box-shadow: var(--card-shadow);
       }
     }
   }
@@ -561,14 +577,13 @@ const send = async () => {
     cursor: pointer;
     background: var(--el-color-primary-light-9);
     border: 1px solid var(--el-border-color-lighter);
-    border-radius: 16px;
+    border-radius: var(--radius-pill);
     transition: all 0.2s;
 
     &:hover {
-      color: #4f6ef7;
-      background: linear-gradient(120deg, #eef2ff, #f0ecff);
-      border-color: #4f6ef7;
-      transform: translateY(-1px);
+      color: var(--brand-primary);
+      background: var(--el-color-primary-light-9);
+      border-color: var(--brand-primary);
     }
   }
 }
@@ -589,14 +604,14 @@ const send = async () => {
 
   :deep(.el-input__wrapper) {
     background: var(--el-fill-color-light);
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     box-shadow: 0 0 0 1px var(--el-border-color-light) inset;
     transition: all 0.2s;
 
     &.is-focus,
     &:focus-within {
       background: var(--el-bg-color);
-      box-shadow: 0 0 0 2px rgb(79 110 247 / 40%) inset;
+      box-shadow: 0 0 0 2px var(--brand-primary) inset;
     }
   }
 
@@ -604,17 +619,17 @@ const send = async () => {
     padding: 10px 22px;
     margin-left: 0;
     font-weight: 600;
-    background: linear-gradient(120deg, #4f6ef7, #7b5cff);
+    background: var(--brand-primary);
     border: none;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgb(79 110 247 / 35%);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--card-shadow);
 
     &:hover {
-      filter: brightness(1.06);
+      background: var(--brand-primary-hover);
     }
 
     &:active {
-      filter: brightness(0.96);
+      background: var(--brand-primary-active);
     }
   }
 }
@@ -645,7 +660,7 @@ const send = async () => {
     .bot-avatar {
       width: 34px;
       height: 34px;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
     }
   }
 
