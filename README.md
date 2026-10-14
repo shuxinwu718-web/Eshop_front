@@ -1,4 +1,16 @@
+<div align="center">
+
 # E-Shop 电商系统（前端）
+
+**基于 Vue 3 + TypeScript + Element Plus 的三端电商前端：用户商城 · 商家中心 · 管理后台**
+
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Element Plus](https://img.shields.io/badge/Element_Plus-2.13-409EFF?logo=element&logoColor=white)](https://element-plus.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-required-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
+
+</div>
 
 > 基于 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 二次开发的电商前端。
 
@@ -24,7 +36,7 @@
 - **支付宝沙箱支付**：下单支付走真实沙箱 channel，`/pay/result` 回跳页展示结果并结合异步对账自愈（reconcilePaidOrder）
 - **拼团/团购**：商品详情 GroupBuyPanel 展示进行中团（按剩余名额紧迫度排序）、发起/加入拼团，可多层拼团
 - **优惠券体系**：领券中心 + 我的券 + 节日签到活动券，每日签到双入口（顶栏 + 首页搜索栏）
-- **AI 客服**：浮球 + 引导气泡 + 消息面板，商品推荐/搜索类问题优先走真实数据工具，FAQ 兜底
+- **AI 客服**：浮球 + 引导气泡 + 消息面板（SSE 流式打字机输出），商品推荐/搜索类问题优先走真实数据工具，FAQ 兜底
 - **关系型搜索双引擎**：ES 开关控制，关闭自动降级 MySQL 搜索，默认 id 升序
 - **移动端商品详情**：全宽图集 + 价格卡片 + 半屏规格抽屉 + 底部固定操作栏（收藏/客服/加购/立即购买），隐藏商城 Tab 用专属 Dock
 - **收货地址级联**：AddressPicker 底部弹层 + 单列递进选择省市区，替代 el-cascader 适配窄屏
@@ -42,34 +54,98 @@
 | 富文本/编辑 | WangEditor、CodeMirror |
 | 工程化 | pnpm、husky、eslint、prettier、stylelint、commitlint |
 
+## 系统架构
+
+一套代码承载三个角色入口，由路由层分发到独立布局，页面按业务域组织：
+
+```mermaid
+flowchart TB
+    R["router/ 路由层<br/>静态路由 + 动态权限路由"]
+
+    R -->|"商城路由 /home /product /shop …"| S["ShopLayout 商城布局（响应式）"]
+    R -->|"商家路由 /merchant …"| M["MerchantLayout 商家中心布局"]
+    R -->|"管理路由 /dashboard /system …"| A["管理端布局<br/>左栏 / 顶栏 / 混合三种模式"]
+
+    S -->|"≥768px 桌面端"| S1["DesktopHeader 双层导航<br/>内容区 1190px 居中"]
+    S -->|"＜768px 移动端"| S2["MobileHeader 轻导航<br/>+ 底部 5 Tab"]
+    S1 --> V1["views/shop 用户商城<br/>首页 · 商品 · 购物车 · 下单 · 订单<br/>秒杀 · 拼团 · 优惠券 · 个人中心 · AI 客服"]
+    S2 --> V1
+
+    M --> V2["views/merchant 商家中心<br/>商品管理 · 客服会话 · 退款处理"]
+
+    A --> V3["views/eshop 电商运营<br/>views/system RBAC 系统管理<br/>views/dashboard 数据看板"]
+
+    V1 --> API["api/ 接口层<br/>Axios 统一拦截：token · 401/403 · Loading"]
+    V2 --> API
+    V3 --> API
+
+    API --> BE["Java 后端 :8080"]
+    API -.->|"SSE 流式对话"| AI["AI 客服 FastAPI :5000"]
+```
+
 ## 项目结构
+
+> 通用组件统一「文件夹 + index.vue」规范；页面按「业务域」分目录，一个业务域内部再拆组件（如商品详情拆出图集、SKU 选择器、拼团面板等）。
 
 ```
 Eshop
-├── src/
-│   ├── api/
-│   │   ├── eshop/            # 电商业务接口（product/order/cart/groupBuy/seckill/coupon…）
-│   │   ├── system/           # 系统管理接口（user/role/menu/dept/dict…）
-│   │   └── ai/chat.ts        # AI 客服接口
-│   ├── components/           # 全局通用组件（统一「文件夹 + index.vue」规范）
-│   │   └── Upload/           # FileUpload / MultiImageUpload / SingleImageUpload
-│   ├── composables/          # 组合式函数（SSE、导出、表格多选等）
-│   ├── layouts/              # 布局（BaseLayout / ShopLayout / MerchantLayout）
-│   ├── router/               # 路由配置 + 权限守卫
-│   ├── store/modules/        # Pinia 状态（user/permission/settings/tags-view/cart…）
-│   ├── utils/                # 请求、认证、下载、格式化等工具
-│   └── views/
-│       ├── shop/             # 用户商城：首页/商品详情/购物车/下单/订单/拼团/秒杀/优惠券/个人中心…
-│       │   ├── product/      #   商品详情（拆分为 ProductGallery、SkuSelector、GroupBuyPanel 等组件）
-│       │   └── order/        #   订单列表（OrderItemCard、PayDialog、RefundApplyDialog 等组件）
-│       ├── merchant/         # 商家中心：商品管理/订单/退款/拼团管理/统计/店铺装修
-│       ├── eshop/            # 管理后台业务：商品/订单/用户/优惠券/秒杀/退款审核…
-│       ├── system/           # RBAC 管理：用户/角色/菜单/部门/字典/日志…
-│       └── login/            # 登录/注册/找回密码
-├── .env.development          # 开发环境变量
-├── .env.production           # 生产环境变量
-├── vite.config.ts            # Vite 配置（代理、自动导入、构建）
-└── package.json
+├─ public/                          # 静态资源（构建时原样拷贝）
+├─ src/
+│  ├─ main.ts                       # 应用入口：注册插件 / 全局组件 / 路由 / 守卫
+│  │
+│  ├─ router/                       # ── 路由 ──
+│  │  ├─ index.ts                   #   路由表：静态路由 + 动态路由装配
+│  │  └─ guards/                    #   路由守卫：登录鉴权 / 动态权限校验
+│  │
+│  ├─ layouts/                      # ── 布局外壳（三端各自独立）──
+│  │  ├─ index.vue                  #   布局分发器：按路由选择 Shop / Merchant / 管理端
+│  │  ├─ ShopLayout.vue             #   ★ 商城布局：响应式双布局 + 设置抽屉 + 悬浮球统一挂载
+│  │  ├─ MerchantLayout.vue         #   商家中心布局
+│  │  ├─ shop/                      #   商城布局零件：DesktopHeader / MobileHeader / MobileTabBar
+│  │  └─ components/                #   管理端布局零件：侧边栏 / 导航栏 / 标签页 / 主题设置
+│  │
+│  ├─ views/                        # ── 页面（按业务域分目录）──
+│  │  ├─ shop/                      #   ★ 用户商城（C 端）
+│  │  │  ├─ home/ product/          #     首页 · 商品详情（图集/SKU/拼团面板/评论区等子组件）
+│  │  │  ├─ cart/ checkout/ order/  #     购物车 · 结算 · 订单（PayDialog 收银台）
+│  │  │  ├─ seckill/ groupBuy/      #     限时秒杀 · 拼团
+│  │  │  ├─ coupon/ activity/       #     领券中心 · 签到/节日活动
+│  │  │  └─ member/ center/ …       #     我的 · 个人中心 · 收藏 · 地址 · 客服 · 消息 · 店铺
+│  │  ├─ merchant/                  #   商家中心（B 端）：商品管理 · 客服会话 · 入驻申请
+│  │  ├─ eshop/                     #   管理后台-电商运营：商品/订单/用户/优惠券/秒杀/退款审核/监控
+│  │  ├─ system/                    #   管理后台-系统管理：用户/角色/菜单/部门/字典/租户/日志
+│  │  ├─ dashboard/                 #   数据看板（管理端首页）
+│  │  └─ login/ profile/ chat/ …    #   登录注册 · 个人资料 · IM 聊天 · 异常页
+│  │
+│  ├─ api/                          # ── 接口层（与后端 Controller 一一对应）──
+│  │  ├─ eshop/                     #   电商业务接口：product/order/cart/seckill/coupon…
+│  │  ├─ system/                    #   系统管理接口：user/role/menu/dict…
+│  │  └─ ai/chat.ts                 #   AI 客服接口（含 SSE 流式请求）
+│  │
+│  ├─ store/modules/                # ── Pinia 全局状态 ──
+│  │  ├─ user.ts / permission.ts    #   登录态 · 动态路由权限
+│  │  ├─ cart.ts                    #   购物车（数量徽标跨页共享）
+│  │  └─ settings.ts / app.ts …     #   个性化设置 · 应用配置 · 标签页 · 字典 · 租户
+│  │
+│  ├─ components/                   # ── 全局通用组件 ──
+│  │  ├─ Upload/ CURD/ Pagination/  #   后台通用：上传 · 增删改查套件 · 分页 · 表格工具
+│  │  ├─ AddressPicker/ EmptyState/ #   商城通用：省市区级联 · 统一空状态 · 骨架屏
+│  │  └─ CustomerServiceFab/ …      #   AI 客服浮球 · 个性化设置抽屉 · 版本公告横幅
+│  │
+│  ├─ composables/                  # ── 组合式函数 ──
+│  │  ├─ useIsMobile.ts             #   响应式断点（移动/桌面双布局实时切换）
+│  │  ├─ useExport.ts …             #   Excel 导出 · 表格多选 · 最近菜单
+│  │  └─ sse/                       #   SSE 实时通道：站内信 / 在线人数 / 发布公告 / 字典同步
+│  │
+│  ├─ hooks/ directives/ utils/     # 通用逻辑：Hooks · 权限指令 · 工具库（request/auth/theme/format…）
+│  ├─ styles/                       # 全局样式：设计令牌（圆角/品牌色/背景变量）+ 三方库覆写
+│  ├─ assets/ types/ lang/ config/ constants/ enums/ plugins/   # 静态资源 · 类型 · 国际化 · 全局配置
+│  │
+│  └─ …
+├─ .env.development                 # 开发环境变量（代理前缀 /dev-api、/ai）
+├─ .env.production                  # 生产环境变量（/prod-api）
+├─ vite.config.ts                   # Vite 配置：代理 · 自动导入 · 构建压缩
+└─ package.json
 ```
 
 ## 快速开始
