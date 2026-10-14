@@ -2,7 +2,7 @@
   <div class="release-log-page">
     <!-- 页头 -->
     <div class="page-head">
-      <div class="page-head__title">📋 版本更新日志</div>
+      <div class="page-head__title">版本更新日志</div>
       <div class="page-head__desc">
         这里是 E-Shop 每一次版本迭代的官方记录，告诉你新增了什么、优化了什么。
       </div>

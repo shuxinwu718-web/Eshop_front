@@ -1,7 +1,6 @@
 <template>
   <div v-if="festivalPlans.length > 0" class="festival-section">
     <div class="festival-section-header">
-      <span class="festival-section-icon">🎊</span>
       <span class="festival-section-title">节日签到活动</span>
       <span class="festival-section-desc">连续签到达标即可领取限定优惠券</span>
       <el-button type="primary" size="small" plain @click="$router.push('/signin')">

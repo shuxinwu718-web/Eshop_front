@@ -46,7 +46,7 @@
     <el-card shadow="never" class="milestone-card">
       <template #header>
         <div class="section-header">
-          <span>🏆 里程碑奖励</span>
+          <span>里程碑奖励</span>
           <span class="section-sub">连续签到达标即领</span>
         </div>
       </template>
@@ -82,7 +82,7 @@
     <el-card v-if="festivalPlans.length > 0" shadow="never" class="festival-card">
       <template #header>
         <div class="section-header">
-          <span>🎊 节日签到活动</span>
+          <span>节日签到活动</span>
           <span class="section-sub">签到达标领取限定优惠券</span>
         </div>
       </template>
@@ -214,7 +214,7 @@ const handleSignIn = async () => {
     const res = await signIn();
     const msg = typeof res === "string" ? res : "签到成功";
     if (msg.includes("获得优惠券") || msg.includes("优惠券")) {
-      await ElMessageBox.alert(msg, "🎉 签到奖励", {
+      await ElMessageBox.alert(msg, "签到奖励", {
         confirmButtonText: "收下啦",
         type: "success",
         center: true,

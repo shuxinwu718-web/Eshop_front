@@ -3,7 +3,7 @@
     <!-- 头部横幅 -->
     <div class="page-banner">
       <div class="banner-content">
-        <h2>🎯 活动中心</h2>
+        <h2>活动中心</h2>
         <p>完成任务，赢取限时优惠券奖励</p>
       </div>
     </div>

@@ -45,7 +45,21 @@
 
         <!-- c) 领券中心入口（移动端） -->
         <div class="mb-card mb-coupon-card mb-only" @click="goCouponCenter">
-          <span class="mb-coupon-icon">🎫</span>
+          <span class="mb-coupon-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#4080ff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 7h16v2.2a2.4 2.4 0 0 0 0 5.6V17H4v-2.2a2.4 2.4 0 0 0 0-5.6z" />
+              <path d="M15 7v10" />
+            </svg>
+          </span>
           <div class="mb-coupon-text">
             <span class="mb-coupon-title">领券中心</span>
             <span class="mb-coupon-desc">领券下单更优惠</span>
@@ -99,7 +113,8 @@
             发起拼团
           </el-button>
           <el-button type="danger" size="large" :loading="favoriteLoading" @click="toggleFavorite">
-            {{ isFavorited ? "已收藏" : "❤ 收藏" }}
+            <el-icon v-if="!isFavorited" class="f-btn-icon"><Star /></el-icon>
+            <span>{{ isFavorited ? "已收藏" : "收藏" }}</span>
           </el-button>
           <el-button size="large" @click="goToChat">联系商家</el-button>
         </div>

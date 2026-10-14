@@ -22,29 +22,98 @@
         </div>
       </div>
 
-      <!-- 金刚区快捷入口 -->
+      <!-- 金刚区快捷入口（品牌 SVG 图标替代 emoji，去 AI 味） -->
       <div class="m-quick-grid">
         <div class="m-quick-item" @click="router.push('/signin')">
-          <div class="m-quick-icon" style="background: #fff0e6">📅</div>
+          <div class="m-quick-icon" style="background: #fff0e6">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ff5c33"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <p
+                ath
+                d="M3 9
+.             5h18"
+              />
+
+              <path d="M8 3v4M16 3v4" />
+              <path d="m9.5 15 2 2 3.5-3.5" />
+            </svg>
+          </div>
           <span>每日签到</span>
         </div>
         <div class="m-quick-item" @click="router.push('/coupon-center')">
-          <div class="m-quick-icon" style="background: #e6f0ff">🎫</div>
+          <div class="m-quick-icon" style="background: #e6f0ff">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#4080ff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 7h16v2.2a2.4 2.4 0 0 0 0 5.6V17H4v-2.2a2.4 2.4 0 0 0 0-5.6z" />
+
+              <path d="M15 7v10" />
+            </svg>
+          </div>
           <span>领券中心</span>
         </div>
         <div class="m-quick-item" @click="router.push('/shop/customer-service')">
-          <div class="m-quick-icon" style="background: #e8f8e8">💬</div>
+          <div class="m-quick-icon" style="background: #e8f8e8">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#22a06b"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 12.5a7.5 7.5 0 0 1-7.5 7.5H5l-2 2v-6.5a7.5 7.5 0 0 1 7.5-7.5h3A7.5 7.5 0 0 1 21 12.5z"
+              />
+              <path d="M9 11.5h.5M13.5 11.5h.5" />
+            </svg>
+          </div>
           <span>客服中心</span>
         </div>
         <div class="m-quick-item" @click="router.push('/shop/order')">
-          <div class="m-quick-icon" style="background: #f3e8ff">📦</div>
+          <div class="m-quick-icon" style="background: #f3e8ff">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#7c5cff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+              />
+              <path d="M3.27 6.96 12 12.01l8.73-5.05" />
+              <path d="M12 22.08V12" />
+            </svg>
+          </div>
           <span>我的订单</span>
         </div>
       </div>
 
       <!-- 热销商品排行（横滑卡片） -->
       <div v-if="hotProducts.length" class="m-section">
-        <div class="m-section-title">🔥 热销商品排行</div>
+        <div class="m-section-title">热销商品排行</div>
         <div v-scroll-fade class="m-scroll">
           <div
             v-for="(item, idx) in hotProducts"
@@ -75,7 +144,7 @@
 
       <!-- 推荐店铺（横滑卡片） -->
       <div v-if="recommendStores.length" class="m-section">
-        <div class="m-section-title">🏪 推荐店铺</div>
+        <div class="m-section-title">推荐店铺</div>
         <div v-scroll-fade class="m-scroll">
           <div
             v-for="store in recommendStores"
@@ -118,7 +187,24 @@
         >
           最新
         </span>
-        <span class="m-filter-btn" @click="filterVisible = true">⚙ 筛选</span>
+        <span class="m-filter-btn" @click="filterVisible = true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 7h-9" />
+            <path d="M14 17H5" />
+            <circle cx="17" cy="7" r="3" />
+            <circle cx="7" cy="17" r="3" />
+          </svg>
+          筛选
+        </span>
         <span class="m-sort-item" @click="resetAll">重置</span>
       </div>
 
@@ -266,8 +352,8 @@
             <h3>天天低价 · 好物不停</h3>
             <p>新人专享礼包 · 优惠券天天领</p>
             <div class="promo-links">
-              <span class="promo-link" @click="router.push('/seckill')">⚡ 秒杀专场</span>
-              <span class="promo-link" @click="router.push('/coupon-center')">🎫 领取优惠券</span>
+              <span class="promo-link" @click="router.push('/seckill')">秒杀专场</span>
+              <span class="promo-link" @click="router.push('/coupon-center')">领取优惠券</span>
             </div>
           </div>
           <div class="user-card">

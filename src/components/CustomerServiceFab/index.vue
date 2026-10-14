@@ -10,7 +10,7 @@
     <!-- 首次进入的引导气泡：说明球的作用 -->
     <transition name="el-fade-in-right">
       <div v-if="showTip" class="cs-fab__tip" @click.stop="closeTip">
-        <div class="cs-fab__tip-title">Hi～我是 AI 智能客服 🤖</div>
+        <div class="cs-fab__tip-title">Hi～我是 AI 智能客服</div>
         <div class="cs-fab__tip-text">商品、订单、退款问题都可以问我，点我咨询</div>
       </div>
     </transition>

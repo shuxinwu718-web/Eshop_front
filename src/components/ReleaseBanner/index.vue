@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible && banner" class="release-banner" :class="`release-banner--t${banner.type}`">
     <div class="release-banner__body" @click="goDetail">
-      <span class="release-banner__flag">📢 新版本</span>
+      <span class="release-banner__flag">新版本</span>
       <span class="release-banner__version">{{ banner.version }}</span>
       <span class="release-banner__title">{{ banner.title }}</span>
       <span class="release-banner__summary">{{ banner.summary }}</span>

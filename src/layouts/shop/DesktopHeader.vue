@@ -3,7 +3,22 @@
     <!-- 第一行：Logo + 搜索 + 购物车/通知/用户 -->
     <div class="header-inner">
       <div class="logo" @click="router.push('/home')">
-        <span class="logo-icon">🛍️</span>
+        <span class="logo-icon">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ff5c33"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+            <path d="M3 6h18" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        </span>
         <span class="logo-text">E-Shop</span>
       </div>
 
@@ -85,17 +100,17 @@
           活动中心
         </router-link>
         <div class="cat-bar-extra">
-          <router-link to="/signin" class="extra-link">📅 每日签到</router-link>
+          <router-link to="/signin" class="extra-link">每日签到</router-link>
           <!-- 工作台入口：商家/管理员从商城返回 -->
           <router-link
             v-if="role === 'MERCHANT'"
             to="/merchant/products"
             class="extra-link workbench"
           >
-            🏪 商家中心
+            商家中心
           </router-link>
           <router-link v-if="role === 'ADMIN'" to="/dashboard" class="extra-link workbench">
-            🛠 管理后台
+            管理后台
           </router-link>
         </div>
       </div>
