@@ -74,7 +74,9 @@
         <el-form-item label="商品介绍">
           <template v-if="isEdit">
             <Editor
+              ref="introEditorRef"
               v-model="introContent"
+              height="480px"
               placeholder="请输入商品介绍，支持图文混排、图片/视频上传（视频需 mp4 等常见格式）"
             />
             <div class="intro-actions">
@@ -91,6 +93,11 @@
               </el-button>
               <el-button size="small" @click="openVersionDialog">版本历史</el-button>
               <span class="intro-tip">审核通过后将展示在商品详情页</span>
+            </div>
+
+            <!-- 商品详情长图：上传后一键追加到介绍末尾 -->
+            <div class="long-image-block">
+              <LongImageUploader @insert="handleInsertLongImages" />
             </div>
           </template>
           <el-alert
@@ -216,6 +223,7 @@ import SizeChartEditor from "./components/SizeChartEditor/index.vue";
 import SpecSkuEditor from "./components/SpecSkuEditor/index.vue";
 import type { SpecDef, SkuRow } from "./components/SpecSkuEditor/index.vue";
 import Editor from "@/components/Editor/index.vue";
+import LongImageUploader from "./components/LongImageUploader/index.vue";
 import IntroAPI, { type IntroVersionItem } from "@/api/eshop/intro";
 import { resolveRichContent } from "@/utils/url";
 
@@ -511,12 +519,14 @@ const submitForm = async () => {
         specValues: s.specValues.filter((v) => v.trim() !== ""),
         sortOrder: idx,
       }));
+    // 库存为 0 仍是有效 SKU（表示暂时缺货），不能在提交时过滤掉，
+    // 否则商家清空库存后再添加规格组合时，旧/新 SKU 会被误判为不存在。
     submitData.skus = skuList.value
-      .filter((s) => s.price > 0 || s.stock > 0)
+      .filter((s) => Object.keys(s.specMap).length > 0)
       .map((s) => ({
         specs: s.specs,
-        price: s.price,
-        stock: s.stock,
+        price: s.price ?? form.price,
+        stock: s.stock ?? 0,
       }));
   }
 
@@ -541,6 +551,14 @@ const submitForm = async () => {
 const introContent = ref("");
 const introSaving = ref(false);
 const introSubmitting = ref(false);
+
+/** 富文本编辑器实例（只用到追加 HTML 的能力） */
+const introEditorRef = ref<{ appendHtml: (html: string) => void }>();
+
+/** 把「商品详情长图」生成的 HTML 追加到介绍末尾，追加动作可撤销/重做 */
+const handleInsertLongImages = (html: string) => {
+  introEditorRef.value?.appendHtml(html);
+};
 
 const currentProductId = computed(() => (isEdit.value ? Number(route.params.id) : null));
 
@@ -705,6 +723,13 @@ onMounted(() => {
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+  }
+
+  .long-image-block {
+    width: 100%;
+    padding-top: 14px;
+    margin-top: 16px;
+    border-top: 1px dashed var(--el-border-color);
   }
 
   .version-pagination {

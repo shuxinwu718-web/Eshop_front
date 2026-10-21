@@ -2,9 +2,9 @@
 <!--
   富文本编辑器（wangEditor-next）：
   - v-model 绑定 HTML
-  - 可视化模式：所见即所得编辑（支持图片/视频上传，复用 /api/v1/files）
-  - HTML源码模式：直接编辑/粘贴完整 HTML（可保留表格边框、cellpadding 等 wangEditor 模型不支持的样式），
-    源码模式下修改的内容即为保存内容，详情页 v-html 原样渲染
+  - 可视化模式：所见即所得编辑（WPS 风格完整工具栏，支持图片/视频上传，复用 /api/v1/files）
+  - HTML源码模式：直接编辑/粘贴完整 HTML（可保留表格边框、cellpadding 等 wangEditor 模型不支持的样式）
+  - 粘贴清洗：Word/网页/完整 HTML 自动提取正文，剔除脚本、Office 私有标签与无效样式
 -->
 <template>
   <div class="editor-wrapper">
@@ -15,7 +15,7 @@
           size="small"
           plain
           :type="!sourceMode ? 'primary' : 'default'"
-          @click="sourceMode = false"
+          @click="showVisualMode"
         >
           可视化
         </el-button>
@@ -29,21 +29,23 @@
         </el-button>
       </div>
     </div>
-    <Editor
-      v-if="!sourceMode"
-      v-model="content"
-      :default-config="editorConfig"
-      mode="default"
-      @on-created="handleCreated"
-    />
+    <div v-if="!sourceMode" class="editor-body" :style="{ height }">
+      <Editor
+        v-model="content"
+        :default-config="editorConfig"
+        mode="default"
+        @on-created="handleCreated"
+      />
+    </div>
     <el-input
       v-else
       v-model="content"
       type="textarea"
-      :rows="16"
+      :rows="20"
       resize="vertical"
       class="source-area"
       placeholder="在此粘贴 HTML 源码，支持表格边框、cellpadding 等完整样式；编辑后内容即为最终保存内容"
+      @paste="handleSourcePaste"
     />
   </div>
 </template>
@@ -52,6 +54,7 @@
 import { ref, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { Editor, Toolbar } from "@wangeditor-next/editor-for-vue";
+import type { IToolbarConfig } from "@wangeditor-next/editor";
 import "@wangeditor-next/editor/dist/css/style.css"; // 引入 CSS
 import request from "@/utils/request";
 import { getFullImageUrl } from "@/utils/url";
@@ -62,10 +65,13 @@ const props = withDefaults(
     placeholder?: string;
     /** 是否启用图片/视频上传（默认 true） */
     upload?: boolean;
+    /** 编辑区高度（超出后内部滚动） */
+    height?: string;
   }>(),
   {
     placeholder: "请输入内容...",
     upload: true,
+    height: "460px",
   }
 );
 const emit = defineEmits<{
@@ -77,7 +83,180 @@ const sourceMode = ref(false);
 
 const content = ref(props.modelValue);
 const editor = shallowRef();
-const toolbarConfig = {};
+const toolbarConfig = ref<Partial<IToolbarConfig>>();
+
+/**
+ * 粘贴清洗时保留的行内样式白名单：
+ * 只保留排版必需的属性，丢弃 Word/网页带出的定位、浮动、动画等无效样式。
+ */
+const SAFE_STYLE_PROPS = new Set([
+  "font-weight",
+  "font-style",
+  "font-size",
+  "font-family",
+  "color",
+  "background-color",
+  "text-align",
+  "text-decoration",
+  "line-height",
+  "text-indent",
+  "vertical-align",
+  "border",
+  "border-collapse",
+  "border-color",
+  "border-width",
+  "border-style",
+  "padding",
+  "padding-left",
+  "padding-right",
+  "margin",
+  "margin-top",
+  "margin-bottom",
+  "margin-left",
+  "margin-right",
+  "width",
+  "height",
+  "list-style-type",
+]);
+
+/** Office 私有标签：保留子节点内容，标签本身解包掉 */
+const OFFICE_TAGS = ["o:p", "w:worddocument", "v:shape", "o:picture", "w:sdt", "m:omath"];
+
+/** 逐条过滤行内样式，去掉 mso-*、脚本、定位等无效/危险声明 */
+const cleanStyle = (style: string): string =>
+  style
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((declaration) => {
+      const index = declaration.indexOf(":");
+      if (index === -1) return null;
+      const prop = declaration.slice(0, index).trim().toLowerCase();
+      const value = declaration.slice(index + 1).trim();
+      if (!prop || !value) return null;
+      if (prop.startsWith("mso") || prop.startsWith("-webkit") || prop.startsWith("-moz"))
+        return null;
+      if (prop === "position" || prop === "float" || prop === "z-index") return null;
+      if (!SAFE_STYLE_PROPS.has(prop)) return null;
+      if (/expression|javascript:|url\s*\(/i.test(value)) return null;
+      return `${prop}: ${value}`;
+    })
+    .filter(Boolean)
+    .join("; ");
+
+/**
+ * 浏览器、Word 和 Excel 复制出来的 HTML 往往带有 office 私有标签、事件属性、
+ * 本机 file:// 图片地址和成堆的类名/内联样式。这里统一做一次清洗：
+ * 1. 完整 HTML 只取 body 正文；2. 移除脚本/样式/注释；
+ * 3. 解包 Office 私有标签；4. 过滤属性与内联样式；5. 移除空标签。
+ */
+const normalizePastedHtml = (rawHtml: string): string => {
+  if (!rawHtml.trim() || typeof DOMParser === "undefined") return rawHtml;
+
+  const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+
+  // 1. 非正文节点直接移除
+  doc
+    .querySelectorAll(
+      "script, style, meta, link, title, base, iframe, object, embed, xml, form, input, button, colgroup"
+    )
+    .forEach((node) => node.remove());
+
+  // 2. 移除 HTML 注释（Word 的 <!--[if gte mso 9]> 条件注释）
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_COMMENT);
+  const comments: ChildNode[] = [];
+  while (walker.nextNode()) comments.push(walker.currentNode as ChildNode);
+  comments.forEach((node) => node.remove());
+
+  // 3. 解包 Office 私有标签，未知的命名空间标签直接移除
+  doc.querySelectorAll("*").forEach((node) => {
+    const tag = node.tagName.toLowerCase();
+    if (!tag.includes(":")) return;
+    if (OFFICE_TAGS.includes(tag)) {
+      const fragment = doc.createDocumentFragment();
+      while (node.firstChild) fragment.appendChild(node.firstChild);
+      node.replaceWith(fragment);
+    } else {
+      node.remove();
+    }
+  });
+
+  // 4. 清理属性与内联样式
+  doc.querySelectorAll("*").forEach((node) => {
+    Array.from(node.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim();
+      if (
+        name.startsWith("on") ||
+        name === "class" ||
+        name === "id" ||
+        name === "xmlns" ||
+        name.startsWith("xmlns:") ||
+        name.startsWith("mso-") ||
+        name.startsWith("data-")
+      ) {
+        node.removeAttribute(attribute.name);
+        return;
+      }
+      if (
+        (name === "href" || name === "src" || name === "poster") &&
+        /^(javascript|vbscript|file):/i.test(value)
+      ) {
+        node.removeAttribute(attribute.name);
+        return;
+      }
+      if (name === "style") {
+        const cleaned = cleanStyle(value);
+        if (cleaned) node.setAttribute("style", cleaned);
+        else node.removeAttribute("style");
+      }
+    });
+  });
+
+  // 5. 移除没有内容的空标签（Word 会产出大量空 span/p）
+  doc.querySelectorAll("span, font, p, div").forEach((node) => {
+    const hasMedia = node.querySelector("img, table, video, br");
+    if (!hasMedia && !(node.textContent || "").trim()) node.remove();
+  });
+
+  return doc.body.innerHTML.trim();
+};
+
+/** 源码模式粘贴：完整 HTML / Word 内容清洗后整体替换，普通片段走默认插入 */
+const handleSourcePaste = (event: ClipboardEvent) => {
+  const clipboard = event.clipboardData;
+  if (!clipboard) return;
+  const html = clipboard.getData("text/html");
+  if (!html) return;
+  const isFullDocument =
+    /<(?:!doctype|html|head|body)\b/i.test(html) || /mso-|urn:schemas-microsoft-com/i.test(html);
+  if (!isFullDocument) return;
+  event.preventDefault();
+  content.value = normalizePastedHtml(html);
+};
+
+const showVisualMode = () => {
+  // 兼容用户在源码模式粘贴的完整 ss.html 文件。
+  if (/<(?:!doctype|html|head|body)\b/i.test(content.value)) {
+    content.value = normalizePastedHtml(content.value);
+  }
+  sourceMode.value = false;
+};
+
+/** 处理富文本编辑器的粘贴事件，避免 WangEditor 的默认过滤吞掉整段内容。 */
+const customPaste = (editorInstance: any, event: ClipboardEvent): boolean => {
+  const clipboard = event.clipboardData;
+  if (!clipboard) return true;
+
+  const html = normalizePastedHtml(clipboard.getData("text/html"));
+  const text = clipboard.getData("text/plain");
+  if (html) {
+    editorInstance.dangerouslyInsertHtml(html);
+  } else if (text) {
+    editorInstance.insertText(text);
+  }
+  return false;
+};
 
 /** 图片/视频上传到文件服务后插入编辑器 */
 const uploadFile = async (
@@ -97,8 +276,47 @@ const uploadFile = async (
   }
 };
 
+// WPS 风格工具栏：标题 / 字号 / 字体 / 加粗等 / 颜色 / 对齐 / 列表 / 表格 / 链接 / 撤销重做 / 全屏
+toolbarConfig.value = {
+  toolbarKeys: [
+    "headerSelect",
+    "fontSize",
+    "fontFamily",
+    "|",
+    "bold",
+    "italic",
+    "underline",
+    "through",
+    "|",
+    "color",
+    "bgColor",
+    "|",
+    "justifyLeft",
+    "justifyCenter",
+    "justifyRight",
+    "|",
+    "bulletedList",
+    "numberedList",
+    "|",
+    "insertTable",
+    "insertLink",
+    "uploadImage",
+    "uploadVideo",
+    "|",
+    "divider",
+    "|",
+    "undo",
+    "redo",
+    "|",
+    "fullScreen",
+  ],
+  // 隐藏工具栏里的 emoji、代码块、引用等，保持电商场景的简洁
+  excludeKeys: ["emotion", "codeBlock", "blockquote", "todo", "group-video"],
+};
+
 const editorConfig = {
   placeholder: props.placeholder,
+  customPaste,
   MENU_CONF: {
     uploadImage: props.upload
       ? {
@@ -135,6 +353,26 @@ watch(
 const handleCreated = (newEditor: any) => {
   editor.value = newEditor;
 };
+
+/**
+ * 在正文末尾追加 HTML（用于"插入商品详情长图"）。
+ * 走编辑器 API 而不是直接替换 v-model，保证追加动作可被撤销/重做。
+ */
+const appendHtml = (html: string) => {
+  if (!html) return;
+  if (sourceMode.value) {
+    content.value = `${content.value || ""}\n${html}`;
+    return;
+  }
+  const instance = editor.value;
+  if (!instance) return;
+  // focus(true) 把光标移动到正文末尾，再插入 HTML
+  instance.focus(true);
+  instance.dangerouslyInsertHtml(html);
+  content.value = instance.getHtml();
+};
+
+defineExpose({ appendHtml });
 </script>
 
 <style>
@@ -142,10 +380,15 @@ const handleCreated = (newEditor: any) => {
   overflow: hidden;
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--el-color-primary);
+  }
 
   .editor-toolbar-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     border-bottom: 1px solid var(--el-border-color);
 
@@ -159,8 +402,23 @@ const handleCreated = (newEditor: any) => {
       display: flex;
       flex-shrink: 0;
       gap: 0;
-      margin-right: 8px;
+      margin: 4px 8px 0 0;
     }
+  }
+
+  /* 编辑区固定高度，长文在内部滚动，避免表单被无限撑开 */
+  .editor-body .w-e-text-container {
+    height: 100% !important;
+  }
+
+  .editor-body .w-e-scroll {
+    overflow-y: auto;
+  }
+
+  .editor-body [data-slate-editor] {
+    box-sizing: border-box;
+    min-height: 100% !important;
+    padding: 12px 16px;
   }
 
   .source-area {
@@ -168,10 +426,10 @@ const handleCreated = (newEditor: any) => {
     font-size: 13px;
     border: none;
     border-radius: 0;
+  }
 
-    :deep(textarea) {
-      font-family: inherit;
-    }
+  .source-area textarea {
+    font-family: inherit;
   }
 }
 </style>
