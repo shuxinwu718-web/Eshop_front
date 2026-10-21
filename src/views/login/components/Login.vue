@@ -387,6 +387,13 @@ onMounted(() => {
     width: 130px;
     height: 48px;
     border-radius: 8px;
+
+    // 极窄屏（320-400px）收窄按钮，避免验证码输入框被挤到无法输入
+    @media (max-width: 400px) {
+      width: auto;
+      min-width: 104px;
+      padding: 0 12px;
+    }
   }
 
   .captcha-image {
@@ -401,6 +408,11 @@ onMounted(() => {
 
     &:hover {
       border-color: var(--el-color-primary);
+    }
+
+    // 与 code-btn 保持一致，极窄屏让出宽度给输入框
+    @media (max-width: 400px) {
+      width: 104px;
     }
 
     img {

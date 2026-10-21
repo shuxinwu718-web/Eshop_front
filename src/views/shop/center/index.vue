@@ -301,6 +301,10 @@
               <el-button type="primary" link @click="clearHistory">清空历史</el-button>
             </div>
           </div>
+          <p class="history-retention-tip">
+            <el-icon><InfoFilled /></el-icon>
+            浏览历史仅保留最近 30 天，超期记录会自动清理
+          </p>
           <div v-loading="historyLoading" class="history-grid">
             <div
               v-for="item in historyList"
@@ -345,6 +349,7 @@ import {
   Search,
   Shop,
   Brush,
+  InfoFilled,
 } from "@element-plus/icons-vue";
 import { getFullImageUrl } from "@/utils/url";
 import { useCartStore } from "@/store/modules/cart";
@@ -1057,6 +1062,25 @@ onMounted(async () => {
 }
 
 .history-section {
+  .section-header {
+    margin-bottom: 8px;
+  }
+
+  .history-retention-tip {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0 0 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+
+    .el-icon {
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+  }
+
   .history-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

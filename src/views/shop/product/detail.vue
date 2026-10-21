@@ -207,7 +207,11 @@
 
     <!-- 移动端：底部固定操作栏（Dock） -->
     <div class="mb-dock">
-      <button class="dock-icon-btn" @click="toggleFavorite">
+      <button
+        class="dock-icon-btn"
+        :class="{ 'is-favorited': isFavorited }"
+        @click="toggleFavorite"
+      >
         <el-icon v-if="isFavorited" class="dock-icon"><StarFilled /></el-icon>
         <el-icon v-else class="dock-icon"><Star /></el-icon>
         <span>{{ isFavorited ? "已收藏" : "收藏" }}</span>
@@ -744,43 +748,53 @@ watch(
     max-width: 960px;
     margin: 0 auto;
     line-height: 1.8;
-    color: var(--el-text-color-primary) !important;
+    color: var(--el-text-color-regular);
     word-break: normal;
     overflow-wrap: anywhere;
     -webkit-user-select: text;
     user-select: text;
 
-    :deep(p),
-    :deep(span),
-    :deep(div),
-    :deep(li),
-    :deep(blockquote) {
-      color: var(--el-text-color-regular) !important;
-    }
-
+    /* 不再强制覆盖行内颜色：商家在编辑器里设置的文字颜色需要保留 */
     :deep(a) {
-      color: var(--el-color-primary) !important;
+      color: var(--el-color-primary);
     }
 
-    /* 统一商家富文本里的卖点标题（有的带图标、字号不一致，统一为 18px 深色加粗） */
+    /* 标题按层级给出字号差，保留商家在编辑器里选择的标题级别 */
+    :deep(h1) {
+      font-size: 24px;
+    }
+
+    :deep(h2) {
+      font-size: 21px;
+    }
+
+    :deep(h3) {
+      font-size: 18px;
+    }
+
+    :deep(h4) {
+      font-size: 16px;
+    }
+
     :deep(h1),
     :deep(h2),
     :deep(h3),
     :deep(h4) {
-      margin: 32px 0 12px;
-      font-size: 18px;
+      margin: 28px 0 12px;
       font-weight: 700;
       line-height: 1.5;
-      color: var(--el-text-color-primary) !important;
+      color: var(--el-text-color-primary);
     }
 
     :deep(img) {
-      /* 详情长图惯例：整宽等比缩放，消除窄图靠左造成的留白 */
-      width: 100%;
+      /* 长图整宽等比缩放；未设宽度的小图保持原始尺寸居中，避免被强行放大 */
+      display: block;
+      width: auto;
+      max-width: 100%;
       height: auto;
       /* 大图与下方文字留 40px 间距，呼吸感更强 */
-      margin-bottom: 40px;
-      border-radius: 8px;
+      margin: 0 auto 40px;
+      border-radius: var(--radius-md);
     }
 
     :deep(video),
@@ -1011,20 +1025,12 @@ watch(
         margin-bottom: 12px;
       }
 
-      /* 富文本正文强制深色，覆盖商家编辑时残留的浅色内联 style（!important 压过 inline style） */
+      /* 富文本正文兜底深色；商家在编辑器里设置的行内颜色优先 */
       .description-content {
-        color: var(--el-text-color-primary) !important;
-
-        :deep(p),
-        :deep(span),
-        :deep(div),
-        :deep(li),
-        :deep(blockquote) {
-          color: var(--el-text-color-regular) !important;
-        }
+        color: var(--el-text-color-primary);
 
         :deep(a) {
-          color: var(--el-color-primary) !important;
+          color: var(--el-color-primary);
         }
       }
     }
@@ -1057,6 +1063,11 @@ watch(
 
         .dock-icon {
           font-size: 20px;
+        }
+
+        /* 已收藏：图标与文字改为黄色，与未收藏的次要灰区分 */
+        &.is-favorited {
+          color: var(--el-color-warning);
         }
       }
 

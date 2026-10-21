@@ -17,15 +17,26 @@
       <div class="auth-shell">
         <!-- 左：品牌展示区 -->
         <aside class="brand-side">
-          <div class="brand-side__logo">
-            <el-icon :size="34" color="#ff5c33"><Shop /></el-icon>
+          <div class="brand-lockup">
+            <svg
+              class="brand-mark"
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+              <path d="M3 6h18" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <span class="brand-word">E-Shop</span>
           </div>
-          <h1 class="brand-side__title">电商平台</h1>
-          <p class="brand-side__slogan">
-            一站式购物体验
-            <br />
-            正品保障 · 极速送达
-          </p>
+          <p class="brand-name">悦选商场</p>
+          <p class="brand-side__slogan">好物不必等，正品送到家</p>
 
           <ul class="brand-side__features">
             <li v-for="f in features" :key="f.title" class="feature-item">
@@ -44,6 +55,24 @@
 
         <!-- 右：表单区 -->
         <section class="form-side">
+          <!-- 窄屏下左侧品牌区隐藏，用这里的字标保留品牌露出 -->
+          <div class="mobile-brand">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+              <path d="M3 6h18" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <span>E-Shop</span>
+          </div>
           <transition name="fade-slide" mode="out-in">
             <component
               :is="formComponents[component]"
@@ -58,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { Shop, CircleCheckFilled, Van, Service } from "@element-plus/icons-vue";
+import { CircleCheckFilled, Van, Service } from "@element-plus/icons-vue";
 import ThemeSwitch from "@/components/ThemeSwitch/index.vue";
 
 type LayoutMap = "login" | "register" | "resetPwd";
@@ -89,6 +118,8 @@ const formComponents = {
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
+  // 移动端地址栏收起/展开时 vh 不跟随可视区，dvh 可避免页面高度跳动
+  min-height: 100dvh;
   overflow: hidden;
   // 浅色实底，衬托白色登录卡
   background: var(--page-bg, #f5f8fd);
@@ -131,6 +162,8 @@ const formComponents = {
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 4vw, 3rem);
+  // 底部留出 iPhone 横条等安全区，避免卡片下沿被遮挡
+  padding-bottom: calc(clamp(1.5rem, 4vw, 3rem) + env(safe-area-inset-bottom));
 }
 
 .auth-shell {
@@ -155,25 +188,25 @@ const formComponents = {
   color: #fff;
   background: #ff5c33;
 
-  &__logo {
+  // 图标与字标同一基线组成品牌 lockup，不加容器，避免模板感
+  .brand-lockup {
     display: flex;
+    gap: 0.6rem;
     align-items: center;
-    justify-content: center;
-    width: 64px;
-    height: 64px;
-    margin-bottom: 1.6rem;
-    // P1-3：白色实底圆 + 珊瑚橙购物袋，作为可记忆的品牌符号
-    // （纯色对比，无渐变/毛玻璃/光晕；柔和投影为地面感，非辉光）
-    background: #fff;
-    border-radius: var(--radius-pill);
-    box-shadow: 0 8px 20px rgba(214, 51, 0, 0.28);
+    margin-bottom: 0.5rem;
   }
 
-  &__title {
-    margin: 0 0 0.75rem;
-    font-size: 2rem;
+  .brand-word {
+    font-size: 1.75rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-name {
+    margin: 0 0 1.4rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.72);
+    letter-spacing: 3px;
   }
 
   &__slogan {
@@ -222,10 +255,24 @@ const formComponents = {
 .form-side {
   display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 1.5rem;
   align-items: center;
   justify-content: center;
   padding: 2.6rem 2.8rem;
   background: var(--el-bg-color);
+}
+
+// 仅在窄屏（左侧品牌区隐藏时）出现，保证手机上仍有品牌露出
+.mobile-brand {
+  display: none;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  letter-spacing: -0.3px;
 }
 
 .auth-panel__form {
@@ -292,6 +339,17 @@ const formComponents = {
     min-height: auto;
   }
 
+  .mobile-brand {
+    display: flex;
+  }
+
+  // iOS Safari 会在输入框字号小于 16px 时自动放大页面
+  .auth-panel__form {
+    :deep(.el-input__inner) {
+      font-size: 16px;
+    }
+  }
+
   .form-side {
     padding: 2.2rem 1.8rem;
   }
@@ -305,6 +363,7 @@ const formComponents = {
 
   .auth-view__wrapper {
     padding: 1.25rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
   }
 
   .form-side {

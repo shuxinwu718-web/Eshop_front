@@ -37,11 +37,7 @@
               stroke-linejoin="round"
             >
               <rect x="3" y="5" width="18" height="16" rx="2" />
-              <p
-                ath
-                d="M3 9
-.             5h18"
-              />
+              <path d="M3 9.5h18" />
 
               <path d="M8 3v4M16 3v4" />
               <path d="m9.5 15 2 2 3.5-3.5" />

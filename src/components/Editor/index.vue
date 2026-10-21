@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch } from "vue";
+import { nextTick, ref, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { Editor, Toolbar } from "@wangeditor-next/editor-for-vue";
 import type { IToolbarConfig } from "@wangeditor-next/editor";
@@ -213,26 +213,62 @@ const normalizePastedHtml = (rawHtml: string): string => {
     });
   });
 
-  // 5. 移除没有内容的空标签（Word 会产出大量空 span/p）
-  doc.querySelectorAll("span, font, p, div").forEach((node) => {
-    const hasMedia = node.querySelector("img, table, video, br");
-    if (!hasMedia && !(node.textContent || "").trim()) node.remove();
+  // 5. 只清理空的行内标签（Word 会产出大量空 span/font）。
+  //    段落 p 必须保留，否则网页/Word 里的空行和段间距会被吞掉；
+  //    div 仅在没有任何子节点时删除，避免连带删掉内部的空行段落。
+  doc.querySelectorAll("span, font, a").forEach((node) => {
+    const hasMedia = node.querySelector("img, br, video");
+    const hasText = (node.textContent || "").replace(/\u00a0/g, "").trim();
+    if (!hasMedia && !hasText) node.remove();
+  });
+  doc.querySelectorAll("div").forEach((node) => {
+    if (node.children.length) return;
+    const hasText = (node.textContent || "").replace(/\u00a0/g, "").trim();
+    if (!hasText) node.remove();
   });
 
   return doc.body.innerHTML.trim();
 };
 
-/** 源码模式粘贴：完整 HTML / Word 内容清洗后整体替换，普通片段走默认插入 */
+/**
+ * 源码模式粘贴：
+ * - 从代码编辑器复制 HTML 源码时，剪贴板只有 text/plain 且内容本身带标签 → 交给 textarea 默认插入
+ * - 从网页/公众号/在线文档复制时，text/plain 是渲染后的纯文本，真正的结构在 text/html
+ *   这里取 text/html 清洗后按源码插入，保证切到源码模式能得到完整结构
+ */
 const handleSourcePaste = (event: ClipboardEvent) => {
   const clipboard = event.clipboardData;
-  if (!clipboard) return;
+  const target = event.target as HTMLTextAreaElement | null;
+  if (!clipboard || !target || target.tagName !== "TEXTAREA") return;
+
+  const text = clipboard.getData("text/plain");
   const html = clipboard.getData("text/html");
-  if (!html) return;
+
+  // 剪贴板内容本身就是 HTML 源码，或没有富文本版本，保持默认粘贴
+  if (!html || /<\/?[a-z][\s\S]*>/i.test(text)) return;
+
+  const cleaned = normalizePastedHtml(html);
+  if (!cleaned) return;
+
+  event.preventDefault();
+
   const isFullDocument =
     /<(?:!doctype|html|head|body)\b/i.test(html) || /mso-|urn:schemas-microsoft-com/i.test(html);
-  if (!isFullDocument) return;
-  event.preventDefault();
-  content.value = normalizePastedHtml(html);
+  if (isFullDocument) {
+    content.value = cleaned;
+    return;
+  }
+
+  // 普通片段：插入到当前光标位置
+  const start = target.selectionStart ?? content.value.length;
+  const end = target.selectionEnd ?? start;
+  content.value = `${content.value.slice(0, start)}${cleaned}${content.value.slice(end)}`;
+
+  nextTick(() => {
+    const position = start + cleaned.length;
+    target.setSelectionRange(position, position);
+    target.focus();
+  });
 };
 
 const showVisualMode = () => {
@@ -243,15 +279,27 @@ const showVisualMode = () => {
   sourceMode.value = false;
 };
 
+/** 网页/在线文档常见的语义块，wangEditor 的模型不认识，粘贴后会重排 */
+const COMPLEX_BLOCK_TAGS = /<(?:section|article|figure|figcaption|main|header|footer)\b/i;
+let complexPasteHinted = false;
+
 /** 处理富文本编辑器的粘贴事件，避免 WangEditor 的默认过滤吞掉整段内容。 */
 const customPaste = (editorInstance: any, event: ClipboardEvent): boolean => {
   const clipboard = event.clipboardData;
   if (!clipboard) return true;
 
-  const html = normalizePastedHtml(clipboard.getData("text/html"));
+  const rawHtml = clipboard.getData("text/html");
+  const html = normalizePastedHtml(rawHtml);
   const text = clipboard.getData("text/plain");
   if (html) {
     editorInstance.dangerouslyInsertHtml(html);
+    // 复杂网页结构在可视化模式下必然被编辑器重排，提示一次正确做法
+    if (!complexPasteHinted && COMPLEX_BLOCK_TAGS.test(rawHtml)) {
+      complexPasteHinted = true;
+      ElMessage.warning(
+        "检测到网页排版结构，可视化模式会重排段落。需要完整保留结构请切到「HTML源码」模式粘贴"
+      );
+    }
   } else if (text) {
     editorInstance.insertText(text);
   }

@@ -617,6 +617,8 @@ const submitReply = async (comment: CommentVO) => {
 
     .sort-select {
       flex-shrink: 0;
+      /* el-select 根节点默认 100% 宽，在 flex 行里会被拉满，这里按选项文案给固定宽度 */
+      width: 120px;
     }
   }
 
