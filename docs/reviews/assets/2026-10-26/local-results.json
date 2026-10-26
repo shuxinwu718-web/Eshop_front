@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-26",
+  "source_commit": "76f337df94596262073c13eaec24fd622627ef0d",
+  "scope": "Local production build with intercepted synthetic API responses; not live deployment tests. No real credentials, orders, payments, or data changes.",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "observations": [
+    {
+      "case": "AI tip geometry desktop",
+      "box": {
+        "x": 1294,
+        "y": 505,
+        "width": 56,
+        "height": 435
+      }
+    },
+    {
+      "case": "Header registration entry",
+      "url": "http://127.0.0.1:4173/#/login",
+      "passwordLoginSelected": "true",
+      "registrationTitle": "登 录"
+    },
+    {
+      "case": "Reversed price interval",
+      "request": {
+        "minPrice": "200",
+        "maxPrice": "100",
+        "page": "0",
+        "size": "12"
+      }
+    },
+    {
+      "case": "Negative price",
+      "request": {
+        "minPrice": "-5",
+        "page": "0",
+        "size": "12"
+      }
+    },
+    {
+      "case": "Empty mobile catalog",
+      "text": "— 没有更多了 —"
+    },
+    {
+      "case": "Failed mobile catalog",
+      "text": "— 没有更多了 —"
+    },
+    {
+      "case": "Mobile login 390",
+      "geometry": {
+        "viewport": 390,
+        "document": 390
+      }
+    },
+    {
+      "case": "Checkout selected SKU scope",
+      "productRows": ["测试商品 黑色", "测试商品 白色"],
+      "subtotal": "实付金额\n¥30.00"
+    },
+    {
+      "case": "Checkout change address",
+      "url": "http://127.0.0.1:4173/#/shop/address?select=true",
+      "addressBButtons": ["编辑", "删除"],
+      "text": "收货地址\n导出Excel\n新增地址\n本地测试地址A\n13800000000\n默认\n测试地址A\n编辑\n删除\n本地测试地址B\n13900000000\n测试地址B\n编辑\n删除"
+    },
+    {
+      "case": "Missing payment record",
+      "title": "未找到支付记录",
+      "spinner": "result-icon spin",
+      "description": "订单号："
+    }
+  ]
+}

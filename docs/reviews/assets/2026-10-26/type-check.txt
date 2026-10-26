@@ -1,0 +1,177 @@
+$ vue-tsc --noEmit
+src/components/Upload/FileUpload/index.vue(117,20): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(name: string, options: ({ required: true; } | { default: DefineModelDefault<() => never[]>; }) & Omit<PropOptions<() => never[], () => never[]>, "default"> & DefineModelOptions<...>): ModelRef<...>', gave the following error.
+    Type 'PropType<FileInfo[]>' is not assignable to type 'true | PropType<() => never[]> | null | undefined'.
+      Type 'new (...args: any[]) => FileInfo[]' is not assignable to type 'true | PropType<() => never[]> | null | undefined'.
+        Type 'new (...args: any[]) => FileInfo[]' is not assignable to type 'new (...args: any[]) => () => never[]'.
+          Type 'FileInfo[]' is not assignable to type '() => never[]'.
+            Type 'FileInfo[]' provides no match for the signature '(): never[]'.
+  Overload 2 of 4, '(name: string, options?: DefineModelRuntimeOptions<FileInfo[], FileInfo[], FileInfo[]> | undefined): ModelRef<FileInfo[] | undefined, string, FileInfo[] | undefined, FileInfo[] | undefined>', gave the following error.
+    Object literal may only specify known properties, and 'default' does not exist in type 'DefineModelRuntimeOptions<FileInfo[], FileInfo[], FileInfo[]>'.
+src/components/Upload/FileUpload/index.vue(129,28): error TS2339: Property 'map' does not exist on type '() => never[]'.
+src/components/Upload/FileUpload/index.vue(129,33): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/components/Upload/FileUpload/index.vue(221,7): error TS2322: Type 'any[]' is not assignable to type '() => never[]'.
+  Type 'any[]' provides no match for the signature '(): never[]'.
+src/components/Upload/FileUpload/index.vue(221,30): error TS2488: Type '() => never[]' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/components/Upload/FileUpload/index.vue(239,41): error TS2339: Property 'filter' does not exist on type '() => never[]'.
+src/components/Upload/FileUpload/index.vue(239,49): error TS7006: Parameter 'file' implicitly has an 'any' type.
+src/components/Upload/MultiImageUpload/index.vue(37,6): error TS2322: Type '() => never[]' is not assignable to type 'string[]'.
+src/components/Upload/MultiImageUpload/index.vue(89,20): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(name: string, options: ({ required: true; } | { default: DefineModelDefault<() => never[]>; }) & Omit<PropOptions<() => never[], () => never[]>, "default"> & DefineModelOptions<...>): ModelRef<...>', gave the following error.
+    Type 'PropType<string[]>' is not assignable to type 'true | PropType<() => never[]> | null | undefined'.
+      Type 'new (...args: any[]) => string[]' is not assignable to type 'true | PropType<() => never[]> | null | undefined'.
+        Type 'new (...args: any[]) => string[]' is not assignable to type 'new (...args: any[]) => () => never[]'.
+          Type 'string[]' is not assignable to type '() => never[]'.
+            Type 'string[]' provides no match for the signature '(): never[]'.
+  Overload 2 of 4, '(name: string, options?: DefineModelRuntimeOptions<string[], string[], string[]> | undefined): ModelRef<string[] | undefined, string, string[] | undefined, string[] | undefined>', gave the following error.
+    Object literal may only specify known properties, and 'default' does not exist in type 'DefineModelRuntimeOptions<string[], string[], string[]>'.
+src/components/Upload/MultiImageUpload/index.vue(101,36): error TS2339: Property 'indexOf' does not exist on type '() => never[]'.
+src/components/Upload/MultiImageUpload/index.vue(104,24): error TS2339: Property 'splice' does not exist on type '() => never[]'.
+src/components/Upload/MultiImageUpload/index.vue(186,5): error TS7053: Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '() => never[]'.
+  No index signature with a parameter of type 'number' was found on type '() => never[]'.
+src/components/Upload/MultiImageUpload/index.vue(201,46): error TS2339: Property 'findIndex' does not exist on type '() => never[]'.
+src/components/Upload/MultiImageUpload/index.vue(201,57): error TS7006: Parameter 'url' implicitly has an 'any' type.
+src/components/Upload/MultiImageUpload/index.vue(213,37): error TS2339: Property 'map' does not exist on type '() => never[]'.
+src/components/Upload/MultiImageUpload/index.vue(213,42): error TS7006: Parameter 'url' implicitly has an 'any' type.
+src/components/Upload/SingleImageUpload/index.vue(17,12): error TS2322: Type '() => string' is not assignable to type 'string'.
+src/components/Upload/SingleImageUpload/index.vue(18,31): error TS2322: Type '() => string' is not assignable to type 'string'.
+src/components/Upload/SingleImageUpload/index.vue(86,20): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(name: string, options: ({ required: true; } | { default: DefineModelDefault<() => string>; }) & Omit<PropOptions<() => string, () => string>, "default"> & DefineModelOptions<...>): ModelRef<...>', gave the following error.
+    Type 'StringConstructor' is not assignable to type 'true | PropType<() => string> | null | undefined'.
+      Type 'StringConstructor' is not assignable to type '() => () => string'.
+        Type 'string' is not assignable to type '() => string'.
+  Overload 2 of 4, '(name: string, options?: DefineModelRuntimeOptions<string, string, string> | undefined): ModelRef<string | undefined, string, string | undefined, string | undefined>', gave the following error.
+    Object literal may only specify known properties, and 'default' does not exist in type 'DefineModelRuntimeOptions<string, string, string>'.
+src/components/Upload/SingleImageUpload/index.vue(160,3): error TS2322: Type 'string' is not assignable to type '() => string'.
+src/components/Upload/SingleImageUpload/index.vue(170,3): error TS2322: Type 'string' is not assignable to type '() => string'.
+src/views/eshop/accessLog/index.vue(54,22): error TS2322: Type 'string' is not assignable to type '"primary" | "success" | "warning" | "info" | "danger" | undefined'.
+src/views/eshop/address/index.vue(30,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'AddressItem'.
+  Type 'DefaultRow' is missing the following properties from type 'AddressItem': receiverName, receiverPhone, detailAddress
+src/views/eshop/address/index.vue(31,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'AddressItem'.
+  Type 'DefaultRow' is missing the following properties from type 'AddressItem': receiverName, receiverPhone, detailAddress
+src/views/eshop/address/index.vue(200,12): error TS2790: The operand of a 'delete' operator must be optional.
+src/views/eshop/cart/index.vue(38,46): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CartItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CartItem': id, userId, productId, quantity, and 2 more.
+src/views/eshop/cart/index.vue(51,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CartItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CartItem': id, userId, productId, quantity, and 2 more.
+src/views/eshop/category/index.vue(28,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CategoryItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CategoryItem': id, name, parentId, level, and 2 more.
+src/views/eshop/category/index.vue(32,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CategoryItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CategoryItem': id, name, parentId, level, and 2 more.
+src/views/eshop/comment/index.vue(114,36): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CommentItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CommentItem': id, productId, userId, rating, and 6 more.
+src/views/eshop/comment/index.vue(118,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CommentItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CommentItem': id, productId, userId, rating, and 6 more.
+src/views/eshop/coupon/index.vue(79,46): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CouponItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CouponItem': id, name, type, value, and 10 more.
+src/views/eshop/coupon/index.vue(86,63): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CouponItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CouponItem': id, name, type, value, and 10 more.
+src/views/eshop/coupon/index.vue(87,64): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'CouponItem'.
+  Type 'DefaultRow' is missing the following properties from type 'CouponItem': id, name, type, value, and 10 more.
+src/views/eshop/festival/index.vue(70,46): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'FestivalPlanItem'.
+  Type 'DefaultRow' is missing the following properties from type 'FestivalPlanItem': id, couponId, couponName, couponType, and 11 more.
+src/views/eshop/festival/index.vue(77,63): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'FestivalPlanItem'.
+  Type 'DefaultRow' is missing the following properties from type 'FestivalPlanItem': id, couponId, couponName, couponType, and 11 more.
+src/views/eshop/festival/index.vue(78,64): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'FestivalPlanItem'.
+  Type 'DefaultRow' is missing the following properties from type 'FestivalPlanItem': id, couponId, couponName, couponType, and 11 more.
+src/views/eshop/introAudit/index.vue(53,73): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'IntroAuditItem'.
+  Type 'DefaultRow' is missing the following properties from type 'IntroAuditItem': id, productId, versionNo, content, and 3 more.
+src/views/eshop/introAudit/index.vue(54,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'IntroAuditItem'.
+  Type 'DefaultRow' is missing the following properties from type 'IntroAuditItem': id, productId, versionNo, content, and 3 more.
+src/views/eshop/introAudit/index.vue(55,75): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'IntroAuditItem'.
+  Type 'DefaultRow' is missing the following properties from type 'IntroAuditItem': id, productId, versionNo, content, and 3 more.
+src/views/eshop/marketing/index.vue(62,46): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MarketingActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'MarketingActivityItem': id, activityName, startTime, endTime, and 2 more.
+src/views/eshop/marketing/index.vue(69,63): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MarketingActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'MarketingActivityItem': id, activityName, startTime, endTime, and 2 more.
+src/views/eshop/marketing/index.vue(70,64): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MarketingActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'MarketingActivityItem': id, activityName, startTime, endTime, and 2 more.
+src/views/eshop/merchantApply/index.vue(67,29): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ApplyRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'ApplyRecord': id, userId, username, nickname, and 9 more.
+src/views/eshop/merchantApply/index.vue(76,40): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ApplyRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'ApplyRecord': id, userId, username, nickname, and 9 more.
+src/views/eshop/merchantApply/index.vue(80,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ApplyRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'ApplyRecord': id, userId, username, nickname, and 9 more.
+src/views/eshop/order/index.vue(59,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'OrderVO'.
+  Type 'DefaultRow' is missing the following properties from type 'OrderVO': id, orderNo, userId, totalAmount, and 3 more.
+src/views/eshop/order/index.vue(65,36): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'OrderVO'.
+  Type 'DefaultRow' is missing the following properties from type 'OrderVO': id, orderNo, userId, totalAmount, and 3 more.
+src/views/eshop/product/index.vue(52,76): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ProductItem'.
+  Type 'DefaultRow' is missing the following properties from type 'ProductItem': id, name, namePinyin, categoryId, and 6 more.
+src/views/eshop/product/index.vue(57,36): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ProductItem'.
+  Type 'DefaultRow' is missing the following properties from type 'ProductItem': id, name, namePinyin, categoryId, and 6 more.
+src/views/eshop/product/index.vue(61,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ProductItem'.
+  Type 'DefaultRow' is missing the following properties from type 'ProductItem': id, name, namePinyin, categoryId, and 6 more.
+src/views/eshop/seckill/index.vue(78,34): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'SeckillSessionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'SeckillSessionItem': id, seckillType, couponId, sessionName, and 6 more.
+src/views/eshop/seckill/index.vue(82,90): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'SeckillSessionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'SeckillSessionItem': id, seckillType, couponId, sessionName, and 6 more.
+src/views/eshop/seckill/index.vue(89,36): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'SeckillSessionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'SeckillSessionItem': id, seckillType, couponId, sessionName, and 6 more.
+src/views/eshop/seckill/index.vue(93,64): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'SeckillSessionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'SeckillSessionItem': id, seckillType, couponId, sessionName, and 6 more.
+src/views/eshop/user/index.vue(83,40): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'UserItem'.
+  Type 'DefaultRow' is missing the following properties from type 'UserItem': id, username, phone, email, and 3 more.
+src/views/eshop/user/index.vue(120,74): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type '{ userId: number; username: string; }'.
+  Type 'DefaultRow' is missing the following properties from type '{ userId: number; username: string; }': userId, username
+src/views/merchant/GroupBuy.vue(107,22): error TS2322: Type 'string' is not assignable to type '"primary" | "success" | "warning" | "info" | "danger" | undefined'.
+src/views/merchant/GroupBuy.vue(112,74): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'GroupBuyActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'GroupBuyActivityItem': id, productId, groupPrice, targetCount, and 3 more.
+src/views/merchant/GroupBuy.vue(114,80): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'GroupBuyActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'GroupBuyActivityItem': id, productId, groupPrice, targetCount, and 3 more.
+src/views/merchant/GroupBuy.vue(119,80): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'GroupBuyActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'GroupBuyActivityItem': id, productId, groupPrice, targetCount, and 3 more.
+src/views/merchant/GroupBuy.vue(128,36): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'GroupBuyActivityItem'.
+  Type 'DefaultRow' is missing the following properties from type 'GroupBuyActivityItem': id, productId, groupPrice, targetCount, and 3 more.
+src/views/merchant/GroupBuy.vue(460,8): error TS2304: Cannot find name 'toTimeStamp'.
+src/views/merchant/GroupBuy.vue(460,49): error TS2304: Cannot find name 'toTimeStamp'.
+src/views/merchant/Orders.vue(109,38): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MerchantShipment'.
+  Type 'DefaultRow' is missing the following properties from type 'MerchantShipment': id, orderId, orderNo, orderCreateTime, and 14 more.
+src/views/merchant/ProductForm.vue(177,80): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'IntroVersionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'IntroVersionItem': id, productId, versionNo, status, createTime
+src/views/merchant/ProductForm.vue(180,80): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'IntroVersionItem'.
+  Type 'DefaultRow' is missing the following properties from type 'IntroVersionItem': id, productId, versionNo, status, createTime
+src/views/merchant/Products.vue(80,89): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MerchantProduct'.
+  Type 'DefaultRow' is missing the following properties from type 'MerchantProduct': id, name, categoryId, price, and 4 more.
+src/views/merchant/Products.vue(83,72): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MerchantProduct'.
+  Type 'DefaultRow' is missing the following properties from type 'MerchantProduct': id, name, categoryId, price, and 4 more.
+src/views/merchant/Products.vue(84,64): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'MerchantProduct'.
+  Type 'DefaultRow' is missing the following properties from type 'MerchantProduct': id, name, categoryId, price, and 4 more.
+src/views/merchant/Refund.vue(54,70): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'RefundRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'RefundRecord': id, orderId, orderNo, userId, and 6 more.
+src/views/merchant/Refund.vue(55,78): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'RefundRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'RefundRecord': id, orderId, orderNo, userId, and 6 more.
+src/views/merchant/Refund.vue(60,56): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'RefundRecord'.
+  Type 'DefaultRow' is missing the following properties from type 'RefundRecord': id, orderId, orderNo, userId, and 6 more.
+src/views/merchant/Statistics.vue(53,77): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'ProductSalesItem'.
+  Type 'DefaultRow' is missing the following properties from type 'ProductSalesItem': productId, productName, productImage, price, and 3 more.
+src/views/merchant/StoreDesign.vue(405,55): error TS2339: Property 'id' does not exist on type '{ userId?: string | undefined; username?: string | undefined; nickname?: string | undefined; avatar?: string | undefined; roles: string[]; perms: string[]; gender?: number | undefined; mobile?: string | undefined; ... 4 more ...; canSwitchTenant?: boolean | undefined; }'.
+src/views/shop/address/index.vue(170,10): error TS2790: The operand of a 'delete' operator must be optional.
+src/views/shop/center/index.vue(526,12): error TS2790: The operand of a 'delete' operator must be optional.
+src/views/shop/order/components/PayDialog/index.vue(21,46): error TS2322: Type '(value: string) => Promise<void>' is not assignable to type '(val: string | number | boolean | undefined) => any'.
+  Types of parameters 'value' and 'val' are incompatible.
+    Type 'string | number | boolean | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/views/shop/product/components/CommentSection/index.vue(109,29): error TS2322: Type 'string[]' is not assignable to type '() => never[]'.
+  Type 'string[]' provides no match for the signature '(): never[]'.
+src/views/shop/product/components/GroupBuyPanel.vue(35,39): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/views/shop/product/components/GroupBuyPanel.vue(104,24): error TS2307: Cannot find module '@/api/address' or its corresponding type declarations.
+src/views/shop/product/components/GroupBuyPanel.vue(215,32): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/views/shop/store/components/StoreLayout.vue(74,29): error TS18048: 'c.claimedCount' is possibly 'undefined'.
+src/views/shop/store/components/StoreLayout.vue(158,7): error TS18048: 'coupon.claimedCount' is possibly 'undefined'.
+src/views/system/dict/dict-item.vue(63,39): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'DictItem'.
+  Type 'DefaultRow' is missing the following properties from type 'DictItem': id, dictCode, label, value, status
+src/views/system/dict/index.vue(59,83): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'DictTypeItem'.
+  Type 'DefaultRow' is missing the following properties from type 'DictTypeItem': id, name, dictCode, status
+src/views/system/log/index.vue(69,78): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'LogItem'.
+  Property 'id' is missing in type 'DefaultRow' but required in type 'LogItem'.
+src/views/system/online/index.vue(35,38): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type '{ userId: string; username: string; }'.
+  Type 'DefaultRow' is missing the following properties from type '{ userId: string; username: string; }': userId, username
+src/views/system/user/components/UserImportDialog.vue(73,18): error TS2322: Type 'string[]' is not assignable to type 'DefaultRow[]'.
+  Type 'string' is not assignable to type 'DefaultRow'.
+src/views/system/user/index.vue(126,47): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type 'UserItem'.
+  Property 'id' is missing in type 'DefaultRow' but required in type 'UserItem'.
+src/views/system/user/index.vue(259,38): error TS2345: Argument of type 'DefaultRow' is not assignable to parameter of type '{ userId: string; username: string; }'.
+  Type 'DefaultRow' is missing the following properties from type '{ userId: string; username: string; }': userId, username
+[ELIFECYCLE] Command failed with exit code 2.
