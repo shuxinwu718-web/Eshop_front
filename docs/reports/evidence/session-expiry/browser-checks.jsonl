@@ -1,0 +1,4 @@
+{"name":"public-page expiry stops polling","status":401,"url":"http://127.0.0.1:4173/#/home","tokenRetained":false,"failedRequests":2,"result":"PASS"}
+{"name":"protected-page expiry redirects","status":401,"url":"http://127.0.0.1:4173/#/login?redirect=/shop/order","tokenRetained":false,"failedRequests":2,"result":"PASS"}
+{"name":"permission denial preserves login","status":403,"url":"http://127.0.0.1:4173/#/home","tokenRetained":true,"failedRequests":2,"result":"PASS"}
+{"name":"server outage preserves login","status":500,"url":"http://127.0.0.1:4173/#/home","tokenRetained":true,"failedRequests":2,"result":"PASS"}

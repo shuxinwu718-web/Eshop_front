@@ -1,0 +1,24 @@
+✔ login state is reactive and concurrent invalidation happens only once (316.237554ms)
+✔ expires at the JWT deadline without any API request (93.752584ms)
+✔ focus check detects a deadline missed while browser is suspended (38.1559ms)
+✔ 401 expires login even on a public page (155.318717ms)
+✔ 403 and 500 do not log out a valid session (62.015798ms)
+✔ HTTP 200 with application code 401 expires the associated session (26.199839ms)
+✔ late 401 and success responses cannot affect a new login (49.484895ms)
+✔ network and cancellation errors preserve the login (35.665188ms)
+✔ same-session logout is broadcast without placing the token in the message (48.746529ms)
+✔ in-flight requests are aborted when authentication ends (25.412368ms)
+✔ login endpoints cannot invalidate a current session on a bad-password 401 (16.044781ms)
+✔ ending an old tab does not remove a newer remembered session (20.422543ms)
+✔ SSE authentication event closes the connection and invalidates the session (59.58173ms)
+✔ an SSE network error retries with backoff without ending the login (41.22585ms)
+✔ provider key 401 remains AI-only; explicit user-auth 401 expires login (81.876007ms)
+✔ cancelling an AI stream suppresses late output and completion callbacks (67.852667ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1147.414698

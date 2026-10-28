@@ -1,0 +1,31 @@
+{
+  "scope": "Spring Security chain and SSE contract tests with mocked dependencies; no production DB or Redis",
+  "results": [
+    {
+      "suite": "AuthSessionContractTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "anonymousProtectedRequestIs401",
+        "replacedSessionIs401",
+        "validSessionCanReadProtectedResource",
+        "publicResourceStillAllowsExpiredCredentialsAsGuest",
+        "permissionDenialIs403",
+        "expiredTokenIs401"
+      ]
+    },
+    {
+      "suite": "SseAuthContractTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "replacedSessionNeverRegistersAWorkingStream",
+        "invalidTokenEmitsExplicitAuthenticationEvent"
+      ]
+    }
+  ]
+}
