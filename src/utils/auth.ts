@@ -72,9 +72,11 @@ export function setupAuthSession() {
           reason === "replaced" ? "账号已在其他位置登录，请重新登录" : "请重新登录后继续操作",
         type: "warning",
       });
-      if (!publicPage && route.path !== "/login") {
-        void router.replace({ path: "/login", query: { redirect: route.fullPath } });
-      }
+    }
+    // 主动退出同样要离开受保护页面：跨标签退出时本标签不会再收到 401，
+    // 不跳转就会停在一个需要登录的页面上。
+    if (!publicPage && route.path !== "/login") {
+      void router.replace({ path: "/login", query: { redirect: route.fullPath } });
     }
   });
   setupSessionLifecycle();

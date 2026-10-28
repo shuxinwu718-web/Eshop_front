@@ -4,7 +4,7 @@ import { sessionToken } from "@/utils/session";
 import NProgress from "@/plugins/nprogress";
 import router from "@/router";
 import { useUserStore } from "@/store";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { addRecentMenu } from "@/composables/useRecentMenus";
 
 // 模块级变量：保证 profile 只请求一次
@@ -87,6 +87,9 @@ export function setupPermissionGuard() {
           // offline response must not destroy a valid login.
           if (userStore.isLoggedIn()) {
             if (to.meta?.public) return true;
+            // 服务异常不等于登录失效：保留会话，但必须给出可见反馈，
+            // 否则导航被静默取消，用户会误以为系统卡死。
+            ElMessage.error("服务暂时不可用，请稍后重试");
             NProgress.done();
             return false;
           }
