@@ -5,9 +5,9 @@ import axios, {
   type AxiosResponse,
 } from "axios";
 import qs from "qs";
-import { AuthStorage, redirectToLogin } from "@/utils/auth";
+import { AuthStorage } from "@/utils/auth";
 import { ElLoading, ElMessage } from "element-plus";
-import router from "@/router";
+import { checkSessionExpiry, invalidateSession, sessionRequest } from "./session";
 // HTTP 请求实例
 const http = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -61,76 +61,72 @@ const hideLoading = () => {
   }
 };
 
-// 请求拦截器
-http.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = AuthStorage.getAccessToken();
-    showLoading();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+type SessionConfig = InternalAxiosRequestConfig & {
+  sessionToken?: string;
+  releaseSessionRequest?: () => void;
+};
+const anonymousEndpoint = (url = "") =>
+  /^\/api\/(?:user\/(?:login|register|reset-password)(?:\/|$)|auth\/|captcha\/)/.test(url);
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+http.interceptors.request.use((config: SessionConfig) => {
+  checkSessionExpiry();
+  const token = anonymousEndpoint(config.url) ? "" : AuthStorage.getAccessToken();
+  config.sessionToken = token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    const request = sessionRequest();
+    config.signal = config.signal
+      ? AbortSignal.any([config.signal as AbortSignal, request.controller.signal])
+      : request.controller.signal;
+    config.releaseSessionRequest = request.release;
+  }
+  showLoading();
+  return config;
+});
 
-// 响应拦截器
+function finishRequest(config?: SessionConfig) {
+  config?.releaseSessionRequest?.();
+  hideLoading();
+}
+function isStale(config?: SessionConfig) {
+  return !!config?.sessionToken && config.sessionToken !== AuthStorage.getAccessToken();
+}
+function handleAuthentication(config: SessionConfig | undefined, code: number, message?: string) {
+  if (code === 401) {
+    if (config?.sessionToken) invalidateSession(config.sessionToken, "invalid");
+    else ElMessage.warning(message || "请先登录后操作");
+  } else {
+    // 403 is authorization failure, not proof that the login is expired.
+    ElMessage.warning(message || "权限不足，无法访问该资源");
+  }
+}
+
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    const { responseType } = response.config;
-
-    // 二进制数据直接返回（已结束 loading，防止全屏 loading 泄漏）
-    if (responseType === "blob" || responseType === "arraybuffer") {
-      hideLoading();
-      return response;
-    }
-
+    const config = response.config as SessionConfig;
+    finishRequest(config);
+    if (isStale(config)) throw new axios.CanceledError("忽略旧会话响应");
+    if (config.responseType === "blob" || config.responseType === "arraybuffer") return response;
     const { code, data, msg } = response.data;
-    hideLoading();
-    // E-Shop 后端成功码为 200
-    if (code === 200) {
-      return data;
-    }
-
-    // 业务异常
-    ElMessage.error(msg || "系统出错");
+    if (code === 200) return data;
+    if (code === 401 || code === 403) handleAuthentication(config, code, msg);
+    else ElMessage.error(msg || "系统出错");
     return Promise.reject(new Error(msg || "系统出错"));
   },
-
   async (error) => {
-    // 请求已进入拦截器（showLoading 已执行），任何分支都必须 hideLoading，防止全屏 loading 永久卡死
-    hideLoading();
-
-    const { response } = error;
-
+    const config = error.config as SessionConfig | undefined;
+    finishRequest(config);
+    if (axios.isCancel(error) || isStale(config)) return Promise.reject(error);
+    const response = error.response;
     if (!response) {
       ElMessage.error("网络连接失败");
       return Promise.reject(error);
     }
-
-    const status = response.status;
-    const { msg } = response.data as ApiResponse;
-
-    if (status === 401 || status === 403) {
-      // P0-1：游客（无凭证）访问需登录接口时仅提示、不强制跳登录。
-      // 此前用 currentRoute.meta.public 判断，但全局初始化请求（如版本公告未读）
-      // 在路由切换时序下 currentRoute 可能是 "/"（public 为空），导致游客被误踢登录页。
-      const hasToken = !!AuthStorage.getAccessToken();
-      const isPublicRoute =
-        router.currentRoute.value.meta?.public ||
-        router.currentRoute.value.matched.some((r) => r.meta?.public);
-      if (!hasToken || isPublicRoute) {
-        // 后端对未认证访问默认返回 403（与 401 同属「需登录」类）：
-        // 游客在公开页面访问需登录接口时（如未登录点收藏/领取），仅提示，不强制跳登录
-        ElMessage.warning(msg || "请先登录后操作");
-        return Promise.reject(new Error(msg || "请先登录后操作"));
-      }
-      await redirectToLogin(msg || "登录已过期，请重新登录");
-      return Promise.reject(new Error("Token Invalid"));
-    }
-    ElMessage.error(msg || "请求失败");
-    return Promise.reject(new Error(msg || "请求失败"));
+    const msg = response.data?.msg;
+    if (response.status === 401 || response.status === 403)
+      handleAuthentication(config, response.status, msg);
+    else ElMessage.error(msg || "请求失败");
+    return Promise.reject(error);
   }
 );
 

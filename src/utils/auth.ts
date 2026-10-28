@@ -2,31 +2,20 @@ import { Storage } from "./storage";
 import { STORAGE_KEYS } from "@/constants";
 import { useUserStoreHook } from "@/store/modules/user";
 import router from "@/router";
+import { ElNotification } from "element-plus";
+import {
+  sessionToken,
+  setSessionTokens,
+  clearSessionTokens,
+  onSessionEnded,
+  setupSessionLifecycle,
+} from "./session";
 
 // 负责本地凭证与偏好的读写
 export const AuthStorage = {
-  getAccessToken(): string {
-    const isRememberMe = Storage.get<boolean>(STORAGE_KEYS.REMEMBER_ME, false);
-    return isRememberMe
-      ? Storage.get(STORAGE_KEYS.ACCESS_TOKEN, "")
-      : Storage.sessionGet(STORAGE_KEYS.ACCESS_TOKEN, "");
-  },
-
-  setTokens(token: string, rememberMe: boolean): void {
-    Storage.set(STORAGE_KEYS.REMEMBER_ME, rememberMe);
-    if (rememberMe) {
-      Storage.set(STORAGE_KEYS.ACCESS_TOKEN, token);
-    } else {
-      Storage.sessionSet(STORAGE_KEYS.ACCESS_TOKEN, token);
-      Storage.remove(STORAGE_KEYS.ACCESS_TOKEN);
-    }
-  },
-
-  clearAuth(): void {
-    Storage.remove(STORAGE_KEYS.ACCESS_TOKEN);
-    Storage.sessionRemove(STORAGE_KEYS.ACCESS_TOKEN);
-    Storage.remove(STORAGE_KEYS.REMEMBER_ME);
-  },
+  getAccessToken: () => sessionToken.value,
+  setTokens: setSessionTokens,
+  clearAuth: clearSessionTokens,
 
   getRememberMe(): boolean {
     return Storage.get<boolean>(STORAGE_KEYS.REMEMBER_ME, false);
@@ -67,4 +56,26 @@ export async function redirectToLogin(message: string = "请重新登录"): Prom
     console.error("Redirect to login error:", error);
     window.location.href = "/login";
   }
+}
+
+/** Install before router navigation and before starting authenticated services. */
+export function setupAuthSession() {
+  onSessionEnded((reason) => {
+    const route = router.currentRoute.value;
+    const publicPage =
+      route.meta?.public || route.matched.some((r) => r.meta?.public) || route.path === "/";
+    useUserStoreHook().resetAllState();
+    if (reason !== "logout") {
+      ElNotification({
+        title: "登录状态已失效",
+        message:
+          reason === "replaced" ? "账号已在其他位置登录，请重新登录" : "请重新登录后继续操作",
+        type: "warning",
+      });
+      if (!publicPage && route.path !== "/login") {
+        void router.replace({ path: "/login", query: { redirect: route.fullPath } });
+      }
+    }
+  });
+  setupSessionLifecycle();
 }

@@ -1,3 +1,4 @@
+import { invalidateSession } from "@/utils/session";
 import { AuthStorage } from "@/utils/auth";
 
 export interface UseSseOptions {
@@ -44,6 +45,9 @@ function createSseConnection(options: UseSseOptions = {}) {
 
   // EventSource 实例
   let eventSource: EventSource | null = null;
+  let connectionToken = "";
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let retryDelay = 1000;
   let isManualDisconnect = false;
   let connectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -69,6 +73,7 @@ function createSseConnection(options: UseSseOptions = {}) {
    */
   const handleOpen = () => {
     clearConnectionTimeout();
+    retryDelay = 1000;
     connectionState.value = SseConnectionState.CONNECTED;
     log("SSE 连接已建立");
   };
@@ -76,14 +81,15 @@ function createSseConnection(options: UseSseOptions = {}) {
   /**
    * 处理连接错误事件
    */
-  const handleError = (event: Event) => {
+  const handleError = () => {
     clearConnectionTimeout();
+    eventSource?.close();
+    eventSource = null;
     connectionState.value = SseConnectionState.DISCONNECTED;
-    logError("SSE 连接错误:", event);
-
-    // 非手动断开时，浏览器会自动重连
-    if (!isManualDisconnect && eventSource) {
-      log("浏览器将自动重连...");
+    if (!isManualDisconnect && connectionToken === AuthStorage.getAccessToken()) {
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(connect, retryDelay);
+      retryDelay = Math.min(retryDelay * 2, 30000);
     }
   };
 
@@ -151,8 +157,17 @@ function createSseConnection(options: UseSseOptions = {}) {
     const separator = config.url.includes("?") ? "&" : "?";
     const fullUrl = `${config.url}${separator}token=${encodeURIComponent(token)}`;
 
-    // 创建 EventSource
+    connectionToken = token;
+    clearTimeout(retryTimer);
+    eventSource?.close();
+    // Authentication failures have a distinct event; network errors are retried.
     eventSource = new EventSource(fullUrl);
+    const source = eventSource;
+    eventSource.addEventListener("auth-expired", () => {
+      if (eventSource !== source) return;
+      disconnect();
+      invalidateSession(token, "invalid");
+    });
 
     // 设置连接超时
     connectionTimeoutTimer = setTimeout(() => {
@@ -163,8 +178,12 @@ function createSseConnection(options: UseSseOptions = {}) {
     }, config.connectionTimeout);
 
     // 注册事件监听器
-    eventSource.onopen = handleOpen;
-    eventSource.onerror = handleError;
+    eventSource.onopen = () => {
+      if (eventSource === source) handleOpen();
+    };
+    eventSource.onerror = () => {
+      if (eventSource === source) handleError();
+    };
     eventSource.onmessage = handleMessage;
 
     // 重新绑定此前已订阅的自定义事件（修复：on() 在 connect() 之前调用时，
@@ -216,6 +235,7 @@ function createSseConnection(options: UseSseOptions = {}) {
    */
   const disconnect = () => {
     isManualDisconnect = true;
+    clearTimeout(retryTimer);
     clearConnectionTimeout();
 
     if (eventSource) {
@@ -272,6 +292,6 @@ export function getSseInstance() {
 export function cleanupSse() {
   if (globalInstance) {
     globalInstance.cleanup();
-    globalInstance = null;
+    // Keep identity for composables already holding this connection.
   }
 }

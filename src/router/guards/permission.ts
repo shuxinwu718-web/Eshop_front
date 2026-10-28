@@ -1,4 +1,6 @@
 // src/router/guards/permission.ts
+import { watch } from "vue";
+import { sessionToken } from "@/utils/session";
 import NProgress from "@/plugins/nprogress";
 import router from "@/router";
 import { useUserStore } from "@/store";
@@ -14,6 +16,14 @@ let _profilePromise: Promise<any> | null = null;
  */
 export function setupPermissionGuard() {
   const whiteList = ["/login"];
+  watch(
+    sessionToken,
+    () => {
+      _profileLoaded = false;
+      _profilePromise = null;
+    },
+    { flush: "sync" }
+  );
 
   router.beforeEach(async (to, _from) => {
     NProgress.start();
@@ -73,7 +83,13 @@ export function setupPermissionGuard() {
         } catch (err) {
           _profilePromise = null;
           _profileLoaded = false;
-          await userStore.resetAllState();
+          // Only the authentication classifier may invalidate a session. A 5xx or
+          // offline response must not destroy a valid login.
+          if (userStore.isLoggedIn()) {
+            if (to.meta?.public) return true;
+            NProgress.done();
+            return false;
+          }
           // P0-1：token 失效/过期时，若目标是公开页（首页/商品详情等），
           // 降级为游客放行、不阻断浏览；结算/收藏时再由业务逻辑弹登录引导
           if (to.meta?.public || to.path === "/" || to.path === "") {
@@ -117,8 +133,8 @@ export function setupPermissionGuard() {
       return true;
     } catch (error) {
       console.error("路由守卫异常:", error);
-      await useUserStore().resetAllState();
-      return "/login";
+      NProgress.done();
+      return false;
     }
   });
 

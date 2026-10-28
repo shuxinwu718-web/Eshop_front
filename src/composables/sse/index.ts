@@ -10,6 +10,7 @@
 import { useDictSync } from "./useDictSync";
 import { useOnlineCount } from "./useOnlineCount";
 import { useReleaseLog, cleanupReleaseLog } from "./useReleaseLog";
+import { cleanupImMessages } from "./useImMessages";
 import { cleanupSse } from "./useSse";
 
 /**
@@ -59,7 +60,8 @@ export function cleanupSseServices() {
   // 清理版本公告服务（注销 SSE 订阅、重置红点）
   cleanupReleaseLog();
 
-  // 清理全局 SSE 实例
+  cleanupImMessages();
+  // Keep the connection object: mounted subscribers can reconnect after login.
   cleanupSse();
 }
 

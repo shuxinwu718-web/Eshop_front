@@ -161,6 +161,7 @@ const unreadCount = ref(0);
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
 const fetchUnreadCount = async () => {
+  if (!userStore.isLoggedIn()) return;
   try {
     unreadCount.value = await NoticeAPI.getUnreadCount();
   } catch {

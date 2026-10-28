@@ -100,8 +100,13 @@ onMounted(() => {
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) {
     cartStore.fetchCount();
+    if (!pollingTimer) pollingTimer = setInterval(fetchUnreadCount, 30000);
   } else {
     cartStore.reset();
+    if (pollingTimer) {
+      clearInterval(pollingTimer);
+      pollingTimer = null;
+    }
   }
 });
 

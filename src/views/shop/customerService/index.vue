@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ChatDotRound, MagicStick, Service, User } from "@element-plus/icons-vue";
@@ -84,6 +84,8 @@ import AiAPI, { type AiHistoryItem } from "@/api/ai/chat";
 import { useUserStore } from "@/store/modules/user";
 import { AuthStorage } from "@/utils/auth";
 
+let streamController: AbortController | null = null;
+onBeforeUnmount(() => streamController?.abort());
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -97,6 +99,16 @@ interface ChatMessage {
 const SESSION_KEY = "ai_cs_session";
 
 const messages = ref<ChatMessage[]>([]);
+watch(
+  () => userStore.isLoggedIn(),
+  (logged) => {
+    if (!logged) {
+      streamController?.abort();
+      messages.value = [];
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+  }
+);
 const loading = ref(false);
 const input = ref("");
 const chatBodyRef = ref<HTMLElement | null>(null);
@@ -252,7 +264,7 @@ const send = async () => {
   if (loading.value) return;
 
   // 游客需登录后才能使用 AI 客服（回复明确提示，不再请求 AI 服务）
-  if (!userStore.isLoggedIn) {
+  if (!userStore.isLoggedIn()) {
     pushMessage("assistant", "登录后才能使用 AI 智能客服哦～请先登录账号，再来咨询购物问题。");
     return;
   }
@@ -278,21 +290,31 @@ const send = async () => {
     .slice(-11, -1)
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }));
+  streamController?.abort();
+  streamController = new AbortController();
+  const requestToken = AuthStorage.getAccessToken();
   try {
-    await AiAPI.sendAiChatStream(text, history, AuthStorage.getAccessToken(), {
-      onDelta: (delta) => {
-        streamingStarted.value = true;
-        streamingMsg.content += delta;
-        scrollToBottom();
+    await AiAPI.sendAiChatStream(
+      text,
+      history,
+      AuthStorage.getAccessToken(),
+      {
+        onDelta: (delta) => {
+          streamingStarted.value = true;
+          streamingMsg.content += delta;
+          scrollToBottom();
+        },
+        onDone: (fullText) => {
+          if (!fullText) streamingMsg.content = "抱歉，AI 服务开小差了，请稍后再试。";
+        },
+        onError: (msg) => {
+          if (!streamingMsg.content) streamingMsg.content = msg;
+        },
       },
-      onDone: (fullText) => {
-        if (!fullText) streamingMsg.content = "抱歉，AI 服务开小差了，请稍后再试。";
-      },
-      onError: (msg) => {
-        if (!streamingMsg.content) streamingMsg.content = msg;
-      },
-    });
+      streamController.signal
+    );
   } catch {
+    if (streamController?.signal.aborted || requestToken !== AuthStorage.getAccessToken()) return;
     // 明确区分：服务不可用 / 网络异常，避免游客得到含糊反馈
     if (!streamingMsg.content) {
       streamingMsg.content = "网络异常，暂时无法连接 AI 客服，请稍后再试。";

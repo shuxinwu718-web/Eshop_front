@@ -1,6 +1,7 @@
 import { store } from "@/store";
 import AuthAPI from "@/api/auth";
 import type { LoginRequest, UserInfo } from "@/types/api";
+import { invalidateSession } from "@/utils/session";
 import { AuthStorage } from "@/utils/auth";
 import { usePermissionStoreHook } from "@/store/modules/permission";
 import { useDictStoreHook } from "@/store/modules/dict";
@@ -9,7 +10,6 @@ import { cleanupSseServices } from "@/composables";
 
 // ---------- 新增：缓存相关常量 ----------
 const USER_INFO_CACHE_KEY = "user_info_cache"; // 带过期时间的缓存key
-const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 1小时
 
 export const useUserStore = defineStore("user", () => {
   // 用户信息
@@ -19,6 +19,8 @@ export const useUserStore = defineStore("user", () => {
 
   // ---------- 新增：用于防止并发重复请求的 Promise 缓存 ----------
   let _fetchProfilePromise: Promise<UserInfo> | null = null;
+  let verifiedToken = "";
+  let profileToken = "";
 
   /**
    * 登录
@@ -36,30 +38,17 @@ export const useUserStore = defineStore("user", () => {
    * @param forceRefresh 是否强制刷新（忽略缓存，直接请求）
    */
   async function getUserInfo(forceRefresh = false): Promise<UserInfo> {
-    // 1. 如果有内存中的 userInfo 且不强制刷新，直接返回（同时保留内存中的信息）
-    if (!forceRefresh && userInfo.value.userId) {
-      return userInfo.value;
-    }
-
-    // 2. 尝试读取 localStorage 缓存（带过期时间）
-    if (!forceRefresh) {
-      const cached = getCachedUserInfo();
-      if (cached) {
-        // 更新内存中的 userInfo，保持状态同步
-        Object.assign(userInfo.value, cached);
-        return cached;
-      }
-    }
-
-    // 3. 防止并发重复请求
-    if (_fetchProfilePromise) {
-      return _fetchProfilePromise;
-    }
-
+    const token = AuthStorage.getAccessToken();
+    if (!token) throw new Error("未登录");
+    if (!forceRefresh && verifiedToken === token && userInfo.value.userId) return userInfo.value;
+    if (_fetchProfilePromise && profileToken === token) return _fetchProfilePromise;
+    profileToken = token;
     // 4. 发起真实请求
     _fetchProfilePromise = (async () => {
       try {
         const data = await AuthAPI.getUserInfo();
+        if (AuthStorage.getAccessToken() !== token) throw new Error("会话已变更，忽略旧用户资料");
+        verifiedToken = token;
         const role = data.role || "USER";
         const user: UserInfo = {
           userId: String(data.id),
@@ -81,28 +70,11 @@ export const useUserStore = defineStore("user", () => {
         return user;
       } finally {
         // 请求完成后清除 Promise 缓存（无论成功失败）
-        _fetchProfilePromise = null;
+        if (profileToken === token) _fetchProfilePromise = null;
       }
     })();
 
     return _fetchProfilePromise;
-  }
-
-  // ---------- 新增：带过期时间的缓存读取 ----------
-  function getCachedUserInfo(): UserInfo | null {
-    const cacheStr = localStorage.getItem(USER_INFO_CACHE_KEY);
-    if (!cacheStr) return null;
-    try {
-      const { data, timestamp } = JSON.parse(cacheStr);
-      if (Date.now() - timestamp > CACHE_EXPIRE_TIME) {
-        // 缓存过期，清除
-        localStorage.removeItem(USER_INFO_CACHE_KEY);
-        return null;
-      }
-      return data as UserInfo;
-    } catch {
-      return null;
-    }
   }
 
   // ---------- 新增：带过期时间的缓存存储 ----------
@@ -116,6 +88,8 @@ export const useUserStore = defineStore("user", () => {
 
   // ---------- 新增：清除用户信息缓存（登出或切换账号时调用） ----------
   function clearUserInfoCache() {
+    verifiedToken = "";
+    profileToken = "";
     localStorage.removeItem(USER_INFO_CACHE_KEY);
     _fetchProfilePromise = null;
     // 注意：不清除原有的 'userInfo' 是为了兼容旧代码，如果你希望完全清掉也可以加上
@@ -139,6 +113,7 @@ export const useUserStore = defineStore("user", () => {
    * 登出
    */
   async function logout(): Promise<void> {
+    invalidateSession(AuthStorage.getAccessToken(), "logout");
     resetAllState();
   }
 

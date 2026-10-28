@@ -2,7 +2,8 @@
  * 应用启动入口
  */
 
-import { createApp } from "vue";
+import { createApp, watch } from "vue";
+import { sessionToken } from "@/utils/session";
 import App from "./App.vue";
 
 // ===== 样式导入 =====
@@ -29,6 +30,7 @@ import { InstallCodeMirror } from "codemirror-editor-vue3";
 import { configureVxeTable } from "@/plugins/vxe-table";
 
 // ===== 路由守卫 =====
+import { setupAuthSession } from "@/utils/auth";
 import { setupPermissionGuard } from "@/router/guards/permission";
 
 // ===== SSE 服务（在线人数/通知实时推送，登录态无 token 时内部跳过） =====
@@ -39,12 +41,17 @@ const app = createApp(App);
 
 // 1️⃣ 核心配置
 setupDirective(app);
-setupRouter(app);
 setupStore(app);
 setupI18n(app);
+setupPermissionGuard();
+setupAuthSession();
+setupRouter(app);
 
 // 初始化全局 SSE 长连接（在线人数/通知；客服 IM 页面进入时也会通过 useImMessages 再ensure一次）
 setupSse();
+watch(sessionToken, (token) => {
+  if (token) setupSse();
+});
 
 // 2️⃣ 全局组件（Element Plus 图标 + 富文本编辑器）
 Object.entries(ElementPlusIcons).forEach(([name, comp]) => app.component(name, comp));
@@ -59,8 +66,7 @@ configureVxeTable();
 app.use(VXETable);
 app.use(InstallCodeMirror);
 
-// 4️⃣ 路由守卫（确保该文件存在，若不存在请注释）
-setupPermissionGuard();
+// 路由守卫和会话生命周期在首次导航前注册。
 
 // 5️⃣ 挂载应用
 app.mount("#app");

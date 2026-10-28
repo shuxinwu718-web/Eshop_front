@@ -2,6 +2,7 @@
 // AI 客服接口封装（独立 axios 实例，不走主后端的 code 拦截器）
 
 import axios from "axios";
+import { invalidateSession, sessionRequest, sessionToken } from "@/utils/session";
 
 /**
  * 独立 axios 实例：
@@ -80,24 +81,48 @@ export const sendAiChatStream = async (
   message: string,
   history: AiHistoryItem[] = [],
   token: string = "",
-  handlers: AiChatStreamHandlers
+  handlers: AiChatStreamHandlers,
+  signal?: AbortSignal
 ): Promise<string> => {
+  const pending = sessionRequest();
+  const combined = signal
+    ? AbortSignal.any([signal, pending.controller.signal])
+    : pending.controller.signal;
   let fullText = "";
+  const stillCurrent = () => !combined.aborted && token === sessionToken.value;
   try {
     const res = await fetch("/ai/chat/stream", {
       method: "POST",
+      signal: combined,
       headers: { "Content-Type": "application/json;charset=utf-8" },
       body: JSON.stringify({ message, history, token: token || "" }),
     });
     if (!res.ok || !res.body) {
+      // Only a structured application-auth error may expire the shop session.
+      // A provider API-key 401 must remain an AI-only failure.
+      const detail = await res
+        .clone()
+        .json()
+        .catch(() => null);
+      if (
+        res.status === 401 &&
+        ["TOKEN_EXPIRED", "TOKEN_INVALID", "SESSION_REPLACED"].includes(detail?.authCode)
+      ) {
+        invalidateSession(token, "invalid");
+      }
       const msg = `AI 客服服务暂时不可用，请稍后再试。(${res.status})`;
       throw new Error(msg);
     }
+    if (!stillCurrent()) throw new DOMException("Session changed", "AbortError");
     const reader = res.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
     while (true) {
       const { done, value } = await reader.read();
+      if (!stillCurrent()) {
+        await reader.cancel();
+        throw new DOMException("Session changed", "AbortError");
+      }
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       // SSE 事件以空行 \n\n 分隔
@@ -137,8 +162,10 @@ export const sendAiChatStream = async (
     return fullText;
   } catch (err) {
     const msg = (err instanceof Error && err.message) || "AI 客服服务暂时不可用，请稍后再试。";
-    handlers.onError?.(msg);
-    throw new Error(msg, { cause: err });
+    if (stillCurrent()) handlers.onError?.(msg);
+    throw err;
+  } finally {
+    pending.release();
   }
 };
 

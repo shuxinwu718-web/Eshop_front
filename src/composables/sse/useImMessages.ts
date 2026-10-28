@@ -57,3 +57,8 @@ export function useImMessages() {
   }
   return globalInstance;
 }
+
+export function cleanupImMessages() {
+  globalInstance?.cleanup();
+  globalInstance = null;
+}
