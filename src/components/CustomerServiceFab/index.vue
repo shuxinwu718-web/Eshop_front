@@ -2,10 +2,8 @@
   <div
     v-if="!isActive"
     class="cs-fab"
-    :class="{ 'cs-fab--active': expanded }"
-    @click="handleClick"
-    @mouseenter="showPanel"
-    @mouseleave="hidePanel"
+    :class="{ 'cs-fab--active': expanded, 'cs-fab--dragging': dragging }"
+    :style="fabStyle"
   >
     <!-- 首次进入的引导气泡：说明球的作用 -->
     <transition name="el-fade-in-right">
@@ -15,14 +13,23 @@
       </div>
     </transition>
 
-    <!-- 悬浮球 -->
-    <div class="cs-fab__ball">
+    <!-- 悬浮球：可拖动调整位置 -->
+    <div
+      class="cs-fab__ball"
+      @click="handleClick"
+      @mouseenter="showPanel"
+      @mouseleave="hidePanel"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerUp"
+    >
       <el-icon :size="24"><ChatDotRound /></el-icon>
     </div>
 
     <!-- 展开气泡面板（桌面 hover/点击） -->
     <transition name="el-zoom-in-top">
-      <div v-show="expanded" class="cs-fab__panel">
+      <div v-show="expanded" class="cs-fab__panel" :style="panelStyle">
         <div class="cs-fab__panel-title">需要帮助吗？</div>
         <div class="cs-fab__panel-qs">
           <div v-for="q in quickQuestions" :key="q" class="cs-fab__panel-q" @click="askQuick(q)">
@@ -48,6 +55,92 @@ const showTip = ref(false);
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 let tipTimer: ReturnType<typeof setTimeout> | null = null;
 
+// ===== 悬浮球拖动 =====
+const POS_KEY = "ai_fab_pos"; // 记住用户拖到的位置
+const FAB_SIZE = 54; // 兜底尺寸（桌面 52 / 移动端 54）
+const EDGE = 8; // 距视口边缘的最小间距
+const PANEL_WIDTH = 260;
+const DRAG_THRESHOLD = 4; // 位移小于该值仍视为点击
+
+const pos = ref<{ left: number; top: number } | null>(null);
+const dragging = ref(false);
+const viewportWidth = ref(window.innerWidth);
+
+let startX = 0;
+let startY = 0;
+let originLeft = 0;
+let originTop = 0;
+let moved = false;
+let lastDragEnd = 0;
+
+const clampPos = (left: number, top: number) => ({
+  left: Math.min(Math.max(EDGE, left), Math.max(EDGE, window.innerWidth - FAB_SIZE - EDGE)),
+  top: Math.min(Math.max(EDGE, top), Math.max(EDGE, window.innerHeight - FAB_SIZE - EDGE)),
+});
+
+// 记录过位置就改用 left/top 定位，否则沿用默认的 right/bottom
+const fabStyle = computed(() =>
+  pos.value
+    ? {
+        left: `${pos.value.left}px`,
+        top: `${pos.value.top}px`,
+        right: "auto",
+        bottom: "auto",
+      }
+    : {}
+);
+
+// 球靠近右边界时面板向左展开，否则向右展开，避免超出视口
+const panelStyle = computed(() =>
+  pos.value && pos.value.left + PANEL_WIDTH <= viewportWidth.value - EDGE
+    ? { left: "0", right: "auto" }
+    : {}
+);
+
+const onPointerDown = (e: PointerEvent) => {
+  if (e.button !== 0) return;
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  originLeft = rect.left;
+  originTop = rect.top;
+  startX = e.clientX;
+  startY = e.clientY;
+  moved = false;
+  dragging.value = true;
+  closeTip();
+  (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+};
+
+const onPointerMove = (e: PointerEvent) => {
+  if (!dragging.value) return;
+  const dx = e.clientX - startX;
+  const dy = e.clientY - startY;
+  if (!moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+  moved = true;
+  expanded.value = false;
+  pos.value = clampPos(originLeft + dx, originTop + dy);
+};
+
+const onPointerUp = (e: PointerEvent) => {
+  if (!dragging.value) return;
+  dragging.value = false;
+  (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+  if (!moved || !pos.value) return;
+
+  lastDragEnd = Date.now();
+  try {
+    localStorage.setItem(POS_KEY, JSON.stringify(pos.value));
+  } catch {
+    /* 隐私模式下忽略 */
+  }
+};
+
+const onResize = () => {
+  viewportWidth.value = window.innerWidth;
+  if (pos.value) {
+    pos.value = clampPos(pos.value.left, pos.value.top);
+  }
+};
+
 // 首次进入商城时弹出引导气泡，之后不再打扰
 const TIP_KEY = "ai_fab_tip_shown";
 onMounted(() => {
@@ -56,9 +149,18 @@ onMounted(() => {
       showTip.value = true;
       tipTimer = setTimeout(closeTip, 6000);
     }
+    // 恢复上次拖动的位置
+    const raw = localStorage.getItem(POS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw) as { left?: number; top?: number };
+      if (typeof saved.left === "number" && typeof saved.top === "number") {
+        pos.value = clampPos(saved.left, saved.top);
+      }
+    }
   } catch {
     /* 忽略 */
   }
+  window.addEventListener("resize", onResize);
 });
 
 const closeTip = () => {
@@ -84,6 +186,7 @@ const quickQuestions = [
 ];
 
 const showPanel = () => {
+  if (dragging.value) return;
   if (hideTimer) clearTimeout(hideTimer);
   expanded.value = true;
 };
@@ -112,6 +215,8 @@ const askQuick = (q: string) => {
 };
 
 const handleClick = () => {
+  // 刚拖动结束时浏览器仍会派发 click，这里忽略这一次
+  if (Date.now() - lastDragEnd < 300) return;
   closeTip(); // 点击即关闭引导气泡
   // 移动端（无 hover）：直接跳转
   if (window.innerWidth <= 768) {
@@ -125,6 +230,7 @@ const handleClick = () => {
 onUnmounted(() => {
   if (hideTimer) clearTimeout(hideTimer);
   if (tipTimer) clearTimeout(tipTimer);
+  window.removeEventListener("resize", onResize);
 });
 </script>
 
@@ -142,7 +248,9 @@ onUnmounted(() => {
     width: 52px;
     height: 52px;
     color: var(--el-color-white);
-    cursor: pointer;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
     background: var(--brand-primary);
     border-radius: 50%;
     box-shadow: var(--card-shadow);
@@ -153,6 +261,12 @@ onUnmounted(() => {
     &:hover {
       background: var(--brand-primary-hover);
     }
+  }
+
+  /* 拖拽中不显示 grab，避免与抓手图标来回切换 */
+  &--dragging &__ball {
+    cursor: grabbing;
+    transition: none;
   }
 
   &__tip {
